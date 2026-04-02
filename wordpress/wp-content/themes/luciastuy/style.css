@@ -1,0 +1,48 @@
+/*
+Theme Name: LuciaStuy
+Theme URI: https://www.luciastuy.com
+Author: Lucia Stuy
+Description: Owned baseline theme for the Lucia Stuy WooCommerce workspace.
+Version: 0.1.0
+Requires at least: 6.0
+Tested up to: 6.9.4
+Requires PHP: 8.1
+Text Domain: luciastuy
+*/
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: #f7f1ea;
+  color: #1f1a17;
+}
+
+a {
+  color: inherit;
+}
+
+.site-header,
+.site-footer,
+.site-main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.site-title {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.site-tagline {
+  margin: 0.25rem 0 0;
+  color: #64554d;
+}
+
+.site-main {
+  min-height: 60vh;
+}

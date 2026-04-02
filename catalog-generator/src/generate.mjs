@@ -23,8 +23,54 @@ function normalizeBoolean(value) {
   return ['true', '1', 'yes', 'y', 'sí', 'si'].includes(text);
 }
 
+function normalizeArtworkStatus(status) {
+  const normalized = String(status || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[-\s]+/g, '_');
+
+  switch (normalized) {
+    case 'available':
+    case 'for_sale':
+    case 'disponible':
+      return 'available';
+    case 'gifted':
+    case 'gift':
+    case 'regalo':
+    case 'donated':
+    case 'donation':
+      return 'gifted';
+    case 'exchanged':
+    case 'exchange':
+    case 'intercambio':
+    case 'traded':
+      return 'exchanged';
+    case 'sold':
+    case 'vendido':
+      return 'sold';
+    case 'commissioned':
+    case 'commission':
+    case 'encargo':
+      return 'commissioned';
+    case 'not_for_sale':
+    case 'nfs':
+    case 'no_disponible':
+      return 'not_for_sale';
+    case 'personal_collection':
+    case 'collection':
+    case 'coleccion_personal':
+      return 'personal_collection';
+    case 'archived':
+    case 'archive':
+    case 'archivada':
+      return 'archived';
+    default:
+      return '';
+  }
+}
+
 function statusLabel(status) {
-  switch ((status || '').trim().toLowerCase()) {
+  switch (normalizeArtworkStatus(status)) {
     case 'gifted':
     case 'exchanged':
     case 'personal_collection':
@@ -99,7 +145,7 @@ async function main() {
   const artworks = records
     .filter((row) => normalizeBoolean(row.include_in_catalog) && normalizeBoolean(row.catalog_ready))
     .map((row) => {
-      const status = (row.status_normalized || '').trim().toLowerCase();
+      const status = normalizeArtworkStatus(row.status_normalized);
       const showPrice = normalizeBoolean(row.show_price) && status === 'available';
       const note = (row.catalog_notes_public || '').trim();
       return {

@@ -1,0 +1,9 @@
+.env
+.env.local
+wordpress.sql
+uploads/
+.tmp/
+wp-data/
+mysql-data/
+phpmyadmin-data/
+.DS_Store
