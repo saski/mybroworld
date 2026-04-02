@@ -1,0 +1,120 @@
+@page {
+  size: A4;
+  margin: 0;
+}
+
+:root {
+  --page-w: 210mm;
+  --page-h: 297mm;
+  --margin-x: 18mm;
+  --margin-y: 18mm;
+  --text-color: #111;
+  --muted: #555;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--text-color);
+  background: white;
+}
+
+.page {
+  width: var(--page-w);
+  height: var(--page-h);
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+  padding: var(--margin-y) var(--margin-x);
+}
+
+.cover-page,
+.closing-page {
+  justify-content: center;
+}
+
+.cover-inner,
+.closing-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+}
+
+.cover-page h1,
+.closing-name {
+  margin: 0;
+  font-size: 28pt;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.cover-subtitle {
+  font-size: 16pt;
+}
+
+.cover-edition,
+.closing-contact {
+  font-size: 10.5pt;
+  color: var(--muted);
+}
+
+.artwork-page {
+  justify-content: space-between;
+}
+
+.image-frame {
+  width: 100%;
+  height: 210mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.meta {
+  padding-top: 8mm;
+}
+
+.title {
+  font-size: 16pt;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 3mm;
+}
+
+.year,
+.technique,
+.dimensions,
+.price,
+.status,
+.note {
+  font-size: 10.5pt;
+  line-height: 1.35;
+  margin-bottom: 1.5mm;
+}
+
+.status,
+.note {
+  color: var(--muted);
+}
+
+.price {
+  margin-top: 2mm;
+}
+
+.note {
+  margin-top: 1mm;
+}
+
