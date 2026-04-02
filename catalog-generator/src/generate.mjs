@@ -51,6 +51,23 @@ function toSortableNumber(value, fallback = 999999) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function normalizeDriveImage(url) {
+  if (!url) return '';
+  const trimmed = String(url).trim();
+
+  const match = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) {
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+  }
+
+  const idMatch = trimmed.match(/id=([a-zA-Z0-9_-]+)/);
+  if (idMatch) {
+    return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+  }
+
+  return trimmed;
+}
+
 async function readCsv({ inputPath, inputUrl }) {
   if (inputUrl) {
     const response = await fetch(inputUrl);
@@ -91,7 +108,7 @@ async function main() {
         year: (row.year || '').trim(),
         technique: buildTechnique(row),
         dimensions: (row.dimensions_clean || '').trim(),
-        imageUrl: (row.image_main || '').trim(),
+        imageUrl: normalizeDriveImage(row.image_main),
         status,
         statusLabel: statusLabel(status),
         showPrice,
