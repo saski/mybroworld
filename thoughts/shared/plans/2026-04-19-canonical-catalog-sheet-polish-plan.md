@@ -278,9 +278,9 @@ Automated success criteria:
 
 - [x] Phase 1 completed on 2026-04-19.
 - [x] Phase 2 completed on 2026-04-19.
-- [ ] Phase 3 in progress.
-- [ ] Phase 4 pending.
-- [ ] Phase 5 pending.
+- [x] Phase 3 completed on 2026-04-19.
+- [x] Phase 4 completed on 2026-04-19.
+- [x] Phase 5 completed on 2026-04-19.
 
 ### Phase 1 Notes
 
@@ -339,6 +339,48 @@ Automated success criteria:
   - `catalog_notes_public`
   - `submission_history`
 - Verified CSV export header still contains the full canonical header set needed by the catalog generator.
+
+### Phase 3 Notes
+
+- Tested the preview formula on sample rows first before rolling it down the full populated range.
+- Initial formula attempt failed because the spreadsheet locale is `es_ES` and required semicolon argument separators.
+- Final row formula applied in `Sheet1!A2:A21`:
+  - `=IF($Q2="";"";IMAGE("https://lh3.googleusercontent.com/d/"&$Q2;1))`
+- Resized the `preview` column to `120px`.
+- Resized populated artwork rows to `96px` so thumbnails stay compact but visible.
+- Verified `Sheet1!A2:A10` contains live formula values without parse errors.
+- Verified the catalog generator still renders from the canonical sheet export.
+
+### Phase 4 Notes
+
+- Added hidden helper tab `validation_lists` with sheet id `20260419`.
+- Seeded reusable dropdown sources for:
+  - `availability_flag_raw`
+  - `status_normalized`
+  - boolean `TRUE` / `FALSE`
+  - `location_clean`
+- Applied dropdown chip validation to:
+  - `availability_flag_raw`
+  - `status_normalized`
+  - `include_in_catalog`
+  - `catalog_ready`
+  - `location_clean`
+- Configured `location_clean` with warning-only validation so new valid locations can still be entered before the helper list is updated.
+- Verified validation rules are present on `Sheet1!B2:B20` and `Sheet1!I2:L20`.
+- Verified helper values in `validation_lists!A1:D20`.
+
+### Phase 5 Notes
+
+- Refreshed `catalog-generator/data/CATALOGO_BASE.csv` from the live canonical sheet export after the sheet polish completed.
+- Restored `Sheet1!A1` to `preview` after catching an export regression where the helper header had drifted back to blank.
+- Verified the refreshed local mirror contains:
+  - `preview`
+  - `submission_history`
+  - `status_normalized`
+  - `include_in_catalog`
+  - `catalog_ready`
+- Updated `docs/artwork-data-contract.md` so it reflects the new header-based contract and the sheet-only `preview` helper column.
+- Verified final catalog generation from the live canonical export succeeds with no generator code changes.
 
 ## Next Step
 

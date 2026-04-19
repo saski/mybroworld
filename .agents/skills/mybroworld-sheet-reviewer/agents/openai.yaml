@@ -1,0 +1,4 @@
+interface:
+  display_name: "MyBroworld Sheet Reviewer"
+  short_description: "Review MyBroworld Sheets with project rules and guided manual review"
+  default_prompt: "Use $mybroworld-sheet-reviewer to review this project Google Sheet, apply project criteria, fill deterministic values, flag unresolved cells, and when needed guide a cooperative cell-by-cell manual review queue."

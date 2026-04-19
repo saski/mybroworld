@@ -47,6 +47,7 @@ Columnas mínimas:
   - `status_normalized = available`
   - `show_price = TRUE`
 - Si no hay precio visible, se muestra una etiqueta editorial:
+  - `Reservada`
   - `Obra no disponible`
   - `Obra histórica`
 

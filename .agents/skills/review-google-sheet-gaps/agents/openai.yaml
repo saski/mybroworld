@@ -1,4 +1,0 @@
-interface:
-  display_name: "Review Google Sheet Gaps"
-  short_description: "Fill inferable Google Sheets gaps"
-  default_prompt: "Use $review-google-sheet-gaps to inspect this Google Sheet, fill deterministic gaps, and highlight unresolved cells for review."

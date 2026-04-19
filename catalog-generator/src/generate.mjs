@@ -52,6 +52,10 @@ function normalizeArtworkStatus(status) {
     case 'commission':
     case 'encargo':
       return 'commissioned';
+    case 'reserved':
+    case 'reservado':
+    case 'reservada':
+      return 'reserved';
     case 'not_for_sale':
     case 'nfs':
     case 'no_disponible':
@@ -76,6 +80,8 @@ function statusLabel(status) {
     case 'personal_collection':
     case 'archived':
       return 'Obra histórica';
+    case 'reserved':
+      return 'Reservada';
     case 'sold':
     case 'commissioned':
     case 'not_for_sale':
