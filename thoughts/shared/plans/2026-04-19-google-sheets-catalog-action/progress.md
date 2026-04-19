@@ -71,6 +71,43 @@
   - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/progress.md` (updated)
   - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/task_plan.md` (updated)
 
+### Phase 6: Implementation
+
+- **Status:** complete
+- Actions taken:
+  - Added shared contract utilities for compatible-tab discovery, scope resolution, filename sanitization, and queued-job defaults.
+  - Refactored the generator into a reusable library plus CLI wrapper with stable exit codes and support for `--catalog-title` and `--artist-name`.
+  - Added the first bound Apps Script delivery with `onOpen()`, setup helpers, sidebar rendering, profile selection, compatible-tab discovery, and queue-row creation.
+  - Added the local `catalog-agent` with config loading, OAuth token refresh, Sheets queue polling, profile-safe claiming, multi-tab CSV merge, PDF rendering, and Drive upload.
+  - Added rollout documentation and package commands for authorization, one-shot polling, and automated tests.
+- Files created/modified:
+  - `catalog-generator/apps-script/Code.gs` (created)
+  - `catalog-generator/apps-script/CatalogSidebar.html` (created)
+  - `catalog-generator/apps-script/appsscript.json` (created)
+  - `catalog-generator/catalog-agent/config.example.json` (created)
+  - `catalog-generator/catalog-agent/src/agent.mjs` (created)
+  - `catalog-generator/catalog-agent/src/authorize.mjs` (created)
+  - `catalog-generator/catalog-agent/src/cli.mjs` (created)
+  - `catalog-generator/catalog-agent/src/config.mjs` (created)
+  - `catalog-generator/catalog-agent/src/errors.mjs` (created)
+  - `catalog-generator/catalog-agent/src/google-api.mjs` (created)
+  - `catalog-generator/catalog-agent/src/job-queue.mjs` (created)
+  - `catalog-generator/catalog-agent/src/oauth-session.mjs` (created)
+  - `catalog-generator/catalog-agent/src/utils.mjs` (created)
+  - `catalog-generator/catalog-agent/MEMORY.md` (updated)
+  - `catalog-generator/catalog-agent/RUN_REPORT.md` (updated)
+  - `catalog-generator/package.json` (updated)
+  - `catalog-generator/README.md` (updated)
+  - `catalog-generator/src/catalog-action-contract.mjs` (created)
+  - `catalog-generator/src/catalog-generator.mjs` (created)
+  - `catalog-generator/src/generate.mjs` (updated)
+  - `catalog-generator/test/catalog-action-contract.test.mjs` (created)
+  - `catalog-generator/test/catalog-agent-core.test.mjs` (created)
+  - `catalog-generator/test/catalog-generator-cli.test.mjs` (created)
+  - `docs/google-sheets-catalog-action.md` (created)
+  - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/progress.md` (updated)
+  - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/task_plan.md` (updated)
+
 ## Test Results
 
 | Test | Input | Expected | Actual | Status |
@@ -81,6 +118,8 @@
 | Local executor path check | `/Users/luciaastuy` | Confirm fixed local deployment target exists | Directory exists | ✓ |
 | Current local profile check | Current workspace under `/Users/nacho` | Confirm second operator context exists locally | Workspace is running under `/Users/nacho` | ✓ |
 | Lucia workspace path assumption check | `/Users/luciaastuy/saski/mybroworld` | Confirm whether the same repo path exists for the second profile | Path is missing; install must configure a real Lucia-side path explicitly | ✓ |
+| Catalog generator unit suite | `npm test` in `catalog-generator` | Validate shared contract, merge logic, and generator CLI behavior | 9 tests passed | ✓ |
+| Local render integration | `npm run generate -- --input data/catalog.sample.csv --output /tmp/catalog-test.pdf --catalog-title "Test Catalog" --artist-name "Test Artist"` | Validate real PDF generation path | Passed outside the sandbox; produced `/tmp/catalog-test.pdf` | ✓ |
 
 ## Error Log
 

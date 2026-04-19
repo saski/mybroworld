@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "generate": "node src/generate.mjs"
+    "catalog-agent": "node catalog-agent/src/cli.mjs",
+    "catalog-agent:authorize": "node catalog-agent/src/authorize.mjs",
+    "catalog-agent:once": "node catalog-agent/src/cli.mjs --once",
+    "generate": "node src/generate.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "csv-parse": "^5.5.6",

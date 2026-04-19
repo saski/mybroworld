@@ -6,7 +6,7 @@ Design an installable Google Sheets action that lets the client generate the cat
 
 ## Current Phase
 
-Planning complete
+Implementation complete
 
 ## Phases
 
@@ -50,6 +50,15 @@ Planning complete
 - [x] Define template-copy workflow
 - [x] Define verification checklist
 - [x] Define later migration path to a published add-on if needed
+- **Status:** complete
+
+### Phase 6: Implementation
+
+- [x] Add shared contract logic for compatible-tab discovery, scope resolution, and queued-job defaults
+- [x] Harden the generator CLI with custom title/artist flags and stable exit behavior
+- [x] Implement the first bound Apps Script delivery with setup, menu, sidebar, and queue writer
+- [x] Implement the local `catalog-agent` with profile-safe claiming, multi-tab merge, rendering, and Drive upload
+- [x] Add package commands, tests, and rollout documentation for the new workflow
 - **Status:** complete
 
 ## Key Questions
@@ -103,13 +112,13 @@ Planning complete
 
 ## Planned Implementation Slices
 
-1. Apps Script infrastructure
-   Create `catalog_profiles` and `catalog_jobs`, add `onOpen()`, and wire the custom menu.
-2. Apps Script sidebar
-   Build compatible-tab discovery, profile selection, scope selection, validation, and queue-row creation.
-3. Local catalog agent
-   Poll queued rows by `execution_profile`, claim safely, read selected tabs with the Sheets API, and write progress.
-4. Generator CLI hardening
-   Add non-interactive flags for catalog title, artist name, and stable exit behavior.
-5. End-to-end verification
-   Validate both profiles, both account contexts, and multi-tab generation with Drive upload.
+- [x] Apps Script infrastructure
+  Create `catalog_profiles` and `catalog_jobs`, add `onOpen()`, and wire the custom menu.
+- [x] Apps Script sidebar
+  Build compatible-tab discovery, profile selection, scope selection, validation, and queue-row creation.
+- [x] Local catalog agent
+  Poll queued rows by `execution_profile`, claim safely, read selected tabs with the Sheets API, and write progress.
+- [x] Generator CLI hardening
+  Add non-interactive flags for catalog title, artist name, and stable exit behavior.
+- [x] End-to-end verification
+  Validate the local render path, automated tests, and the profile-safe queue logic. Live two-profile acceptance remains a manual rollout step.

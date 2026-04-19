@@ -1,27 +1,34 @@
-# Lucía Astuy Catalog Generator
+# Lucia Astuy Catalog Generator
 
-Genera un catálogo PDF a partir de un CSV exportado desde Google Sheets.
+Generate a catalog PDF from a normalized CSV exported from Google Sheets.
 
-## Flujo
+## Workflow
 
-1. Exporta tu hoja normalizada a CSV.
-2. Guarda el archivo como `data/catalog.csv`.
-3. Ejecuta:
+1. Export the normalized sheet to CSV.
+2. Save it as `data/catalog.csv`.
+3. Run:
 
 ```bash
 npm install
-npm run generate -- --input data/catalog.csv --output output/catalogo.pdf
+npm run generate -- --input data/catalog.csv --output output/catalogo.pdf --catalog-title "Catalog 2026" --artist-name "Lucía Astuy"
 ```
 
-También puedes usar una URL pública de exportación CSV de Google Sheets:
+You can also render directly from a public Google Sheets CSV export URL:
 
 ```bash
-GOOGLE_SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=..." npm run generate -- --output output/catalogo.pdf
+GOOGLE_SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=..." npm run generate -- --output output/catalogo.pdf --catalog-title "Catalog 2026"
 ```
 
-## Campos esperados en el CSV
+## Output Controls
 
-Columnas mínimas:
+- `--catalog-title` sets the cover title and the default output filename stem.
+- `--artist-name` overrides the artist name shown on the cover and closing page.
+- `--output` sets the PDF destination path.
+- `--limit` renders only the first N eligible artworks.
+
+## Expected CSV Fields
+
+Minimum columns:
 
 - `title_clean`
 - `year`
@@ -38,28 +45,60 @@ Columnas mínimas:
 - `show_price`
 - `catalog_notes_public`
 
-## Reglas incluidas
+## Included Rules
 
-- Solo entra una obra si:
+- An artwork is included only when:
   - `include_in_catalog = TRUE`
   - `catalog_ready = TRUE`
-- El precio solo aparece si:
+- The price is shown only when:
   - `status_normalized = available`
   - `show_price = TRUE`
-- Si no hay precio visible, se muestra una etiqueta editorial:
+- If the price is hidden, the PDF shows an editorial availability label instead:
   - `Reservada`
   - `Obra no disponible`
   - `Obra histórica`
 
-## Scripts
+## Google Sheets Action
+
+This generator now ships with a first installable Google Sheets action:
+
+- Bound Apps Script source: [catalog-generator/apps-script](/Users/nacho/saski/mybroworld/catalog-generator/apps-script)
+- Local queue agent source: [catalog-generator/catalog-agent](/Users/nacho/saski/mybroworld/catalog-generator/catalog-agent)
+- Admin rollout guide: [docs/google-sheets-catalog-action.md](/Users/nacho/saski/mybroworld/docs/google-sheets-catalog-action.md)
+
+The Google Sheets flow supports:
+
+- current compatible tab
+- selected compatible tabs
+- all compatible yearly tabs
+- explicit execution-profile routing
+- Drive upload of the generated PDF
+
+## Commands
 
 ```bash
 npm run generate
+npm run catalog-agent:authorize -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
+npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 
-## Notas
+## Common Errors
 
-- El PDF se renderiza con HTML/CSS + Puppeteer.
-- El CSS está pensado para A4 vertical.
-- La plantilla actual usa una imagen grande y el texto abajo.
-- Puedes afinar la estética en `src/styles.css` y `src/template.js`.
+- `failed code=input_missing message=Provide --input <path> or --input-url <url>.`
+  The command was run without a local CSV path or a Google Sheets CSV export URL.
+
+- `The active tab is not compatible with the catalog contract.`
+  The selected yearly tab is missing one or more required canonical headers such as `artwork_id`, `title_clean`, or `image_main`.
+
+- `An output folder is required before queueing a job.`
+  The selected execution profile has no default Drive folder and the sidebar form did not provide one.
+
+- `Authenticated Google identity <email> does not match configured <email>.`
+  The local `catalog-agent` is using the wrong Google account for the selected execution profile.
+
+## Notes
+
+- The PDF is rendered with HTML/CSS and Puppeteer.
+- The stylesheet is tuned for portrait A4.
+- The current template uses a large image with supporting text below it.
+- You can refine the visual design in `src/styles.css` and `src/template.js`.

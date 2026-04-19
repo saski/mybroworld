@@ -1,0 +1,411 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+      }
+
+      body {
+        background: #f6f1e8;
+        color: #1d1b18;
+        margin: 0;
+      }
+
+      main {
+        padding: 18px 16px 24px;
+      }
+
+      h1 {
+        font-size: 18px;
+        letter-spacing: 0.02em;
+        margin: 0 0 8px;
+      }
+
+      p,
+      label,
+      button,
+      input,
+      select {
+        font-size: 13px;
+      }
+
+      .lead {
+        color: #5f5649;
+        line-height: 1.5;
+        margin: 0 0 18px;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(77, 62, 39, 0.14);
+        border-radius: 14px;
+        margin-bottom: 14px;
+        padding: 14px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field label {
+        font-weight: 600;
+      }
+
+      .field input,
+      .field select {
+        background: #fffefc;
+        border: 1px solid rgba(77, 62, 39, 0.2);
+        border-radius: 10px;
+        box-sizing: border-box;
+        min-height: 38px;
+        padding: 8px 10px;
+        width: 100%;
+      }
+
+      .checkbox-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .checkbox-item {
+        align-items: flex-start;
+        display: grid;
+        gap: 8px;
+        grid-template-columns: 18px 1fr;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+        margin-top: 16px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        min-height: 38px;
+        padding: 0 14px;
+      }
+
+      .primary {
+        background: #7d4d2e;
+        color: #fff;
+        flex: 1;
+      }
+
+      .secondary {
+        background: rgba(125, 77, 46, 0.12);
+        color: #7d4d2e;
+      }
+
+      .status {
+        border-radius: 10px;
+        font-size: 12px;
+        line-height: 1.5;
+        margin-top: 14px;
+        min-height: 18px;
+        padding: 10px 12px;
+      }
+
+      .status.error {
+        background: rgba(172, 39, 39, 0.12);
+        color: #7a1f1f;
+      }
+
+      .status.success {
+        background: rgba(51, 112, 67, 0.12);
+        color: #275433;
+      }
+
+      .muted {
+        color: #746a5b;
+      }
+
+      .warning-list {
+        margin: 6px 0 0 18px;
+        padding: 0;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .pill {
+        background: rgba(27, 92, 140, 0.1);
+        border-radius: 999px;
+        color: #1b5c8c;
+        display: inline-block;
+        font-size: 11px;
+        margin-top: 6px;
+        padding: 4px 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Catalog Queue</h1>
+      <p class="lead">Queue a catalog PDF job from the current workbook without hardcoding a yearly tab.</p>
+
+      <div class="panel" id="setup-warning" hidden>
+        <strong>Setup required.</strong>
+        <p class="lead" style="margin: 8px 0 0;">Run <em>Catalogs → Admin: Setup Catalog Infrastructure</em> before queueing jobs.</p>
+      </div>
+
+      <form class="stack" id="catalog-form">
+        <section class="panel stack">
+          <div class="field">
+            <label for="execution-profile">Execution profile</label>
+            <select id="execution-profile" name="executionProfileKey"></select>
+            <span class="muted" id="profile-hint"></span>
+          </div>
+
+          <div class="field">
+            <label for="scope-mode">Scope mode</label>
+            <select id="scope-mode" name="scopeMode">
+              <option value="current_tab">Current compatible tab</option>
+              <option value="selected_tabs">Selected compatible tabs</option>
+              <option value="all_compatible_tabs">All compatible tabs</option>
+            </select>
+          </div>
+
+          <div class="field hidden" id="selected-tabs-field">
+            <label>Compatible tabs</label>
+            <div class="checkbox-list" id="tab-list"></div>
+          </div>
+
+          <div class="muted" id="active-tab-summary"></div>
+        </section>
+
+        <section class="panel stack">
+          <div class="field">
+            <label for="catalog-title">Catalog title</label>
+            <input id="catalog-title" name="catalogTitle" placeholder="Catalog 2026">
+          </div>
+
+          <div class="field">
+            <label for="artist-name">Artist name</label>
+            <input id="artist-name" name="artistName" placeholder="Lucía Astuy">
+          </div>
+
+          <div class="field">
+            <label for="output-folder-id">Output Drive folder id</label>
+            <input id="output-folder-id" name="outputFolderId" placeholder="Drive folder id">
+          </div>
+
+          <div class="field">
+            <label for="output-filename">Output filename</label>
+            <input id="output-filename" name="outputFilename" placeholder="Optional">
+          </div>
+        </section>
+
+        <div class="actions">
+          <button class="secondary" type="button" id="jobs-button">Open Jobs</button>
+          <button class="primary" type="submit" id="submit-button">Queue Job</button>
+        </div>
+      </form>
+
+      <div class="status hidden" id="status-box"></div>
+    </main>
+
+    <script id="catalog-initial-state" type="application/json"><?!= initialStateJson ?></script>
+    <script>
+      const state = {
+        model: JSON.parse(document.getElementById('catalog-initial-state').textContent),
+      };
+
+      const elements = {
+        activeTabSummary: document.getElementById('active-tab-summary'),
+        artistName: document.getElementById('artist-name'),
+        catalogForm: document.getElementById('catalog-form'),
+        catalogTitle: document.getElementById('catalog-title'),
+        executionProfile: document.getElementById('execution-profile'),
+        jobsButton: document.getElementById('jobs-button'),
+        outputFilename: document.getElementById('output-filename'),
+        outputFolderId: document.getElementById('output-folder-id'),
+        profileHint: document.getElementById('profile-hint'),
+        scopeMode: document.getElementById('scope-mode'),
+        selectedTabsField: document.getElementById('selected-tabs-field'),
+        setupWarning: document.getElementById('setup-warning'),
+        statusBox: document.getElementById('status-box'),
+        submitButton: document.getElementById('submit-button'),
+        tabList: document.getElementById('tab-list'),
+      };
+
+      function setStatus(message, tone) {
+        elements.statusBox.textContent = message;
+        elements.statusBox.className = `status ${tone}`;
+      }
+
+      function clearStatus() {
+        elements.statusBox.textContent = '';
+        elements.statusBox.className = 'status hidden';
+      }
+
+      function profileLabel(profile) {
+        const hints = [profile.googleAccountEmail, profile.macosUserHint].filter(Boolean).join(' / ');
+        return hints ? `${profile.label} (${hints})` : profile.label;
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function renderProfiles() {
+        const currentValue = state.model.preselectedProfileKey || '';
+        const options = ['<option value="">Select a profile</option>']
+          .concat(state.model.profiles.map((profile) => {
+            const selected = profile.profileKey === currentValue ? ' selected' : '';
+            return `<option value="${escapeHtml(profile.profileKey)}"${selected}>${escapeHtml(profileLabel(profile))}</option>`;
+          }));
+        elements.executionProfile.innerHTML = options.join('');
+        updateProfileHint();
+      }
+
+      function renderTabList() {
+        const selectedIds = new Set(state.model.preselectedSheetIds || []);
+        elements.tabList.innerHTML = state.model.compatibleTabs.map((tab) => `
+          <label class="checkbox-item">
+            <input type="checkbox" value="${tab.sheetId}" ${selectedIds.has(tab.sheetId) ? 'checked' : ''}>
+            <span>
+              <strong>${escapeHtml(tab.title)}</strong>
+              ${tab.sheetId === state.model.activeSheetId ? '<span class="pill">Active tab</span>' : ''}
+            </span>
+          </label>
+        `).join('');
+      }
+
+      function renderActiveTabSummary() {
+        if (state.model.activeTabDiagnostics.isCompatible) {
+          elements.activeTabSummary.textContent = `Active tab "${state.model.activeSheetTitle}" is compatible.`;
+          return;
+        }
+
+        const missingHeaders = state.model.activeTabDiagnostics.missingRequiredHeaders
+          .map((header) => `<li>${escapeHtml(header)}</li>`)
+          .join('');
+        elements.activeTabSummary.innerHTML = `
+          Active tab "${escapeHtml(state.model.activeSheetTitle)}" is not compatible.
+          <ul class="warning-list">${missingHeaders}</ul>
+        `;
+      }
+
+      function updateSelectedTabsVisibility() {
+        elements.selectedTabsField.classList.toggle('hidden', elements.scopeMode.value !== 'selected_tabs');
+      }
+
+      function updateProfileHint() {
+        const selectedProfile = state.model.profiles.find((profile) => profile.profileKey === elements.executionProfile.value);
+        if (!selectedProfile) {
+          elements.profileHint.textContent = state.model.currentUserEmail
+            ? `Current Google identity: ${state.model.currentUserEmail}`
+            : 'Current Google identity is unavailable in this context.';
+          return;
+        }
+
+        if (selectedProfile.defaultDriveFolderId) {
+          elements.profileHint.textContent = `Default Drive folder is configured for ${selectedProfile.label}.`;
+          return;
+        }
+
+        elements.profileHint.textContent = `${selectedProfile.label} requires an explicit output folder id.`;
+      }
+
+      function getSelectedSheetIds() {
+        return Array.from(elements.tabList.querySelectorAll('input[type="checkbox"]:checked'))
+          .map((checkbox) => Number(checkbox.value))
+          .filter((sheetId) => !Number.isNaN(sheetId));
+      }
+
+      function collectFormPayload() {
+        return {
+          artistName: elements.artistName.value.trim(),
+          catalogTitle: elements.catalogTitle.value.trim(),
+          executionProfileKey: elements.executionProfile.value,
+          outputFilename: elements.outputFilename.value.trim(),
+          outputFolderId: elements.outputFolderId.value.trim(),
+          scopeMode: elements.scopeMode.value,
+          selectedSheetIds: getSelectedSheetIds(),
+        };
+      }
+
+      function validateClientPayload(payload) {
+        if (!payload.executionProfileKey) {
+          return 'Select an execution profile.';
+        }
+
+        if (!payload.catalogTitle) {
+          return 'Enter a catalog title.';
+        }
+
+        if (payload.scopeMode === 'selected_tabs' && payload.selectedSheetIds.length === 0) {
+          return 'Select at least one compatible tab.';
+        }
+
+        return '';
+      }
+
+      function initializeForm() {
+        elements.setupWarning.hidden = !state.model.setupRequired;
+        elements.scopeMode.value = state.model.scopeMode || 'current_tab';
+        elements.artistName.value = 'Lucía Astuy';
+        elements.catalogTitle.value = state.model.activeSheetTitle.match(/^\d{4}$/)
+          ? `Catalog ${state.model.activeSheetTitle}`
+          : 'Catalog';
+
+        renderProfiles();
+        renderTabList();
+        renderActiveTabSummary();
+        updateSelectedTabsVisibility();
+      }
+
+      elements.scopeMode.addEventListener('change', updateSelectedTabsVisibility);
+      elements.executionProfile.addEventListener('change', updateProfileHint);
+      elements.jobsButton.addEventListener('click', () => {
+        google.script.run.openCatalogJobsFromSidebar();
+      });
+
+      elements.catalogForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        clearStatus();
+
+        const payload = collectFormPayload();
+        const validationError = validateClientPayload(payload);
+        if (validationError) {
+          setStatus(validationError, 'error');
+          return;
+        }
+
+        elements.submitButton.disabled = true;
+        google.script.run
+          .withFailureHandler((error) => {
+            elements.submitButton.disabled = false;
+            setStatus(error.message || String(error), 'error');
+          })
+          .withSuccessHandler((result) => {
+            elements.submitButton.disabled = false;
+            setStatus(`Queued ${result.jobId}. Open "${result.jobsSheetName}" to monitor the job.`, 'success');
+          })
+          .queueCatalogJob(payload);
+      });
+
+      initializeForm();
+    </script>
+  </body>
+</html>
