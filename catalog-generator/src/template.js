@@ -25,6 +25,9 @@ function renderArtworkPage(artwork) {
     ? `<div class="note">${escapeHtml(artwork.note)}</div>`
     : '';
 
+  const hasTechnique = Boolean(artwork.technique);
+  const hasDimensions = Boolean(artwork.dimensions);
+
   return `
     <section class="page artwork-page">
       <div class="image-frame">
@@ -32,9 +35,22 @@ function renderArtworkPage(artwork) {
       </div>
       <div class="meta">
         <div class="title">${escapeHtml(artwork.title)}</div>
-        <div class="year">${escapeHtml(artwork.year)}</div>
-        <div class="technique">${escapeHtml(artwork.technique)}</div>
-        <div class="dimensions">${escapeHtml(artwork.dimensions)}</div>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="meta-label">Ano</div>
+            <div class="year">${escapeHtml(artwork.year)}</div>
+          </div>
+          ${hasTechnique ? `
+          <div class="meta-item">
+            <div class="meta-label">Tecnica</div>
+            <div class="technique">${escapeHtml(artwork.technique)}</div>
+          </div>` : ''}
+          ${hasDimensions ? `
+          <div class="meta-item">
+            <div class="meta-label">Dimensiones</div>
+            <div class="dimensions">${escapeHtml(artwork.dimensions)}</div>
+          </div>` : ''}
+        </div>
         ${priceOrStatus}
         ${note}
       </div>

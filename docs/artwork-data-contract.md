@@ -23,6 +23,13 @@ Define the canonical artwork fields shared by the WooCommerce custom layer and t
 | `catalog_order` | integer | optional | Sort order inside the selected section. |
 | `show_price` | boolean | optional | Additional guard for public price display. |
 | `catalog_notes_public` | string | optional | Public note shown in the catalog when needed. |
+| `submission_history` | string | optional | Optional artwork submission history stored as one text field with `; ` between entries, for example `GBK Dusseldorf 2026; Fanzimad 2026`. |
+
+## Field Modeling Notes
+
+- `submission_history` is the initial canonical implementation for contest and open-call history.
+- The first version remains a single optional text field rather than a normalized submission model.
+- In `Sheet1`, the `submission_history` column must be appended at the end of the sheet to avoid disturbing existing column references and manual workflows.
 
 ## Canonical Status Enum
 
