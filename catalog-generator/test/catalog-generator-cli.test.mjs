@@ -72,7 +72,7 @@ test('runGenerateCli honors catalog title and artist flags with stable completio
   assert.match(logs.join('\n'), /artworks=1/);
 });
 
-test('runGenerateCli renders the editorial catalog shell for the client art direction', async () => {
+test('runGenerateCli renders the original editorial shell with section-led cover, centered artwork metadata, and centered closing mark', async () => {
   const { logger } = createLogger();
   const renderedJobs = [];
 
@@ -107,12 +107,13 @@ test('runGenerateCli renders the editorial catalog shell for the client art dire
   });
 
   assert.match(renderedJobs[0], /class="cover-photo"/);
-  assert.match(renderedJobs[0], /Catálogo/);
+  assert.match(renderedJobs[0], /Obra disponible/);
   assert.match(renderedJobs[0], /Marzo 2026/);
-  assert.match(renderedJobs[0], /catalog-wordmark/);
-  assert.match(renderedJobs[0], /class="artwork-stage"/);
-  assert.match(renderedJobs[0], /class="artwork-footer"/);
-  assert.doesNotMatch(renderedJobs[0], /class="page-kicker"/);
+  assert.match(renderedJobs[0], /class="artwork-header"/);
+  assert.match(renderedJobs[0], /class="artwork-kicker"/);
+  assert.match(renderedJobs[0], /Catálogo/);
+  assert.match(renderedJobs[0], /class="artwork-meta-block"/);
+  assert.match(renderedJobs[0], /class="closing-brand-stack"/);
 });
 
 test('runGenerateCli fails fast with a stable error code when no input source is provided', async () => {

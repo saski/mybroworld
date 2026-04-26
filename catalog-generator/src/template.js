@@ -48,9 +48,27 @@ function renderCoverCaption({ catalogPeriodLabel, catalogTitle }) {
 
   return `
     <div class="cover-caption">
-      <span class="cover-caption-status">Catálogo</span>
+      <span class="cover-caption-status">${escapeHtml(catalogTitle)}</span>
       <span class="cover-separator">|</span>
       <span class="cover-caption-secondary">${escapeHtml(secondaryLabel)}</span>
+    </div>
+  `;
+}
+
+function resolveArtworkPageLabel(artwork) {
+  if (artwork.statusLabel) {
+    return artwork.statusLabel;
+  }
+
+  return artwork.section === 'historical' ? 'Obra histórica' : 'Obra disponible';
+}
+
+function renderArtworkKicker(artwork) {
+  return `
+    <div class="artwork-kicker">
+      <span class="artwork-kicker-primary">Catálogo</span>
+      <span class="artwork-kicker-separator">|</span>
+      <span class="artwork-kicker-secondary">${escapeHtml(resolveArtworkPageLabel(artwork))}</span>
     </div>
   `;
 }
@@ -67,7 +85,7 @@ function renderArtworkPage(artwork, { artistName }) {
     : '';
 
   const year = artwork.year
-    ? `<div class="artwork-year">(${escapeHtml(artwork.year)})</div>`
+    ? `<div class="artwork-year">${escapeHtml(artwork.year)}</div>`
     : '';
 
   const dimensions = artwork.dimensions
@@ -80,13 +98,17 @@ function renderArtworkPage(artwork, { artistName }) {
 
   return `
     <section class="page artwork-page">
-      <div class="artwork-stage">
-        <div class="artwork-stage-frame">
-          <img class="artwork-image" src="${escapeHtml(artwork.imageUrl)}" alt="${escapeHtml(artwork.title)}" />
-        </div>
+      <div class="artwork-header">
+        ${renderArtworkKicker(artwork)}
+        ${renderWordmark({ artistName, className: 'artwork-header-wordmark', tone: 'dark' })}
       </div>
-      <div class="artwork-footer">
-        <div class="artwork-details-stack">
+      <div class="artwork-shell">
+        <div class="artwork-stage">
+          <div class="artwork-stage-frame">
+            <img class="artwork-image" src="${escapeHtml(artwork.imageUrl)}" alt="${escapeHtml(artwork.title)}" />
+          </div>
+        </div>
+        <div class="artwork-meta-block">
           <div class="artwork-title">${escapeHtml(artwork.title)}</div>
           ${year}
           ${dimensions}
@@ -94,7 +116,6 @@ function renderArtworkPage(artwork, { artistName }) {
           ${priceOrStatus}
           ${note}
         </div>
-        ${renderWordmark({ artistName, className: 'artwork-wordmark', tone: 'dark' })}
       </div>
     </section>
   `;
@@ -106,6 +127,7 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogP
     .join('\n');
 
   const coverPhoto = referenceCoverPhoto || artworks[0]?.imageUrl || '';
+  const coverLabel = artworks[0] ? resolveArtworkPageLabel(artworks[0]) : catalogTitle;
   const coverPhotoMarkup = coverPhoto
     ? `<img class="cover-photo" src="${escapeHtml(coverPhoto)}" alt="${escapeHtml(`${artistName} cover portrait`)}" />`
     : '<div class="cover-photo cover-photo-fallback"></div>';
@@ -121,22 +143,22 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogP
     <body>
       <section class="page cover-page">
         ${coverPhotoMarkup}
-        <div class="cover-header">
-          ${renderWordmark({ artistName, className: 'cover-wordmark', tone: 'dark' })}
-        </div>
         <div class="cover-footer">
-          ${renderCoverCaption({ catalogPeriodLabel, catalogTitle })}
+          ${renderCoverCaption({ catalogPeriodLabel, catalogTitle: coverLabel })}
+          ${renderWordmark({ artistName, className: 'cover-wordmark', tone: 'light' })}
         </div>
       </section>
 
       ${pages}
 
       <section class="page closing-page">
-        <div class="closing-inner">
-          <div class="closing-contact">hola@luciastuy.com</div>
-          <div class="closing-contact">635.166.253</div>
+        <div class="closing-brand-stack">
+          ${renderWordmark({ artistName, className: 'closing-wordmark', tone: 'dark' })}
+          <div class="closing-inner">
+            <div class="closing-contact">hola@luciastuy.com</div>
+            <div class="closing-contact">635.166.253</div>
+          </div>
         </div>
-        ${renderWordmark({ artistName, className: 'closing-wordmark', tone: 'dark' })}
       </section>
     </body>
   </html>`;

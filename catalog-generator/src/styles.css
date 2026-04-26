@@ -7,11 +7,12 @@
   --page-w: 210mm;
   --page-h: 297mm;
   --paper: #ffffff;
-  --ink: #131313;
-  --muted-ink: #3b3b3b;
+  --ink: #1d1717;
+  --muted-ink: #4d4747;
+  --soft-ink: #8e8a8a;
   --soft-white: #ffffff;
-  --display-font: "Futura", "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-  --body-font: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --display-font: "Avenir Next", "AvenirNext", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --body-font: "Avenir Next", "AvenirNext", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 * {
@@ -49,39 +50,44 @@ img {
   object-fit: cover;
 }
 
-.cover-header {
-  position: absolute;
-  top: 10mm;
-  right: 12mm;
-}
-
 .cover-footer {
   position: absolute;
-  left: 12mm;
-  right: 12mm;
-  bottom: 12mm;
+  left: 14mm;
+  right: 14mm;
+  bottom: 10mm;
   display: flex;
   align-items: flex-end;
-  justify-content: flex-start;
-  gap: 0;
+  justify-content: space-between;
+  gap: 8mm;
 }
 
 .cover-caption {
   display: flex;
   align-items: center;
-  gap: 3mm;
-  color: var(--ink);
-  font-size: 11pt;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  gap: 2.8mm;
+  color: var(--soft-white);
+  text-shadow: 0 0 10px rgb(0 0 0 / 18%);
 }
 
 .cover-caption-status {
+  font-family: var(--display-font);
+  font-size: 15pt;
   font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
 .cover-separator {
-  opacity: 0.85;
+  font-size: 14pt;
+  line-height: 1;
+  opacity: 0.94;
+}
+
+.cover-caption-secondary {
+  font-size: 14pt;
+  font-weight: 450;
+  letter-spacing: -0.025em;
+  line-height: 1;
 }
 
 .catalog-wordmark {
@@ -104,98 +110,124 @@ img {
 }
 
 .cover-wordmark {
-  width: 33mm;
+  width: 24mm;
 }
 
 .artwork-page {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  grid-template-rows: auto 1fr;
   background: var(--paper);
-  padding: 13mm 10mm 11mm;
+  padding: 9mm 11mm 15mm;
+}
+
+.artwork-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8mm;
+}
+
+.artwork-kicker {
+  display: flex;
+  align-items: center;
+  gap: 1.8mm;
+  color: var(--muted-ink);
+  font-size: 7.5pt;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 1;
+}
+
+.artwork-kicker-separator {
+  opacity: 0.88;
+}
+
+.artwork-header-wordmark {
+  width: 18mm;
+  opacity: 0.38;
 }
 
 .artwork-stage {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 232mm;
-  padding: 0;
+  min-height: 0;
+  width: 100%;
+  padding: 6mm 0 8mm;
+}
+
+.artwork-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 0;
 }
 
 .artwork-stage-frame {
-  width: 100%;
-  height: 100%;
+  width: 150mm;
+  max-width: 100%;
+  height: 184mm;
+  max-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .artwork-image {
-  max-width: 88%;
-  max-height: 208mm;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 
-.artwork-footer {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8mm;
-}
-
-.artwork-details-stack {
-  max-width: 126mm;
-  padding-left: 1mm;
-  text-align: left;
+.artwork-meta-block {
+  width: 128mm;
+  max-width: 100%;
+  text-align: center;
   color: var(--ink);
 }
 
 .artwork-title {
   font-family: var(--display-font);
-  font-size: 16.5pt;
+  font-size: 15.4pt;
   font-weight: 800;
-  line-height: 1.02;
-  letter-spacing: -0.015em;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
 }
 
 .artwork-year {
-  margin-top: 1.1mm;
-  font-size: 8.5pt;
-  font-style: italic;
-  line-height: 1.2;
+  margin-top: 2.6mm;
+  font-family: var(--display-font);
+  font-size: 8.7pt;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .artwork-meta-line,
 .artwork-note,
 .artwork-price,
 .artwork-status {
-  margin-top: 1.3mm;
-  font-size: 8.6pt;
-  line-height: 1.24;
+  margin-top: 1.7mm;
+  font-size: 8.2pt;
+  line-height: 1.22;
   color: var(--muted-ink);
 }
 
 .artwork-price,
 .artwork-status {
-  margin-top: 2.7mm;
+  margin-top: 4.1mm;
   font-family: var(--display-font);
-  font-size: 10.5pt;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: 10.8pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--ink);
 }
 
 .artwork-note {
   font-style: italic;
-}
-
-.artwork-wordmark {
-  width: 20mm;
-  margin-bottom: 1mm;
 }
 
 .closing-page {
@@ -205,22 +237,28 @@ img {
   background: var(--paper);
 }
 
+.closing-brand-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6.5mm;
+  transform: translateY(-10mm);
+}
+
 .closing-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2.5mm;
+  gap: 1.7mm;
   color: var(--ink);
 }
 
 .closing-contact {
-  font-size: 11pt;
+  font-size: 10.6pt;
+  font-weight: 400;
   line-height: 1.2;
 }
 
 .closing-wordmark {
-  position: absolute;
-  right: 12mm;
-  bottom: 10mm;
-  width: 22mm;
+  width: 42mm;
 }

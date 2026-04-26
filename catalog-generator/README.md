@@ -101,6 +101,6 @@ npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld
 
 - The PDF is rendered with HTML/CSS and Puppeteer.
 - The stylesheet is tuned for portrait A4.
-- The current template follows the approved editorial direction: luminous photographic cover, white artwork pages with a bottom editorial caption block, and a minimal closing page.
+- The current template follows the original editorial PDF more closely: section-led photographic cover, white artwork pages with a top kicker and centered metadata block, and a centered closing brand stack.
 - Reference art-direction assets live in [catalog-generator/assets](/Users/nacho/saski/mybroworld/catalog-generator/assets).
 - You can refine the visual design in `src/styles.css` and `src/template.js`.
