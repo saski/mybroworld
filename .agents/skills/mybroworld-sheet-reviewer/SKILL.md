@@ -30,6 +30,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 9. Batch edits into one coherent `batchUpdate`: write inferred or normalized values first, then color unresolved cells.
 10. Report touched cells as `Filled`, `Normalized`, `Flagged`, and `Skipped`.
 11. If the user introduced a new reusable review rule during the task, update this skill and `references/project-criteria.md` before finishing.
+   - In Codex sessions, edit files under `.agents/` with the file edit tool, not shell redirection or shell-created temp files, because shell writes under `.agents/` may be sandbox-blocked even when direct file edits are allowed.
 
 ## Review Criteria
 
@@ -39,6 +40,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 - Split medium and support only when the grammar is consistent across rows, for example `... sobre lienzo` to `medium_clean` plus `support_clean`.
 - Normalize prices only when one numeric value is clearly intended. If a cell contains multiple prices or conflicting numbers, do not invent a canonical value unless the sheet already shows the rule.
 - Normalize status or location only when the sheet already shows the same notes-to-clean-field mapping pattern in comparable rows.
+- When a work needs both its current holder and its route through prior holders or venues, keep `location_clean` as the current location only and use a dedicated `location_history` field for the chronological route.
 - When the catalog needs to capture whether an artwork belongs to a series, prefer a dedicated optional text field such as `series_name` instead of overloading `title_clean`, `notes_raw`, or public notes.
 - Fill `series_name` only when the shared series name is explicit from a repeated title pattern already evidenced in the sheet, such as a common title stem followed by item numbers.
 - When a new canonical enum value is explicitly approved for a range-backed field such as `status_normalized`, add it consistently across the hidden validation list, header note, and any matching conditional-format rules rather than only editing one cell.
@@ -77,6 +79,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 
 - Read `./references/project-criteria.md` before making final review judgments on project sheets.
 - When the user gives a new reusable rule, add it to `project-criteria.md` with a short rationale and a concrete example.
+- The canonical criteria file is `./references/project-criteria.md`. Do not target a sibling path such as `./project-criteria.md`.
 - Keep this skill concise. Put project-specific examples and accumulated criteria in the reference file instead of bloating the main workflow.
 
 ## Example Judgments
@@ -85,6 +88,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 - `dimensions_clean` blank while `dimensions_raw` contains `23x16`: fill `23 x 16 cm`.
 - `dimensions_raw` and `dimensions_clean` both blank: flag the cells instead of guessing from title, price, or nearby works.
 - `location_clean` blank for a commissioned work: fill it only if the notes clearly identify the current holder/location and the sheet already uses that same mapping elsewhere.
+- A notes trail such as `Residencia Escala House 07.01/20.02 / El Grifo / Vendido a Juan Roller` should keep the current holder in `location_clean` and the full route in `location_history`, for example `Residencia Escala House 07.01/20.02 -> El Grifo -> Juan Roller`.
 - `title_clean` values `Perrete en tablillas 01` through `Perrete en tablillas 05` with a new `series_name` column present: fill `series_name` as `Perrete en tablillas`.
 - Existing value conflicts with a repeated project normalization pattern: treat it as a review issue, not just a blank-cell issue.
 

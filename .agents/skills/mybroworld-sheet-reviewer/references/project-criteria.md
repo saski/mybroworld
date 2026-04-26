@@ -9,8 +9,10 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - Extract `image_id_manual` from a stable Drive file URL in `image_main`.
 - Normalize `dimensions_clean` from `dimensions_raw` when the raw cell already contains the full dimensional data.
 - Fill `location_clean` from notes only when the mapping is explicit in the notes and already evidenced by comparable rows.
+- Keep `location_clean` for the current location only. When the row needs to preserve previous stops as well, add and fill a dedicated `location_history` field instead of storing multiple values in `location_clean`.
 - Fill `series_name` only when the series is explicit from a repeated title stem already evidenced across multiple rows.
 - Example: `Perrete en tablillas 01` through `Perrete en tablillas 05` should use `series_name = Perrete en tablillas`.
+- Example: if a row says `Residencia Escala House 07.01/20.02 / El Grifo / Vendido a Juan Roller`, keep `location_clean = Juan Roller` and store `location_history = Residencia Escala House 07.01/20.02 -> El Grifo -> Juan Roller`.
 
 ### Ambiguity handling
 

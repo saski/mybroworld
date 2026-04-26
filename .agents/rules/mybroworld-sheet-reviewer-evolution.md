@@ -30,6 +30,7 @@ Apply this rule whenever the task involves one or more of:
 6. When a new rule changes how review judgments should be made, update both:
    - `.agents/skills/mybroworld-sheet-reviewer/SKILL.md`
    - `.agents/skills/mybroworld-sheet-reviewer/references/project-criteria.md`
+7. In Codex sessions, use the file edit tool to update `.agents/**` files. Do not rely on shell redirection, shell temp files, or shell in-place edits there, because shell writes under `.agents/` may be sandbox-blocked even when direct file edits are allowed.
 
 ## Reviewer Scope
 

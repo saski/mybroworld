@@ -16,6 +16,8 @@ Define the canonical artwork fields shared by the WooCommerce custom layer and t
 | `support_clean` | string | recommended | Public-facing support material. |
 | `dimensions_clean` | string | recommended | Public-facing formatted dimensions. |
 | `status_normalized` | enum | yes | Canonical availability state after normalization. |
+| `location_clean` | string | optional | Current location or holder only, such as `El Grifo` or `Juan Roller`. Do not store multi-step routes here. |
+| `location_history` | string | optional | Ordered route history stored as one text field with ` -> ` between steps, for example `Residencia Escala House 07.01/20.02 -> El Grifo -> Juan Roller`. |
 | `price_display_clean` | string | conditional | Only shown when the artwork is `available` and `show_price` is true. |
 | `image_main` | string | yes | Primary public image URL. |
 | `include_in_catalog` | boolean | yes | Gate for catalog inclusion. |
@@ -34,6 +36,9 @@ Define the canonical artwork fields shared by the WooCommerce custom layer and t
 - `preview` is a sheet-only helper column used for in-cell thumbnails in Google Sheets. It is not part of the canonical business contract, and downstream repo code must ignore it.
 - CSV exports from a canonical yearly sheet may include the leading `preview` helper column. The catalog generator remains compatible because it parses rows by header name and ignores extra columns it does not consume.
 - `series_name` is an optional canonical field for grouping related artworks without changing their public titles.
+- `location_clean` remains the single current location or current holder field.
+- `location_history` is the dedicated canonical field for chronological route history and must not be collapsed back into `location_clean`.
+- When both are present, the final step in `location_history` should normally match `location_clean`.
 - `submission_history` is the initial canonical implementation for contest and open-call history.
 - The first version remains a single optional text field rather than a normalized submission model.
 - In any canonical yearly tab, `submission_history` must keep its canonical header name, but its physical column position may move with other editing-oriented layout changes.
