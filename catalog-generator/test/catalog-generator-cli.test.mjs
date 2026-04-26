@@ -72,6 +72,49 @@ test('runGenerateCli honors catalog title and artist flags with stable completio
   assert.match(logs.join('\n'), /artworks=1/);
 });
 
+test('runGenerateCli renders the editorial catalog shell for the client art direction', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-title',
+      'Catálogo 2026',
+      '--artist-name',
+      'Lucia Astuy',
+      '--limit',
+      '1',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async () => {
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean,catalog_section,catalog_order,show_price,catalog_notes_public',
+          'LA-2026-001,Alpha,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/abc123/view,TRUE,TRUE,300 €,available,1,TRUE,',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => {
+        renderedJobs.push(html);
+      },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.match(renderedJobs[0], /class="cover-photo"/);
+  assert.match(renderedJobs[0], /Catálogo/);
+  assert.match(renderedJobs[0], /Marzo 2026/);
+  assert.match(renderedJobs[0], /catalog-wordmark/);
+  assert.match(renderedJobs[0], /class="artwork-stage"/);
+  assert.match(renderedJobs[0], /class="artwork-footer"/);
+  assert.doesNotMatch(renderedJobs[0], /class="page-kicker"/);
+});
+
 test('runGenerateCli fails fast with a stable error code when no input source is provided', async () => {
   const { logger, logs, errors } = createLogger();
 

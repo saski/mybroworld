@@ -8,6 +8,20 @@ import { renderCatalogHtml } from './template.js';
 const DEFAULT_ARTIST_NAME = 'Lucía Astuy';
 const DEFAULT_CATALOG_TITLE = 'Catálogo 2026';
 const DEFAULT_OUTPUT_PATH = 'output/catalogo.pdf';
+const SPANISH_MONTHS = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+];
 
 class CatalogCliError extends Error {
   constructor({ code, exitCode, message, cause }) {
@@ -128,6 +142,42 @@ function toSortableNumber(value, fallback = 999999) {
   return Number.isFinite(numberValue) ? numberValue : fallback;
 }
 
+function parseCatalogDateLabel(value) {
+  const normalizedValue = String(value || '').trim();
+  const match = normalizedValue.match(/^(\d{1,2})\s*\/\s*(\d{2}|\d{4})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const month = Number(match[1]);
+  const rawYear = Number(match[2]);
+  const year = rawYear < 100 ? 2000 + rawYear : rawYear;
+
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return null;
+  }
+
+  return {
+    month,
+    sortKey: year * 100 + month,
+    year,
+  };
+}
+
+function buildCatalogPeriodLabel(artworks) {
+  const latestPeriod = artworks
+    .map((artwork) => parseCatalogDateLabel(artwork.dateLabel))
+    .filter(Boolean)
+    .sort((left, right) => right.sortKey - left.sortKey)[0];
+
+  if (!latestPeriod) {
+    return '';
+  }
+
+  return `${SPANISH_MONTHS[latestPeriod.month - 1]} ${latestPeriod.year}`;
+}
+
 function normalizeDriveImage(url) {
   if (!url) {
     return '';
@@ -227,6 +277,7 @@ export function buildCatalogArtworks(records, { limit }) {
 
       return {
         artworkId: String(row.artwork_id || '').trim(),
+        dateLabel: String(row.date_label || '').trim(),
         dimensions: String(row.dimensions_clean || '').trim(),
         imageUrl: normalizeDriveImage(row.image_main),
         note,
@@ -300,8 +351,10 @@ export async function generateCatalog(options, dependencies = {}) {
   });
 
   const artworks = buildCatalogArtworks(records, { limit });
+  const catalogPeriodLabel = buildCatalogPeriodLabel(artworks);
   const html = renderCatalogHtml(artworks, {
     artistName,
+    catalogPeriodLabel,
     catalogTitle,
   });
 

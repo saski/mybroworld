@@ -14,52 +14,102 @@ function escapeHtml(value = '') {
     .replaceAll("'", '&#39;');
 }
 
-function renderArtworkPage(artwork) {
+function loadAssetDataUri(fileName, mimeType) {
+  try {
+    const assetPath = path.join(__dirname, '..', 'assets', fileName);
+    const assetBuffer = fs.readFileSync(assetPath);
+    return `data:${mimeType};base64,${assetBuffer.toString('base64')}`;
+  } catch {
+    return '';
+  }
+}
+
+const referenceCoverPhoto = loadAssetDataUri('reference-cover.jpg', 'image/jpeg');
+const referenceWordmark = loadAssetDataUri('reference-wordmark.png', 'image/png');
+const referenceWordmarkDark = loadAssetDataUri('reference-wordmark-dark.png', 'image/png');
+
+function renderWordmark({ artistName, className = '', tone = 'light' }) {
+  const classes = ['catalog-wordmark', className, tone === 'dark' ? 'catalog-wordmark-dark' : '']
+    .filter(Boolean)
+    .join(' ');
+  const source = tone === 'dark' && referenceWordmarkDark
+    ? referenceWordmarkDark
+    : referenceWordmark;
+
+  if (source) {
+    return `<img class="${classes}" src="${escapeHtml(source)}" alt="${escapeHtml(artistName)}" />`;
+  }
+
+  return `<div class="${classes} catalog-wordmark-text">${escapeHtml(artistName)}</div>`;
+}
+
+function renderCoverCaption({ catalogPeriodLabel, catalogTitle }) {
+  const secondaryLabel = catalogPeriodLabel || catalogTitle;
+
+  return `
+    <div class="cover-caption">
+      <span class="cover-caption-status">Catálogo</span>
+      <span class="cover-separator">|</span>
+      <span class="cover-caption-secondary">${escapeHtml(secondaryLabel)}</span>
+    </div>
+  `;
+}
+
+function renderArtworkPage(artwork, { artistName }) {
   const priceOrStatus = artwork.showPrice && artwork.price
-    ? `<div class="price">${escapeHtml(artwork.price)}</div>`
+    ? `<div class="artwork-price">${escapeHtml(artwork.price)}</div>`
     : artwork.statusLabel
-      ? `<div class="status">${escapeHtml(artwork.statusLabel)}</div>`
+      ? `<div class="artwork-status">${escapeHtml(artwork.statusLabel)}</div>`
       : '';
 
   const note = artwork.note
-    ? `<div class="note">${escapeHtml(artwork.note)}</div>`
+    ? `<div class="artwork-note">${escapeHtml(artwork.note)}</div>`
     : '';
 
-  const hasTechnique = Boolean(artwork.technique);
-  const hasDimensions = Boolean(artwork.dimensions);
+  const year = artwork.year
+    ? `<div class="artwork-year">(${escapeHtml(artwork.year)})</div>`
+    : '';
+
+  const dimensions = artwork.dimensions
+    ? `<div class="artwork-meta-line">${escapeHtml(artwork.dimensions)}</div>`
+    : '';
+
+  const technique = artwork.technique
+    ? `<div class="artwork-meta-line">${escapeHtml(artwork.technique)}</div>`
+    : '';
 
   return `
     <section class="page artwork-page">
-      <div class="image-frame">
-        <img src="${escapeHtml(artwork.imageUrl)}" alt="${escapeHtml(artwork.title)}" />
-      </div>
-      <div class="meta">
-        <div class="title">${escapeHtml(artwork.title)}</div>
-        <div class="meta-grid">
-          <div class="meta-item">
-            <div class="meta-label">Ano</div>
-            <div class="year">${escapeHtml(artwork.year)}</div>
-          </div>
-          ${hasTechnique ? `
-          <div class="meta-item">
-            <div class="meta-label">Tecnica</div>
-            <div class="technique">${escapeHtml(artwork.technique)}</div>
-          </div>` : ''}
-          ${hasDimensions ? `
-          <div class="meta-item">
-            <div class="meta-label">Dimensiones</div>
-            <div class="dimensions">${escapeHtml(artwork.dimensions)}</div>
-          </div>` : ''}
+      <div class="artwork-stage">
+        <div class="artwork-stage-frame">
+          <img class="artwork-image" src="${escapeHtml(artwork.imageUrl)}" alt="${escapeHtml(artwork.title)}" />
         </div>
-        ${priceOrStatus}
-        ${note}
+      </div>
+      <div class="artwork-footer">
+        <div class="artwork-details-stack">
+          <div class="artwork-title">${escapeHtml(artwork.title)}</div>
+          ${year}
+          ${dimensions}
+          ${technique}
+          ${priceOrStatus}
+          ${note}
+        </div>
+        ${renderWordmark({ artistName, className: 'artwork-wordmark', tone: 'dark' })}
       </div>
     </section>
   `;
 }
 
-export function renderCatalogHtml(artworks, { artistName, catalogTitle }) {
-  const pages = artworks.map(renderArtworkPage).join('\n');
+export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogPeriodLabel }) {
+  const pages = artworks
+    .map((artwork) => renderArtworkPage(artwork, { artistName }))
+    .join('\n');
+
+  const coverPhoto = referenceCoverPhoto || artworks[0]?.imageUrl || '';
+  const coverPhotoMarkup = coverPhoto
+    ? `<img class="cover-photo" src="${escapeHtml(coverPhoto)}" alt="${escapeHtml(`${artistName} cover portrait`)}" />`
+    : '<div class="cover-photo cover-photo-fallback"></div>';
+
   return `<!doctype html>
   <html lang="es">
     <head>
@@ -70,10 +120,12 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle }) {
     </head>
     <body>
       <section class="page cover-page">
-        <div class="cover-inner">
-          <h1>${escapeHtml(artistName)}</h1>
-          <div class="cover-subtitle">${escapeHtml(catalogTitle)}</div>
-          <div class="cover-edition">Versión de validación</div>
+        ${coverPhotoMarkup}
+        <div class="cover-header">
+          ${renderWordmark({ artistName, className: 'cover-wordmark', tone: 'dark' })}
+        </div>
+        <div class="cover-footer">
+          ${renderCoverCaption({ catalogPeriodLabel, catalogTitle })}
         </div>
       </section>
 
@@ -81,10 +133,10 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle }) {
 
       <section class="page closing-page">
         <div class="closing-inner">
-          <div class="closing-name">${escapeHtml(artistName)}</div>
           <div class="closing-contact">hola@luciastuy.com</div>
-          <div class="closing-contact">635 166 253</div>
+          <div class="closing-contact">635.166.253</div>
         </div>
+        ${renderWordmark({ artistName, className: 'closing-wordmark', tone: 'dark' })}
       </section>
     </body>
   </html>`;
