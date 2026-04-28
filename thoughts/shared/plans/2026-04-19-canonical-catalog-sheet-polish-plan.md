@@ -148,7 +148,7 @@ Use dropdown selectors for stable-value columns.
 
 Recommended validation shape:
 - `availability_flag_raw`: inline dropdown `Si`, `No`
-- `status_normalized`: range-backed dropdown using the full canonical enum from [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md)
+- `status_normalized`: range-backed dropdown using the full canonical enum from [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md)
 - `include_in_catalog`: inline dropdown `TRUE`, `FALSE`
 - `catalog_ready`: inline dropdown `TRUE`, `FALSE`
 - `location_clean`: range-backed dropdown from a helper list, but allow warnings instead of rejection if a genuinely new location is entered
@@ -247,13 +247,13 @@ Tasks:
 Expected modifications:
 - [catalog-generator/data/CATALOGO_BASE.csv](/Users/nacho/saski/mybroworld/catalog-generator/data/CATALOGO_BASE.csv)
 - Possible clarification in [catalog-generator/README.md](/Users/nacho/saski/mybroworld/catalog-generator/README.md)
-- Possible clarification in [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md)
+- Possible clarification in [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md)
 
 Automated success criteria:
 - `cd /Users/nacho/saski/mybroworld/catalog-generator && GOOGLE_SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/15wvN5g8pQmnjF13v3lLzrIbuFysJ7GaTUAb_ps9oqJw/export?format=csv&gid=102593401" npm run generate -- --output output/catalogo.pdf`
 - `rg -n "preview|submission_history|status_normalized|include_in_catalog|catalog_ready" /Users/nacho/saski/mybroworld/catalog-generator/data/CATALOGO_BASE.csv`
 - If docs are updated:
-  - `rg -n "preview|dropdown|validation|sheet" /Users/nacho/saski/mybroworld/catalog-generator/README.md /Users/nacho/saski/mybroworld/docs/artwork-data-contract.md`
+  - `rg -n "preview|dropdown|validation|sheet" catalog-generator/README.md thoughts/shared/docs/artwork-data-contract.md`
 
 ## Risks And Mitigations
 
@@ -379,7 +379,7 @@ Automated success criteria:
   - `status_normalized`
   - `include_in_catalog`
   - `catalog_ready`
-- Updated `docs/artwork-data-contract.md` so it reflects the new header-based contract and the sheet-only `preview` helper column.
+- Updated `thoughts/shared/docs/artwork-data-contract.md` so it reflects the new header-based contract and the sheet-only `preview` helper column.
 - Verified final catalog generation from the live canonical export succeeds with no generator code changes.
 
 ## Next Step

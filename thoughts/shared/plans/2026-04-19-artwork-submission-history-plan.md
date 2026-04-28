@@ -13,7 +13,7 @@ Add a dedicated field for “concursos y convocatorias a las que presenté la ob
   - `El Grifo / GBK Dusseldorf /`
 - The local catalog source mirror in the repo is [catalog-generator/data/CATALOGO_BASE.csv](/Users/nacho/saski/mybroworld/catalog-generator/data/CATALOGO_BASE.csv).
 - The PDF generator in [catalog-generator/src/generate.mjs](/Users/nacho/saski/mybroworld/catalog-generator/src/generate.mjs) parses CSV by header name, so adding a new column does not require column-order-sensitive changes.
-- The shared artwork contract in [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md) does not yet define a submissions field.
+- The shared artwork contract in [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md) does not yet define a submissions field.
 - The WooCommerce owned code currently includes only baseline artwork helpers in [wordpress/wp-content/mu-plugins/lucia-artwork-rules.php](/Users/nacho/saski/mybroworld/wordpress/wp-content/mu-plugins/lucia-artwork-rules.php); no product meta field or admin UI for artwork submissions exists yet.
 
 ## Desired End State
@@ -86,17 +86,17 @@ Formatting rules:
 Objective: document the new field before editing data so the spreadsheet, exports, and later WooCommerce work from the same definition.
 
 Tasks:
-- Update [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md) to add `submission_history` as an optional canonical artwork field.
+- Update [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md) to add `submission_history` as an optional canonical artwork field.
 - Record that the initial implementation is a single text field, not a normalized submission model.
 - Record that the spreadsheet column must be appended at the end of `Sheet1`.
 - Confirm that the catalog generator does not need logic changes just to tolerate an additional exported column.
 
 Expected file modifications:
-- [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md)
+- [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md)
 - This plan file for phase tracking: [thoughts/shared/plans/2026-04-19-artwork-submission-history-plan.md](/Users/nacho/saski/mybroworld/thoughts/shared/plans/2026-04-19-artwork-submission-history-plan.md)
 
 Automated success criteria:
-- `rg -n "submission_history" docs/artwork-data-contract.md`
+- `rg -n "submission_history" thoughts/shared/docs/artwork-data-contract.md`
 - `rg -n "columns: true" catalog-generator/src/generate.mjs`
 
 ## Phase 2: Add The New Column To Google Sheets Without Disturbing Existing Data
@@ -144,16 +144,16 @@ Tasks:
 - Refresh [catalog-generator/data/CATALOGO_BASE.csv](/Users/nacho/saski/mybroworld/catalog-generator/data/CATALOGO_BASE.csv) from the validated spreadsheet export.
 - Confirm whether [catalog-generator/README.md](/Users/nacho/saski/mybroworld/catalog-generator/README.md) should list `submission_history` as an optional accepted field.
 - Keep [catalog-generator/src/generate.mjs](/Users/nacho/saski/mybroworld/catalog-generator/src/generate.mjs) unchanged unless a future catalog display requirement needs the field.
-- Update [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md) if the client-approved wording changes during spreadsheet validation.
+- Update [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md) if the client-approved wording changes during spreadsheet validation.
 
 Expected file modifications:
 - [catalog-generator/data/CATALOGO_BASE.csv](/Users/nacho/saski/mybroworld/catalog-generator/data/CATALOGO_BASE.csv)
 - [catalog-generator/README.md](/Users/nacho/saski/mybroworld/catalog-generator/README.md)
-- [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md)
+- [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md)
 
 Automated success criteria:
 - `cd catalog-generator && npm run generate -- --input data/CATALOGO_BASE.csv --output output/catalogo.pdf`
-- `rg -n "submission_history" docs/artwork-data-contract.md catalog-generator/README.md catalog-generator/data/CATALOGO_BASE.csv`
+- `rg -n "submission_history" thoughts/shared/docs/artwork-data-contract.md catalog-generator/README.md catalog-generator/data/CATALOGO_BASE.csv`
 
 ## Phase 5: Introduce The Field Into WooCommerce After Spreadsheet Approval
 Objective: add one owned WooCommerce meta field that matches the validated spreadsheet contract.
@@ -172,13 +172,13 @@ Expected file modifications:
 - [wordpress/wp-content/mu-plugins/lucia-bootstrap.php](/Users/nacho/saski/mybroworld/wordpress/wp-content/mu-plugins/lucia-bootstrap.php)
 - Possible new file if the field handling grows beyond the current helpers:
   - [wordpress/wp-content/mu-plugins/lucia-artwork-meta.php](/Users/nacho/saski/mybroworld/wordpress/wp-content/mu-plugins/lucia-artwork-meta.php)
-- [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md)
+- [thoughts/shared/docs/artwork-data-contract.md](../docs/artwork-data-contract.md)
 
 Automated success criteria:
 - `php -l wordpress/wp-content/mu-plugins/lucia-artwork-rules.php`
 - `php -l wordpress/wp-content/mu-plugins/lucia-bootstrap.php`
 - If a new file is added: `php -l wordpress/wp-content/mu-plugins/lucia-artwork-meta.php`
-- `rg -n "submission_history|_lucia_submission_history" wordpress/wp-content/mu-plugins docs/artwork-data-contract.md`
+- `rg -n "submission_history|_lucia_submission_history" wordpress/wp-content/mu-plugins thoughts/shared/docs/artwork-data-contract.md`
 
 ## Phase 6: Add A One-Way Import Step Only After The WooCommerce Field Exists
 Objective: define a safe path from validated spreadsheet data into WooCommerce without coupling field creation to sync automation.
@@ -194,7 +194,7 @@ Tasks:
 
 Expected file modifications:
 - Possible new implementation doc:
-  - [docs/woocommerce-submission-history-import.md](/Users/nacho/saski/mybroworld/docs/woocommerce-submission-history-import.md)
+  - [thoughts/shared/docs/woocommerce-submission-history-import.md](../docs/woocommerce-submission-history-import.md)
 - Possible import helper script if later approved:
   - [scripts/](/Users/nacho/saski/mybroworld/scripts)
 

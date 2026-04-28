@@ -24,7 +24,26 @@ This workspace is owned-code-only. The imported production `Glacier` theme is au
 - `wp-content/mu-plugins/`
 - custom plugins we explicitly add later
 
-Use [woocommerce-audit.md](../docs/woocommerce-audit.md) to keep the production findings and architecture decision current.
+Use [woocommerce-audit.md](../thoughts/shared/docs/woocommerce-audit.md) to keep the production findings and architecture decision current.
+
+## Local Tooling
+
+Expected local tools:
+- PHP CLI and Composer from Homebrew
+- Docker CLI and Docker Compose from Homebrew
+- Colima as the local Docker daemon
+
+If Homebrew tools are not on `PATH`, run:
+
+```bash
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+```
+
+Before starting Docker services, make sure Colima is running:
+
+```bash
+colima start
+```
 
 ## Local Boot
 
@@ -73,4 +92,28 @@ docker compose --env-file wordpress/.env.example -f wordpress/docker-compose.yml
 docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml up -d
 docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml ps
 docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml run --rm wpcli core version
+```
+
+## Owned-Code Tests
+
+Run the fast PHP checks before changing the owned theme or `mu-plugins`:
+
+```bash
+scripts/wp-test-owned-code.sh
+```
+
+This command lints the owned PHP files and runs the lightweight PHP tests under `wordpress/wp-content/mu-plugins/tests/`.
+
+## Plugin Removal Smoke Checks
+
+Before and after deactivating a plugin, run:
+
+```bash
+WP_BASE_URL=http://localhost:8080 scripts/wp-plugin-removal-smoke.sh
+```
+
+For production or staging, point `WP_BASE_URL` at the target site. The default smoke paths are `/`, `/shop/`, `/cart/`, and `/checkout/`. Override them when needed:
+
+```bash
+WP_BASE_URL=https://www.luciastuy.com WP_SMOKE_PATHS="/,/shop/,/cart/,/checkout/" scripts/wp-plugin-removal-smoke.sh
 ```

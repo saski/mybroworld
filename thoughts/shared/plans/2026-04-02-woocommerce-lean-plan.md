@@ -95,7 +95,7 @@ Objective: understand what exists on DonDominio before choosing child theme vs r
 
 Execution status:
 - Complete. Production access was confirmed through WordPress admin, DonDominio, phpMyAdmin, and FTP.
-- Audit worksheet created and populated at `docs/woocommerce-audit.md`.
+- Audit worksheet created and populated at `thoughts/shared/docs/woocommerce-audit.md`.
 
 Tasks:
 - Record the active theme and parent theme.
@@ -107,7 +107,7 @@ Tasks:
 
 Expected files:
 - `wordpress/README.md`
-- `docs/woocommerce-audit.md` or `thoughts/shared/findings` equivalent
+- `thoughts/shared/docs/woocommerce-audit.md` or `thoughts/shared/findings` equivalent
 
 Success criteria:
 - We have an inventory of theme/plugins/access constraints.
@@ -175,7 +175,7 @@ Recommendation:
 
 Expected files:
 - `scripts/wp-push-theme.sh`
-- `docs/deploy-wordpress.md` or `wordpress/README.md`
+- `thoughts/shared/docs/deploy-wordpress.md` or `wordpress/README.md`
 
 Success criteria:
 - A code-only change can be deployed repeatably without touching WordPress core.
@@ -194,7 +194,7 @@ Tasks:
 Expected files:
 - `catalog-generator/src/normalize-artwork.*`
 - `wordpress/wp-content/mu-plugins/lucia-artwork-rules.php` or custom plugin equivalent
-- `docs/artwork-data-contract.md`
+- `thoughts/shared/docs/artwork-data-contract.md`
 
 Success criteria:
 - The same artwork status/price rules are applied consistently in web and PDF contexts.

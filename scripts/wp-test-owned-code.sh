@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+PHP_BIN="${PHP_BIN:-php}"
+
+if ! command -v "$PHP_BIN" >/dev/null 2>&1; then
+  echo "PHP is required. Install it with Homebrew or set PHP_BIN=/path/to/php." >&2
+  exit 1
+fi
+
+PHP_FILES="$(mktemp)"
+trap 'rm -f "$PHP_FILES"' EXIT
+
+find wordpress/wp-content/themes/luciastuy wordpress/wp-content/mu-plugins -name '*.php' -print > "$PHP_FILES"
+
+echo "Linting WordPress owned PHP files..."
+while IFS= read -r file_path; do
+  "$PHP_BIN" -l "$file_path" >/dev/null
+  echo "ok lint $file_path"
+done < "$PHP_FILES"
+
+echo "Running WordPress owned PHP tests..."
+for test_file in wordpress/wp-content/mu-plugins/tests/*-test.php; do
+  [ -e "$test_file" ] || continue
+  "$PHP_BIN" "$test_file"
+  echo "ok test $test_file"
+done
+
+echo "WordPress owned-code checks passed."

@@ -6,7 +6,7 @@ Realign the WooCommerce work to the original lean intent: this repository should
 This plan replaces the "pull production theme into git and work from there" drift with a stricter custom-code-only workflow: finish the audit, remove imported vendor theme payload from the repo, create an owned theme layer, make local development disposable and scriptable, and defer catalog/data convergence until the WordPress surface is stable.
 
 ## Current State
-- The repo already contains a WordPress workspace under `wordpress/`, deployment scripts under `scripts/`, and an audit doc at `docs/woocommerce-audit.md`.
+- The repo already contains a WordPress workspace under `wordpress/`, deployment scripts under `scripts/`, and an audit doc at `thoughts/shared/docs/woocommerce-audit.md`.
 - Production audit evidence shows the active theme is `Glacier`, and the stack is builder-heavy (`Elementor`, `Slider Revolution`, WPBakery/`js_composer`, bundled ACF Pro, outdated WooCommerce overrides).
 - The repo currently includes the imported production theme at `wordpress/wp-content/themes/glacier/`, including backup/demo artifacts and bundled assets that are not repo-owned custom code.
 - The repo includes a disposable local runtime scaffold (`wordpress/docker-compose.yml`, `wordpress/.env.example`, `wordpress/README.md`), but it has not been verified end to end.
@@ -78,11 +78,11 @@ scripts/
   wp-pull-db.sh
   wp-pull-uploads.sh
   wp-push-theme.sh
-docs/
+thoughts/shared/plans/
+thoughts/shared/docs/
   woocommerce-audit.md
   deploy-wordpress.md
   artwork-data-contract.md
-thoughts/shared/plans/
 ```
 
 ## Phase Plan
@@ -92,7 +92,7 @@ Objective: close the missing production facts and explicitly record that the rep
 Status: completed on 2026-04-02
 
 Tasks:
-- Finish the missing fields in `docs/woocommerce-audit.md`:
+- Finish the missing fields in `thoughts/shared/docs/woocommerce-audit.md`:
   - PHP version
   - exact WooCommerce version
   - child-theme status
@@ -100,16 +100,16 @@ Tasks:
   - caching layer
   - `mu-plugins` presence on production
   - whether WP-CLI is truly available
-- Add a short decision section to `docs/woocommerce-audit.md` stating that `Glacier` is builder-heavy and will be treated as migration source material, not as repo-owned runtime code.
+- Add a short decision section to `thoughts/shared/docs/woocommerce-audit.md` stating that `Glacier` is builder-heavy and will be treated as migration source material, not as repo-owned runtime code.
 - Update `wordpress/README.md` so it describes the owned-code-only strategy rather than the current mixed state.
 
 Expected file modifications:
-- `docs/woocommerce-audit.md`
+- `thoughts/shared/docs/woocommerce-audit.md`
 - `wordpress/README.md`
 
 Automated success criteria:
-- `rg -n "yes/no|unknown|^-$|PHP version:$|Caching layer in use:$|Parent theme:$|Child theme in use:$" docs/woocommerce-audit.md` returns no matches for unresolved placeholders.
-- `rg -n "migration source material|owned-code-only|do not track Glacier" docs/woocommerce-audit.md wordpress/README.md`
+- `rg -n "yes/no|unknown|^-$|PHP version:$|Caching layer in use:$|Parent theme:$|Child theme in use:$" thoughts/shared/docs/woocommerce-audit.md` returns no matches for unresolved placeholders.
+- `rg -n "migration source material|owned-code-only|do not track Glacier" thoughts/shared/docs/woocommerce-audit.md wordpress/README.md`
 
 ## Phase 2: Reset The Repo To Owned Code Only
 Objective: remove imported third-party theme payload from the maintained runtime surface and replace it with an owned theme skeleton.
@@ -178,13 +178,13 @@ Tasks:
 - Add a `--dry-run` mode to `scripts/wp-push-theme.sh` so remote targets can be inspected safely before upload.
 - Keep `scripts/wp-pull-db.sh` as DB staging only; do not turn it into an automated production import.
 - Keep `scripts/wp-pull-uploads.sh` limited to documented subset sync or placeholder behavior.
-- Update `docs/deploy-wordpress.md` with a pre-deploy checklist and post-deploy verification commands.
+- Update `thoughts/shared/docs/deploy-wordpress.md` with a pre-deploy checklist and post-deploy verification commands.
 
 Expected file modifications:
 - `scripts/wp-push-theme.sh`
 - `scripts/wp-pull-db.sh`
 - `scripts/wp-pull-uploads.sh`
-- `docs/deploy-wordpress.md`
+- `thoughts/shared/docs/deploy-wordpress.md`
 
 Automated success criteria:
 - `sh -n scripts/wp-push-theme.sh`
@@ -197,19 +197,19 @@ Objective: establish one explicit artwork model shared by the catalog generator 
 Status: completed on 2026-04-02
 
 Tasks:
-- Document the canonical artwork fields in `docs/artwork-data-contract.md`.
+- Document the canonical artwork fields in `thoughts/shared/docs/artwork-data-contract.md`.
 - Align the existing status-label rules in `wordpress/wp-content/mu-plugins/lucia-artwork-rules.php` with the documented contract.
 - Extract or codify matching normalization behavior in the catalog generator, starting from `catalog-generator/src/generate.mjs`.
 - Keep this phase documentation-first; do not build transport/sync code yet.
 
 Expected file modifications:
-- `docs/artwork-data-contract.md`
+- `thoughts/shared/docs/artwork-data-contract.md`
 - `wordpress/wp-content/mu-plugins/lucia-artwork-rules.php`
 - `catalog-generator/src/generate.mjs`
 
 Automated success criteria:
-- `test -f docs/artwork-data-contract.md`
-- `rg -n "gifted|sold|commissioned|not_for_sale|personal_collection|archived" docs/artwork-data-contract.md wordpress/wp-content/mu-plugins/lucia-artwork-rules.php catalog-generator/src/generate.mjs`
+- `test -f thoughts/shared/docs/artwork-data-contract.md`
+- `rg -n "gifted|sold|commissioned|not_for_sale|personal_collection|archived" thoughts/shared/docs/artwork-data-contract.md wordpress/wp-content/mu-plugins/lucia-artwork-rules.php catalog-generator/src/generate.mjs`
 
 ## Risks And Mitigations
 - Risk: removing `glacier` from the repo reduces short-term visual parity with production.

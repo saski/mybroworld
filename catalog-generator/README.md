@@ -65,7 +65,7 @@ This generator now ships with a first installable Google Sheets action:
 
 - Bound Apps Script source: [catalog-generator/apps-script](/Users/nacho/saski/mybroworld/catalog-generator/apps-script)
 - Local queue agent source: [catalog-generator/catalog-agent](/Users/nacho/saski/mybroworld/catalog-generator/catalog-agent)
-- Admin rollout guide: [docs/google-sheets-catalog-action.md](/Users/nacho/saski/mybroworld/docs/google-sheets-catalog-action.md)
+- Admin rollout guide: [thoughts/shared/docs/google-sheets-catalog-action.md](../thoughts/shared/docs/google-sheets-catalog-action.md)
 
 The Google Sheets flow supports:
 

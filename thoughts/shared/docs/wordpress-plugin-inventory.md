@@ -4,7 +4,7 @@
 Capture a stable inventory of the installed plugins so that “remove no longer needed plugins” can be done safely in staged batches.
 
 ## Source Of Truth (Captured Evidence)
-- Plugin list captured in `docs/woocommerce-audit.md` on `2026-04-02`.
+- Plugin list captured in `thoughts/shared/docs/woocommerce-audit.md` on `2026-04-02`.
 - Plugin versions were not captured in that audit snapshot; versions must be re-captured from `wp-admin/plugins.php` if needed.
 
 Primary reference page:
@@ -14,13 +14,13 @@ Primary reference page:
 
 | Plugin | Active | Type | Initial Classification | Version | Evidence |
 |---|---|---|---|---|---|
-| WooCommerce | yes | required | KEEP | unknown (pending capture) | `docs/woocommerce-audit.md` |
-| Elementor | yes | builder | CANDIDATE | unknown (pending capture) | `docs/woocommerce-audit.md` |
-| Slider Revolution | yes | builder | CANDIDATE | unknown (pending capture) | `docs/woocommerce-audit.md` |
-| Yoast SEO | yes | infrastructure | UNKNOWN | unknown (pending capture) | `docs/woocommerce-audit.md` |
-| Contact Form 7 | yes | content/editorial | UNKNOWN | unknown (pending capture) | `docs/woocommerce-audit.md` |
-| Site Kit by Google | yes | infrastructure | UNKNOWN | unknown (pending capture) | `docs/woocommerce-audit.md` |
-| All-in-One WP Migration | yes | infrastructure | CANDIDATE | unknown (pending capture) | `docs/woocommerce-audit.md` |
+| WooCommerce | yes | required | KEEP | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
+| Elementor | yes | builder | CANDIDATE | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
+| Slider Revolution | yes | builder | CANDIDATE | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
+| Yoast SEO | yes | infrastructure | UNKNOWN | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
+| Contact Form 7 | yes | content/editorial | UNKNOWN | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
+| Site Kit by Google | yes | infrastructure | UNKNOWN | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
+| All-in-One WP Migration | yes | infrastructure | CANDIDATE | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
 
 ## Local Backup Evidence (For Staged Rollback in Development)
 

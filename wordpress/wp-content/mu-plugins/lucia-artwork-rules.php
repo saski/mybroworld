@@ -17,6 +17,7 @@ function lucia_normalize_artwork_status(string $status): string
         'exchanged', 'exchange', 'intercambio', 'traded' => 'exchanged',
         'sold', 'vendido' => 'sold',
         'commissioned', 'commission', 'encargo' => 'commissioned',
+        'reserved', 'reservado', 'reservada' => 'reserved',
         'not_for_sale', 'nfs', 'no_disponible' => 'not_for_sale',
         'personal_collection', 'collection', 'coleccion_personal' => 'personal_collection',
         'archived', 'archive', 'archivada' => 'archived',
@@ -28,6 +29,7 @@ function lucia_artwork_status_label(string $status): string
 {
     return match (lucia_normalize_artwork_status($status)) {
         'gifted', 'exchanged', 'personal_collection', 'archived' => 'Obra histórica',
+        'reserved' => 'Reservada',
         'sold', 'commissioned', 'not_for_sale' => 'Obra no disponible',
         default => '',
     };

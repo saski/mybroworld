@@ -31,7 +31,7 @@
 - Files created/modified:
   - `.agents/skills/mybroworld-sheet-reviewer/SKILL.md` (updated)
   - `.agents/skills/mybroworld-sheet-reviewer/references/project-criteria.md` (updated)
-  - `docs/artwork-data-contract.md` (updated)
+  - `thoughts/shared/docs/artwork-data-contract.md` (updated)
   - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/contracts.md` (created)
   - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/task_plan.md` (updated)
   - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/findings.md` (updated)
@@ -104,7 +104,7 @@
   - `catalog-generator/test/catalog-action-contract.test.mjs` (created)
   - `catalog-generator/test/catalog-agent-core.test.mjs` (created)
   - `catalog-generator/test/catalog-generator-cli.test.mjs` (created)
-  - `docs/google-sheets-catalog-action.md` (created)
+  - `thoughts/shared/docs/google-sheets-catalog-action.md` (created)
   - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/progress.md` (updated)
   - `thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/task_plan.md` (updated)
 

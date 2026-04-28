@@ -57,7 +57,7 @@
 
 - [catalog-generator/src/generate.mjs](/Users/nacho/saski/mybroworld/catalog-generator/src/generate.mjs)
 - [catalog-generator/README.md](/Users/nacho/saski/mybroworld/catalog-generator/README.md)
-- [docs/artwork-data-contract.md](/Users/nacho/saski/mybroworld/docs/artwork-data-contract.md)
+- [thoughts/shared/docs/artwork-data-contract.md](../../docs/artwork-data-contract.md)
 - [contracts.md](/Users/nacho/saski/mybroworld/thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/contracts.md)
 - [Custom Menus in Google Workspace](https://developers.google.com/apps-script/guides/menus)
 - [Container-bound Scripts](https://developers.google.com/apps-script/guides/bound)

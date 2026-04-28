@@ -26,7 +26,7 @@ Use repository artifacts in this order when reconstructing context:
 1. `AGENTS.md`
 2. Task-specific rules under `.agents/rules/`
 3. Task-specific skills under `.agents/skills/`
-4. Canonical operational docs under `docs/`
+4. Canonical operational docs under `thoughts/shared/docs/`
 5. Current status docs such as `PROJECT_STATUS.md`
 6. Active plan artifacts under `thoughts/shared/plans/`
 7. Code, tests, configuration, and the current workspace diff
@@ -37,7 +37,7 @@ Before finishing a task, persist reusable knowledge in the correct place:
 
 - Cross-project working method or chat bootstrap rule: update `AGENTS.md` or this file.
 - Spreadsheet review criteria or judgment model: update `.agents/rules/mybroworld-sheet-reviewer-evolution.md`, `.agents/skills/mybroworld-sheet-reviewer/SKILL.md`, and `.agents/skills/mybroworld-sheet-reviewer/references/project-criteria.md` when the change is reusable.
-- User-facing or operator-facing behavior: update the relevant document under `docs/`.
+- User-facing or operator-facing behavior: update the relevant document under `thoughts/shared/docs/`.
 - Stable implementation behavior: encode it in code and tests, then document only what operators need.
 - Ongoing execution state, milestones, or next steps: update `PROJECT_STATUS.md` or the relevant file under `thoughts/shared/plans/`.
 

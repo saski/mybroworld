@@ -51,9 +51,9 @@ Use a conservative “inventory → classify → deactivate → verify → delet
 ### Phase 1: Preflight Backup + Plugin Inventory (Capture Facts First)
 - [x] Add repeatable backup automation scripts (`scripts/wp-backup*.sh`)
 - [ ] Create backup artifacts (remote) (DB + `wp-content/` backup records)
-- [x] Export plugin inventory (remote) - using existing captured evidence from `docs/woocommerce-audit.md` (deviation)
-- [x] Create inventory file (`docs/wordpress-plugin-inventory.md`)
-- [x] Create removal log (`docs/wordpress-plugin-removal-log.md`) (earlier than planned)
+- [x] Export plugin inventory (remote) - using existing captured evidence from `thoughts/shared/docs/woocommerce-audit.md` (deviation)
+- [x] Create inventory file (`thoughts/shared/docs/wordpress-plugin-inventory.md`)
+- [x] Create removal log (`thoughts/shared/docs/wordpress-plugin-removal-log.md`) (earlier than planned)
 
 ### Phase 2: Classify Candidates + Deactivate One Batch at a Time
 - [ ] Classify plugins into `KEEP` / `CANDIDATE` / `UNKNOWN`
@@ -64,7 +64,7 @@ Use a conservative “inventory → classify → deactivate → verify → delet
 - [ ] Delete confirmed unused plugins only after Phase 2 verification
 
 ### Phase 4: Monitoring Window + Documentation Finalization
-- [ ] Monitor for stability, update `docs/wordpress-plugin-removal-log.md` with final statuses
+- [ ] Monitor for stability, update `thoughts/shared/docs/wordpress-plugin-removal-log.md` with final statuses
 
 ### Phase 1: Preflight Backup + Plugin Inventory (Capture Facts First)
 
@@ -82,15 +82,15 @@ Create a reliable record of what plugins exist now and ensure rollback is possib
      - version
      - author (optional but useful)
 3. **Create inventory file (local documentation)**
-   - `docs/wordpress-plugin-inventory.md` (or `docs/wordpress-plugin-inventory.csv`)
+   - `thoughts/shared/docs/wordpress-plugin-inventory.md` (or `thoughts/shared/docs/wordpress-plugin-inventory.csv`)
 
 #### Expected File Modifications (Documentation)
-- `docs/wordpress-plugin-inventory.md` (created/updated by you)
-- `docs/wordpress-plugin-removal-log.md` (created/updated by you in later phases)
+- `thoughts/shared/docs/wordpress-plugin-inventory.md` (created/updated by you)
+- `thoughts/shared/docs/wordpress-plugin-removal-log.md` (created/updated by you in later phases)
 
 #### Success Criteria (Automated / Objective)
 - Backup exists and is restorable (e.g., backup filenames are recorded and checksums can be verified if available).
-- `docs/wordpress-plugin-inventory.md` exists and lists all currently installed plugins shown in the admin plugins page.
+- `thoughts/shared/docs/wordpress-plugin-inventory.md` exists and lists all currently installed plugins shown in the admin plugins page.
 - If WP-CLI is available on the host, capture plugin status as evidence (examples):
   - `wp plugin list --status=active`
   - `wp plugin list --status=inactive`
@@ -111,7 +111,7 @@ Determine which plugins are truly unused by deactivating candidates and running 
 2. **Deactivate candidates (batch size = 1 is safest)**
    - For each `CANDIDATE` plugin:
      - Deactivate in WordPress admin
-     - Record timestamp + plugin name in `docs/wordpress-plugin-removal-log.md`
+     - Record timestamp + plugin name in `thoughts/shared/docs/wordpress-plugin-removal-log.md`
 3. **Smoke tests**
    - Run quick checks immediately after deactivation:
      - Home page loads (no fatal errors)
@@ -125,7 +125,7 @@ Determine which plugins are truly unused by deactivating candidates and running 
      - Do not attempt deletion for that plugin.
 
 #### Changes Required (Documentation)
-- `docs/wordpress-plugin-removal-log.md` updated after each deactivation + result.
+- `thoughts/shared/docs/wordpress-plugin-removal-log.md` updated after each deactivation + result.
 
 #### Success Criteria (Automated / Objective)
 - For every plugin that remains in `CANDIDATE` after deactivation:
@@ -185,7 +185,7 @@ Confirm the site stays stable over a short monitoring period and finalize eviden
      - checkout/cart behavior (if applicable)
 2. **Documentation finalization**
    - Update:
-     - `docs/wordpress-plugin-removal-log.md` with final statuses:
+     - `thoughts/shared/docs/wordpress-plugin-removal-log.md` with final statuses:
        - `Deleted`
        - `Kept (rolled back)`
        - `Not touched`
@@ -195,7 +195,7 @@ Confirm the site stays stable over a short monitoring period and finalize eviden
 #### Success Criteria (Automated / Objective)
 - No new fatal PHP errors attributed to removed plugins appear in logs for the monitoring window.
 - Critical flows you validated in Phase 2 continue to work.
-- `docs/wordpress-plugin-removal-log.md` is complete and contains:
+- `thoughts/shared/docs/wordpress-plugin-removal-log.md` is complete and contains:
   - removed plugin names
   - timestamps
   - verification notes/screenshots (if you choose to add them)
@@ -219,6 +219,5 @@ Confirm the site stays stable over a short monitoring period and finalize eviden
 
 ## Completion Message (for your workflow)
 When Phase 1-4 are complete:
-- Review `docs/wordpress-plugin-inventory.md` + `docs/wordpress-plugin-removal-log.md`
+- Review `thoughts/shared/docs/wordpress-plugin-inventory.md` + `thoughts/shared/docs/wordpress-plugin-removal-log.md`
 - Confirm no rollbacks occurred after the delete stage
-

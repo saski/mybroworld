@@ -23,3 +23,12 @@ Track each plugin you consider removing so you can prove:
 
 *(No entries yet — Phase 1 created this log file.)*
 
+## Standard Verification Command
+
+Run this before and after each plugin deactivation or deletion:
+
+```bash
+WP_BASE_URL=https://www.luciastuy.com scripts/wp-plugin-removal-smoke.sh
+```
+
+Record the command output summary in the `Evidence` column for the affected plugin.
