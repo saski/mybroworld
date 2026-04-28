@@ -102,7 +102,17 @@ Run the fast PHP checks before changing the owned theme or `mu-plugins`:
 scripts/wp-test-owned-code.sh
 ```
 
-This command lints the owned PHP files and runs the lightweight PHP tests under `wordpress/wp-content/mu-plugins/tests/`.
+This command lints the owned PHP files, runs the lightweight PHP tests under `wordpress/wp-content/mu-plugins/tests/`, and runs the WordPress smoke helper unit tests.
+
+## Full Local Validation
+
+Run the project-level validation loop before committing WordPress simplification or plugin-removal changes:
+
+```bash
+scripts/auto-validate.sh
+```
+
+This command validates active OpenSpec changes, runs the WordPress owned-code checks, runs catalog-generator tests, and checks the current diff for whitespace or conflict-marker issues.
 
 ## Plugin Removal Smoke Checks
 

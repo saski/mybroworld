@@ -28,4 +28,12 @@ for test_file in wordpress/wp-content/mu-plugins/tests/*-test.php; do
   echo "ok test $test_file"
 done
 
+if command -v node >/dev/null 2>&1; then
+  echo "Running WordPress smoke helper tests..."
+  node --test scripts/wp-smoke-test.test.mjs
+else
+  echo "Node.js is required to run WordPress smoke helper tests." >&2
+  exit 1
+fi
+
 echo "WordPress owned-code checks passed."

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-const DEFAULT_PATHS = ['/', '/shop/', '/cart/', '/checkout/'];
+import { pathToFileURL } from 'node:url';
+
+export const DEFAULT_PATHS = ['/', '/shop/', '/cart/', '/checkout/'];
 const ERROR_PATTERNS = [
   /Fatal error/i,
   /Parse error/i,
@@ -9,7 +11,7 @@ const ERROR_PATTERNS = [
   /Error establishing a database connection/i,
 ];
 
-function parseSmokePaths(value) {
+export function parseSmokePaths(value) {
   if (!value) {
     return DEFAULT_PATHS;
   }
@@ -20,7 +22,7 @@ function parseSmokePaths(value) {
     .filter(Boolean);
 }
 
-function buildUrl(baseUrl, path) {
+export function buildUrl(baseUrl, path) {
   return new URL(path, baseUrl).toString();
 }
 
@@ -37,11 +39,11 @@ async function fetchPage(url) {
   };
 }
 
-function findErrorPattern(body) {
+export function findErrorPattern(body) {
   return ERROR_PATTERNS.find((pattern) => pattern.test(body));
 }
 
-async function run() {
+export async function run() {
   const baseUrl = process.env.WP_BASE_URL || process.env.WORDPRESS_BASE_URL || 'http://localhost:8080';
   const paths = parseSmokePaths(process.env.WP_SMOKE_PATHS);
   const failures = [];
@@ -82,4 +84,6 @@ async function run() {
   }
 }
 
-await run();
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await run();
+}
