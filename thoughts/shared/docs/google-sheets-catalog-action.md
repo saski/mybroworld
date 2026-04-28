@@ -1,13 +1,13 @@
 # Google Sheets Catalog Action
 
-This guide documents the first local rollout of the Google Sheets catalog action described in [thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/contracts.md](/Users/nacho/saski/mybroworld/thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/contracts.md).
+This guide documents the first local rollout of the Google Sheets catalog action described in [thoughts/shared/plans/2026-04-19-google-sheets-catalog-action/contracts.md](../plans/2026-04-19-google-sheets-catalog-action/contracts.md).
 
 ## Components
 
 The implementation is split into two installable parts:
 
-1. A bound Google Apps Script project stored in [catalog-generator/apps-script](/Users/nacho/saski/mybroworld/catalog-generator/apps-script)
-2. A local `catalog-agent` process stored in [catalog-generator/catalog-agent](/Users/nacho/saski/mybroworld/catalog-generator/catalog-agent)
+1. A bound Google Apps Script project stored in [catalog-generator/apps-script](../../../catalog-generator/apps-script)
+2. A local `catalog-agent` process stored in [catalog-generator/catalog-agent](../../../catalog-generator/catalog-agent)
 
 The sheet writes jobs into `catalog_jobs`. The local agent claims only jobs whose `execution_profile` matches its own config.
 
@@ -15,7 +15,7 @@ The sheet writes jobs into `catalog_jobs`. The local agent claims only jobs whos
 
 1. Open the target spreadsheet.
 2. Create or open the bound Apps Script project.
-3. Copy the files from [catalog-generator/apps-script](/Users/nacho/saski/mybroworld/catalog-generator/apps-script) into the bound project:
+3. Copy the files from [catalog-generator/apps-script](../../../catalog-generator/apps-script) into the bound project:
    - `Code.gs`
    - `CatalogSidebar.html`
    - `appsscript.json`
@@ -30,7 +30,7 @@ The sheet writes jobs into `catalog_jobs`. The local agent claims only jobs whos
 
 ## Local Agent Install
 
-1. Copy [catalog-generator/catalog-agent/config.example.json](/Users/nacho/saski/mybroworld/catalog-generator/catalog-agent/config.example.json) to the target macOS user profile:
+1. Copy [catalog-generator/catalog-agent/config.example.json](../../../catalog-generator/catalog-agent/config.example.json) to the target macOS user profile:
    - `~/Library/Application Support/MyBroworld/catalog-agent/config.json`
 2. Update the copied config with the real local paths for that user:
    - `profileKey`
@@ -44,7 +44,7 @@ The sheet writes jobs into `catalog_jobs`. The local agent claims only jobs whos
 4. Run the one-time authorization flow:
 
 ```bash
-cd /Users/nacho/saski/mybroworld/catalog-generator
+cd /path/to/mybroworld/catalog-generator
 npm run catalog-agent:authorize -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 
@@ -52,14 +52,14 @@ npm run catalog-agent:authorize -- --config ~/Library/Application\ Support/MyBro
 6. Run one controlled poll:
 
 ```bash
-cd /Users/nacho/saski/mybroworld/catalog-generator
+cd /path/to/mybroworld/catalog-generator
 npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 
 7. After verification, install the user-level LaunchAgent that runs:
 
 ```bash
-cd /Users/nacho/saski/mybroworld/catalog-generator
+cd /path/to/mybroworld/catalog-generator
 npm run catalog-agent -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 

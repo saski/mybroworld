@@ -63,8 +63,8 @@ Minimum columns:
 
 This generator now ships with a first installable Google Sheets action:
 
-- Bound Apps Script source: [catalog-generator/apps-script](/Users/nacho/saski/mybroworld/catalog-generator/apps-script)
-- Local queue agent source: [catalog-generator/catalog-agent](/Users/nacho/saski/mybroworld/catalog-generator/catalog-agent)
+- Bound Apps Script source: [catalog-generator/apps-script](apps-script)
+- Local queue agent source: [catalog-generator/catalog-agent](catalog-agent)
 - Admin rollout guide: [thoughts/shared/docs/google-sheets-catalog-action.md](../thoughts/shared/docs/google-sheets-catalog-action.md)
 
 The Google Sheets flow supports:
@@ -102,5 +102,5 @@ npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld
 - The PDF is rendered with HTML/CSS and Puppeteer.
 - The stylesheet is tuned for portrait A4.
 - The current template follows the original editorial PDF more closely: section-led photographic cover, white artwork pages with a top kicker and centered metadata block, and a centered closing brand stack.
-- Reference art-direction assets live in [catalog-generator/assets](/Users/nacho/saski/mybroworld/catalog-generator/assets).
+- Reference art-direction assets live in [catalog-generator/assets](assets).
 - You can refine the visual design in `src/styles.css` and `src/template.js`.

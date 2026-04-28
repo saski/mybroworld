@@ -1,1 +1,4 @@
 scripts/wp-remote.env
+
+# Local AI assistant state
+.claude/
