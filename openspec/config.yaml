@@ -1,0 +1,22 @@
+schema: spec-driven
+
+context: |
+  Project: MyBroworld / Lucia Stuy catalog and ecommerce support.
+  Supporting documents, plans, research, and operational notes live under thoughts/shared/.
+  Canonical operational docs live under thoughts/shared/docs/.
+  Current technical surfaces include catalog-generator/ for PDF catalog generation and wordpress/ for owned WordPress/WooCommerce code.
+  The project favors baby steps, TDD, explicit customer feedback loops, vanilla WooCommerce where possible, and tests before risky plugin removal.
+
+rules:
+  proposal:
+    - Keep scope explicit and separate customer-facing decisions from implementation work.
+    - Identify which decisions must be made before code changes.
+  specs:
+    - Use SHALL requirements with Given/When/Then scenarios.
+    - Include acceptance criteria for data, catalog, WordPress, WooCommerce, and testing flows when affected.
+  design:
+    - Prefer incremental brownfield changes over rewrites.
+    - Call out plugin, dependency, and rollback risks.
+  tasks:
+    - Keep tasks sequential and small enough to review one step at a time.
+    - Put validation immediately after each risky change.

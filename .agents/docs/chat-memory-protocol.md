@@ -16,8 +16,9 @@ Run these steps before making assumptions or edits:
 2. Read this file.
 3. Load any task-specific rule or skill triggered by the request.
 4. Read the most relevant canonical docs and status artifacts for the active workstream.
-5. Inspect the current code, tests, and workspace diff before changing anything.
-6. Summarize the applicable rules, assumptions, and sources of truth before acting.
+5. Read active OpenSpec changes under `openspec/changes/` when the task touches planned or proposed work.
+6. Inspect the current code, tests, and workspace diff before changing anything.
+7. Summarize the applicable rules, assumptions, and sources of truth before acting.
 
 ## Source Priority
 
@@ -28,8 +29,9 @@ Use repository artifacts in this order when reconstructing context:
 3. Task-specific skills under `.agents/skills/`
 4. Canonical operational docs under `thoughts/shared/docs/`
 5. Current status docs such as `PROJECT_STATUS.md`
-6. Active plan artifacts under `thoughts/shared/plans/`
-7. Code, tests, configuration, and the current workspace diff
+6. Active OpenSpec changes under `openspec/changes/`
+7. Active plan artifacts under `thoughts/shared/plans/`
+8. Code, tests, configuration, and the current workspace diff
 
 ## Writeback Rules
 
@@ -39,7 +41,8 @@ Before finishing a task, persist reusable knowledge in the correct place:
 - Spreadsheet review criteria or judgment model: update `.agents/rules/mybroworld-sheet-reviewer-evolution.md`, `.agents/skills/mybroworld-sheet-reviewer/SKILL.md`, and `.agents/skills/mybroworld-sheet-reviewer/references/project-criteria.md` when the change is reusable.
 - User-facing or operator-facing behavior: update the relevant document under `thoughts/shared/docs/`.
 - Stable implementation behavior: encode it in code and tests, then document only what operators need.
-- Ongoing execution state, milestones, or next steps: update `PROJECT_STATUS.md` or the relevant file under `thoughts/shared/plans/`.
+- Proposed roadmap or implementation plan: create or update the relevant OpenSpec change under `openspec/changes/`.
+- Ongoing execution state, milestones, or next steps outside OpenSpec scope: update `PROJECT_STATUS.md` or the relevant file under `thoughts/shared/plans/`.
 
 Do not promote a one-off anecdote into project policy unless the user states it as a recurring rule or the same pattern is evidenced multiple times.
 
