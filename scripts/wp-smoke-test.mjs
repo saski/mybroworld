@@ -16,10 +16,12 @@ export function parseSmokePaths(value) {
     return DEFAULT_PATHS;
   }
 
-  return value
+  const paths = value
     .split(',')
     .map((path) => path.trim())
     .filter(Boolean);
+
+  return paths.length > 0 ? paths : DEFAULT_PATHS;
 }
 
 export function buildUrl(baseUrl, path) {
