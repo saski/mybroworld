@@ -44,14 +44,19 @@ REMOTE_USER="${WP_REMOTE_USER:-<set WP_REMOTE_USER>}"
 REMOTE_PATH="${WP_REMOTE_PATH:-<set WP_REMOTE_PATH>}"
 REMOTE_THEME_DIR="${WP_REMOTE_THEME_DIR:-$REMOTE_PATH/wp-content/themes/luciastuy}"
 REMOTE_MU_PLUGIN_DIR="${WP_REMOTE_MU_PLUGIN_DIR:-$REMOTE_PATH/wp-content/mu-plugins}"
+REMOTE_USER_LABEL="$REMOTE_USER"
+
+if [ "$REMOTE_USER_LABEL" != "<set WP_REMOTE_USER>" ]; then
+  REMOTE_USER_LABEL="<configured WP_REMOTE_USER>"
+fi
 
 if [ "$DRY_RUN" -eq 1 ]; then
   cat <<MSG
 Dry run only. Nothing will be uploaded.
 Local theme source: $LOCAL_THEME_DIR
-Remote theme target: $REMOTE_USER@$REMOTE_HOST:$REMOTE_THEME_DIR
+Remote theme target: $REMOTE_USER_LABEL@$REMOTE_HOST:$REMOTE_THEME_DIR
 Local mu-plugin source: $LOCAL_MU_PLUGIN_DIR
-Remote mu-plugin target: $REMOTE_USER@$REMOTE_HOST:$REMOTE_MU_PLUGIN_DIR
+Remote mu-plugin target: $REMOTE_USER_LABEL@$REMOTE_HOST:$REMOTE_MU_PLUGIN_DIR
 MSG
   exit 0
 fi

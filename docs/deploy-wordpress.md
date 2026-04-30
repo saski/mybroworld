@@ -38,6 +38,10 @@ Populate these environment variables before running the scripts if they are not 
 - `WP_REMOTE_MU_PLUGIN_DIR` optional
 
 ## Deployment Commands
+- Owned-code verification: `scripts/wp-test-owned-code.sh`
+  - Uses local `php` when available.
+  - If local PHP is unavailable, rerun on a Docker-enabled machine with `WP_TEST_USE_DOCKER=1 scripts/wp-test-owned-code.sh`.
+  - Docker is opt-in so routine verification does not touch Docker on machines where it should stay idle.
 - Audit pull of the current production theme: `scripts/wp-pull-theme.sh`
 - Dry-run preview: `scripts/wp-push-theme.sh --dry-run`
 - Owned theme and `mu-plugin` upload: `scripts/wp-push-theme.sh`
@@ -48,9 +52,12 @@ Populate these environment variables before running the scripts if they are not 
 - confirm the owned theme source exists at `wordpress/wp-content/themes/luciastuy`
 - confirm the `mu-plugin` source exists at `wordpress/wp-content/mu-plugins`
 - confirm `scripts/wp-remote.env` points at `ftp.luciastuy.com` and `/public`
+- run `scripts/wp-test-owned-code.sh`; if local PHP is unavailable, run the same check on the destination machine
 - run `scripts/wp-push-theme.sh --dry-run` and verify the remote target paths
 - verify `WP_REMOTE_HOST`, `WP_REMOTE_USER`, and `WP_REMOTE_PATH` point to production before any upload
 - keep database changes and uploads changes out of this deployment step
+
+Dry-run output masks any configured `WP_REMOTE_USER` value as `<configured WP_REMOTE_USER>` so handoff notes can include deployment targets without exposing credentials.
 
 ## Post-Deploy Verification
 - `curl -I https://www.luciastuy.com`
