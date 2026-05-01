@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  REVIEW_STATUS_VALUES,
+  buildCatalogReviewRecord,
   buildQueuedJobRecord,
+  JOB_HEADERS,
   REQUIRED_COMPATIBILITY_HEADERS,
   getCompatibleTabs,
   resolveJobSheetSelection,
@@ -137,5 +140,66 @@ test('buildQueuedJobRecord applies defaults and blocks missing folder configurat
         scopeMode: 'current_tab',
       }),
     /output folder/i,
+  );
+});
+
+test('job contract includes blank review fields for WordPress catalog review', () => {
+  assert.deepEqual(
+    JOB_HEADERS.slice(-4),
+    ['review_status', 'reviewed_at', 'reviewed_by', 'review_notes'],
+  );
+
+  const compatibleTabs = getCompatibleTabs({
+    activeSheetId: 55,
+    tabs: [
+      { sheetId: 55, title: '2026', hidden: false, headers: buildHeaders() },
+    ],
+  });
+
+  const queuedJob = buildQueuedJobRecord({
+    activeSheetId: 55,
+    catalogTitle: 'Catalog 2026',
+    compatibleTabs,
+    createdAtIso: '2026-05-01T10:15:00.000Z',
+    executionProfile: {
+      defaultDriveFolderId: 'drive-folder-1',
+      profileKey: 'lucia-mybrocorp',
+    },
+    randomSuffix: 'cd34',
+    scopeMode: 'current_tab',
+  });
+
+  assert.equal(queuedJob.review_status, '');
+  assert.equal(queuedJob.reviewed_at, '');
+  assert.equal(queuedJob.reviewed_by, '');
+  assert.equal(queuedJob.review_notes, '');
+});
+
+test('buildCatalogReviewRecord validates approval states for trusted operator UIs', () => {
+  assert.deepEqual(REVIEW_STATUS_VALUES, ['approved', 'needs_changes']);
+
+  assert.deepEqual(
+    buildCatalogReviewRecord({
+      reviewNotes: 'Use the tighter cover crop.',
+      reviewStatus: ' needs changes ',
+      reviewedAtIso: '2026-05-01T12:00:00.000Z',
+      reviewedBy: 'Lucia',
+    }),
+    {
+      review_notes: 'Use the tighter cover crop.',
+      review_status: 'needs_changes',
+      reviewed_at: '2026-05-01T12:00:00.000Z',
+      reviewed_by: 'Lucia',
+    },
+  );
+
+  assert.throws(
+    () =>
+      buildCatalogReviewRecord({
+        reviewStatus: 'pending',
+        reviewedAtIso: '2026-05-01T12:00:00.000Z',
+        reviewedBy: 'Lucia',
+      }),
+    /review status/i,
   );
 });

@@ -8,6 +8,9 @@ import { renderCatalogHtml } from './template.js';
 const DEFAULT_ARTIST_NAME = 'Lucía Astuy';
 const DEFAULT_CATALOG_TITLE = 'Catálogo 2026';
 const DEFAULT_OUTPUT_PATH = 'output/catalogo.pdf';
+const PDF_RENDER_TIMEOUT_MS = 120_000;
+const PDF_IMAGE_LOAD_TIMEOUT_MS = 60_000;
+const MACOS_GOOGLE_CHROME_EXECUTABLE_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const SPANISH_MONTHS = [
   'Enero',
   'Febrero',
@@ -31,6 +34,64 @@ class CatalogCliError extends Error {
     this.exitCode = exitCode;
     this.cause = cause;
   }
+}
+
+async function pathExists(candidatePath) {
+  try {
+    await fs.access(candidatePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function resolvePuppeteerLaunchOptions({
+  env = process.env,
+  executablePath = '',
+  fileExists = pathExists,
+} = {}) {
+  const configuredExecutablePath = String(
+    executablePath || env.PUPPETEER_EXECUTABLE_PATH || '',
+  ).trim();
+
+  if (configuredExecutablePath) {
+    return {
+      executablePath: configuredExecutablePath,
+      headless: true,
+    };
+  }
+
+  if (await fileExists(MACOS_GOOGLE_CHROME_EXECUTABLE_PATH)) {
+    return {
+      executablePath: MACOS_GOOGLE_CHROME_EXECUTABLE_PATH,
+      headless: true,
+    };
+  }
+
+  return {
+    headless: true,
+  };
+}
+
+export async function waitForCatalogImageElements(page, timeoutMs = PDF_IMAGE_LOAD_TIMEOUT_MS) {
+  await page.evaluate(async (maxWaitMs) => {
+    const pendingImages = Array.from(document.images)
+      .filter((image) => !image.complete);
+
+    if (pendingImages.length === 0) {
+      return;
+    }
+
+    await Promise.race([
+      Promise.all(pendingImages.map((image) => new Promise((resolve) => {
+        image.addEventListener('load', resolve, { once: true });
+        image.addEventListener('error', resolve, { once: true });
+      }))),
+      new Promise((resolve) => {
+        setTimeout(resolve, maxWaitMs);
+      }),
+    ]);
+  }, timeoutMs);
 }
 
 function parseArgs(argv) {
@@ -221,6 +282,7 @@ function resolveOptions({ argv, env }) {
   const outputPath = args.output || env.CATALOG_OUTPUT || DEFAULT_OUTPUT_PATH;
   const catalogTitle = args['catalog-title'] || env.CATALOG_TITLE || DEFAULT_CATALOG_TITLE;
   const artistName = args['artist-name'] || env.CATALOG_ARTIST_NAME || DEFAULT_ARTIST_NAME;
+  const puppeteerExecutablePath = args['puppeteer-executable-path'] || env.PUPPETEER_EXECUTABLE_PATH || '';
   const limit = parseLimit(args.limit);
 
   if (!inputPath && !inputUrl) {
@@ -238,6 +300,7 @@ function resolveOptions({ argv, env }) {
     inputUrl,
     limit,
     outputPath,
+    puppeteerExecutablePath,
   };
 }
 
@@ -310,13 +373,23 @@ export function buildCatalogArtworks(records, { limit }) {
   return Number.isFinite(limit) ? artworks.slice(0, limit) : artworks;
 }
 
-async function defaultRenderPdf({ html, outputPath }) {
+async function defaultRenderPdf({ html, outputPath, puppeteerExecutablePath }) {
   const puppeteer = await import('puppeteer');
-  const browser = await puppeteer.default.launch({ headless: true });
+  const browser = await puppeteer.default.launch(
+    await resolvePuppeteerLaunchOptions({
+      executablePath: puppeteerExecutablePath,
+    }),
+  );
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    page.setDefaultTimeout(PDF_RENDER_TIMEOUT_MS);
+    page.setDefaultNavigationTimeout(PDF_RENDER_TIMEOUT_MS);
+    await page.setContent(html, {
+      timeout: PDF_RENDER_TIMEOUT_MS,
+      waitUntil: 'load',
+    });
+    await waitForCatalogImageElements(page);
     await page.pdf({
       format: 'A4',
       margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
@@ -336,6 +409,7 @@ export async function generateCatalog(options, dependencies = {}) {
     inputUrl,
     limit,
     outputPath,
+    puppeteerExecutablePath,
   } = options;
 
   const readCsvText = dependencies.readCsvText || defaultReadCsvText;
@@ -364,7 +438,7 @@ export async function generateCatalog(options, dependencies = {}) {
   await writeTextFile(htmlPath, html);
 
   try {
-    await renderPdf({ html, outputPath });
+    await renderPdf({ html, outputPath, puppeteerExecutablePath });
   } catch (error) {
     throw new CatalogCliError({
       code: 'pdf_render_failed',

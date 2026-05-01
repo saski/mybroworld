@@ -1,6 +1,7 @@
 const CATALOG_MENU_TITLE = 'Catalogs';
 const CATALOG_SIDEBAR_TITLE = 'Generate Catalog PDF';
 const CATALOG_DEFAULT_ARTIST = 'Lucía Astuy';
+const CATALOG_API_TOKEN_PROPERTY = 'CATALOG_API_TOKEN';
 const CATALOG_REQUIRED_HEADERS = [
   'artwork_id',
   'title_clean',
@@ -52,11 +53,70 @@ const CATALOG_JOB_HEADERS = [
   'error_code',
   'error_message',
   'log_excerpt',
+  'review_status',
+  'reviewed_at',
+  'reviewed_by',
+  'review_notes',
 ];
 const CATALOG_INITIAL_PROFILES = [
   ['lucia-mybrocorp', 'Lucia / mybrocorp', true, 'mybrocorp@gmail.com', 'luciaastuy', '', 'Production operator'],
   ['nacho-saski', 'Nacho / saski', true, 'nacho.saski@gmail.com', 'nacho', '', 'Development and testing'],
 ];
+const CATALOG_REVIEW_STATUSES = ['approved', 'needs_changes'];
+
+function doPost(event) {
+  return handleCatalogApiRequest_(event);
+}
+
+function handleCatalogApiRequest_(event) {
+  try {
+    const payload = parseCatalogApiPayload_(event);
+    assertCatalogApiAuthorized_(payload);
+
+    const action = normalizeCatalogText_(payload.action);
+    const data = payload.data || {};
+
+    if (action === 'queue_catalog_job') {
+      return catalogJsonResponse_({
+        ok: true,
+        result: createCatalogJob_(data, {
+          createdByEmail: data.createdByEmail,
+          createdByUserKey: data.createdByUserKey,
+        }),
+      });
+    }
+
+    if (action === 'get_catalog_job') {
+      return catalogJsonResponse_({
+        ok: true,
+        result: getCatalogJobApi_(data),
+      });
+    }
+
+    if (action === 'list_recent_catalog_jobs') {
+      return catalogJsonResponse_({
+        ok: true,
+        result: listRecentCatalogJobsApi_(data),
+      });
+    }
+
+    if (action === 'record_catalog_review') {
+      return catalogJsonResponse_({
+        ok: true,
+        result: recordCatalogReviewApi_(data),
+      });
+    }
+
+    throw new Error('Unsupported catalog API action.');
+  } catch (error) {
+    return catalogJsonResponse_({
+      error: {
+        message: error && error.message ? error.message : String(error),
+      },
+      ok: false,
+    });
+  }
+}
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -108,7 +168,23 @@ function getCatalogSidebarModel(prefill) {
 }
 
 function queueCatalogJob(formData) {
+  const jobRecord = createCatalogJob_(formData || {}, {
+    createdByEmail: getCurrentUserEmail_(),
+    createdByUserKey: normalizeCatalogText_((formData || {}).createdByUserKey),
+    rememberProfile: true,
+  });
+  SpreadsheetApp.getActive().toast(`Queued job ${jobRecord.job_id}`, CATALOG_MENU_TITLE, 5);
+
+  return {
+    jobId: jobRecord.job_id,
+    jobsSheetName: 'catalog_jobs',
+    outputFilename: jobRecord.output_filename,
+  };
+}
+
+function createCatalogJob_(formData, options) {
   const payload = formData || {};
+  const settings = options || {};
   const scopeMode = normalizeCatalogText_(payload.scopeMode) || 'current_tab';
   const spreadsheet = SpreadsheetApp.getActive();
   const profilesSheet = spreadsheet.getSheetByName('catalog_profiles');
@@ -118,20 +194,18 @@ function queueCatalogJob(formData) {
     throw new Error('Run "Admin: Setup Catalog Infrastructure" before queueing jobs.');
   }
 
-  const sidebarModel = buildCatalogSidebarModel_({
-    preselectedProfileKey: payload.executionProfileKey || '',
-    preselectedSheetIds: payload.selectedSheetIds || [],
-    scopeMode: scopeMode,
-  });
-  const executionProfile = sidebarModel.profiles.find((profile) => profile.profileKey === payload.executionProfileKey);
+  const activeSheetId = resolveApiActiveSheetId_(spreadsheet, payload.activeSheetId);
+  const compatibleTabs = discoverCompatibleTabs_(spreadsheet, activeSheetId);
+  const profiles = readCatalogProfiles_(profilesSheet);
+  const executionProfile = profiles.find((profile) => profile.profileKey === payload.executionProfileKey);
 
   if (!executionProfile) {
     throw new Error('Select an enabled execution profile.');
   }
 
   const selection = resolveSheetSelection_({
-    activeSheetId: sidebarModel.activeSheetId,
-    compatibleTabs: sidebarModel.compatibleTabs,
+    activeSheetId: activeSheetId,
+    compatibleTabs: compatibleTabs,
     scopeMode: scopeMode,
     selectedSheetIds: payload.selectedSheetIds || [],
   });
@@ -157,12 +231,16 @@ function queueCatalogJob(formData) {
     artist_name: normalizeCatalogText_(payload.artistName) || CATALOG_DEFAULT_ARTIST,
     catalog_title: catalogTitle,
     created_at: createdAtIso,
-    created_by_email: getCurrentUserEmail_(),
-    created_by_user_key: normalizeCatalogText_(payload.createdByUserKey),
+    created_by_email: normalizeCatalogText_(settings.createdByEmail),
+    created_by_user_key: normalizeCatalogText_(settings.createdByUserKey),
     execution_profile: executionProfile.profileKey,
     job_id: buildCatalogJobId_(createdAtIso),
     output_filename: outputFilename,
     output_folder_id: outputFolderId,
+    review_notes: '',
+    review_status: '',
+    reviewed_at: '',
+    reviewed_by: '',
     scope_mode: scopeMode,
     sheet_ids_json: JSON.stringify(selection.map((tab) => tab.sheetId)),
     sheet_titles_json: JSON.stringify(selection.map((tab) => tab.title)),
@@ -170,14 +248,11 @@ function queueCatalogJob(formData) {
   };
 
   appendCatalogRow_(jobsSheet, CATALOG_JOB_HEADERS, jobRecord);
-  PropertiesService.getUserProperties().setProperty('default_execution_profile', executionProfile.profileKey);
-  SpreadsheetApp.getActive().toast(`Queued job ${jobRecord.job_id}`, CATALOG_MENU_TITLE, 5);
+  if (settings.rememberProfile) {
+    PropertiesService.getUserProperties().setProperty('default_execution_profile', executionProfile.profileKey);
+  }
 
-  return {
-    jobId: jobRecord.job_id,
-    jobsSheetName: jobsSheet.getName(),
-    outputFilename: outputFilename,
-  };
+  return jobRecord;
 }
 
 function openCatalogJobsFromSidebar() {
@@ -433,6 +508,157 @@ function resolveSheetSelection_(options) {
   }
 
   throw new Error('Unsupported scope mode.');
+}
+
+function getCatalogJobApi_(payload) {
+  const jobId = normalizeCatalogText_((payload || {}).jobId);
+  if (!jobId) {
+    throw new Error('Provide jobId.');
+  }
+
+  const jobsSheet = ensureCatalogSheet_('catalog_jobs', CATALOG_JOB_HEADERS);
+  const job = findCatalogJobById_(jobsSheet, jobId);
+  if (!job) {
+    throw new Error('Catalog job not found.');
+  }
+
+  return serializeCatalogJobRecord_(job);
+}
+
+function listRecentCatalogJobsApi_(payload) {
+  const limit = Math.max(1, Math.min(Number((payload || {}).limit) || 10, 50));
+  const jobsSheet = ensureCatalogSheet_('catalog_jobs', CATALOG_JOB_HEADERS);
+  const records = readCatalogJobRecords_(jobsSheet);
+
+  return records
+    .sort(function (left, right) {
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    })
+    .slice(0, limit)
+    .map(serializeCatalogJobRecord_);
+}
+
+function recordCatalogReviewApi_(payload) {
+  const data = payload || {};
+  const jobId = normalizeCatalogText_(data.jobId);
+  if (!jobId) {
+    throw new Error('Provide jobId.');
+  }
+
+  const jobsSheet = ensureCatalogSheet_('catalog_jobs', CATALOG_JOB_HEADERS);
+  const job = findCatalogJobById_(jobsSheet, jobId);
+  if (!job) {
+    throw new Error('Catalog job not found.');
+  }
+
+  const updates = buildCatalogReviewUpdates_(data);
+  updateCatalogJobFields_(jobsSheet, job.rowNumber, updates);
+
+  return serializeCatalogJobRecord_(findCatalogJobById_(jobsSheet, jobId));
+}
+
+function buildCatalogReviewUpdates_(payload) {
+  const reviewStatus = normalizeCatalogReviewStatus_((payload || {}).reviewStatus);
+  if (CATALOG_REVIEW_STATUSES.indexOf(reviewStatus) === -1) {
+    throw new Error('Review status must be approved or needs_changes.');
+  }
+
+  return {
+    review_notes: normalizeCatalogText_(payload.reviewNotes),
+    review_status: reviewStatus,
+    reviewed_at: new Date().toISOString(),
+    reviewed_by: normalizeCatalogText_(payload.reviewedBy),
+  };
+}
+
+function normalizeCatalogReviewStatus_(value) {
+  return normalizeCatalogText_(value).toLowerCase().replace(/[-\s]+/g, '_');
+}
+
+function readCatalogJobRecords_(jobsSheet) {
+  const values = jobsSheet.getDataRange().getValues();
+  if (values.length <= 1) {
+    return [];
+  }
+
+  const headers = values[0].map(normalizeCatalogHeader_);
+  return values.slice(1).map(function (row, index) {
+    const record = mapCatalogRow_(headers, row);
+    record.rowNumber = index + 2;
+    return record;
+  });
+}
+
+function findCatalogJobById_(jobsSheet, jobId) {
+  const normalizedJobId = normalizeCatalogText_(jobId);
+  return readCatalogJobRecords_(jobsSheet).find(function (record) {
+    return normalizeCatalogText_(record.job_id) === normalizedJobId;
+  }) || null;
+}
+
+function serializeCatalogJobRecord_(record) {
+  return CATALOG_JOB_HEADERS.reduce(function (serialized, header) {
+    serialized[header] = record && record[header] !== undefined ? record[header] : '';
+    return serialized;
+  }, {});
+}
+
+function updateCatalogJobFields_(jobsSheet, rowNumber, updates) {
+  const headers = jobsSheet.getRange(1, 1, 1, jobsSheet.getLastColumn()).getValues()[0].map(normalizeCatalogHeader_);
+  Object.keys(updates).forEach(function (fieldName) {
+    const columnIndex = headers.indexOf(fieldName);
+    if (columnIndex === -1) {
+      throw new Error('catalog_jobs is missing expected column: ' + fieldName);
+    }
+    jobsSheet.getRange(rowNumber, columnIndex + 1).setValue(updates[fieldName]);
+  });
+}
+
+function resolveApiActiveSheetId_(spreadsheet, activeSheetId) {
+  const explicitSheetId = Number(activeSheetId);
+  if (explicitSheetId > 0 && !Number.isNaN(explicitSheetId)) {
+    return explicitSheetId;
+  }
+
+  try {
+    return spreadsheet.getActiveSheet().getSheetId();
+  } catch (error) {
+    const firstSheet = spreadsheet.getSheets()[0];
+    return firstSheet ? firstSheet.getSheetId() : 0;
+  }
+}
+
+function parseCatalogApiPayload_(event) {
+  const contents = event && event.postData ? normalizeCatalogText_(event.postData.contents) : '';
+  if (contents) {
+    return JSON.parse(contents);
+  }
+
+  if (event && event.parameter && event.parameter.payload) {
+    return JSON.parse(event.parameter.payload);
+  }
+
+  return event && event.parameter ? event.parameter : {};
+}
+
+function assertCatalogApiAuthorized_(payload) {
+  const expectedToken = normalizeCatalogText_(
+    PropertiesService.getScriptProperties().getProperty(CATALOG_API_TOKEN_PROPERTY),
+  );
+  if (!expectedToken) {
+    throw new Error('Catalog API token is not configured.');
+  }
+
+  const providedToken = normalizeCatalogText_((payload || {}).token || (payload || {}).apiToken);
+  if (providedToken !== expectedToken) {
+    throw new Error('Unauthorized catalog API request.');
+  }
+}
+
+function catalogJsonResponse_(payload) {
+  return ContentService
+    .createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function appendCatalogRow_(sheet, headers, rowData) {

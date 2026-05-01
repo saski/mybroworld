@@ -8,3 +8,4 @@ if (! defined('ABSPATH')) {
 
 require_once __DIR__ . '/lucia-artwork-meta.php';
 require_once __DIR__ . '/lucia-artwork-rules.php';
+require_once __DIR__ . '/lucia-catalog-console.php';

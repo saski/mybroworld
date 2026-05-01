@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { runGenerateCli } from '../src/catalog-generator.mjs';
+import {
+  resolvePuppeteerLaunchOptions,
+  runGenerateCli,
+  waitForCatalogImageElements,
+} from '../src/catalog-generator.mjs';
 
 function createLogger() {
   const logs = [];
@@ -129,4 +133,39 @@ test('runGenerateCli fails fast with a stable error code when no input source is
   assert.equal(result.exitCode, 2);
   assert.equal(logs.length, 0);
   assert.match(errors.join('\n'), /input_missing/);
+});
+
+test('resolvePuppeteerLaunchOptions falls back to the macOS Chrome executable when Puppeteer has no managed browser', async () => {
+  const checkedPaths = [];
+
+  const launchOptions = await resolvePuppeteerLaunchOptions({
+    env: {},
+    fileExists: async (candidatePath) => {
+      checkedPaths.push(candidatePath);
+      return candidatePath === '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    },
+  });
+
+  assert.equal(launchOptions.headless, true);
+  assert.equal(
+    launchOptions.executablePath,
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  );
+  assert.deepEqual(checkedPaths, [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  ]);
+});
+
+test('waitForCatalogImageElements uses a bounded page-context image wait', async () => {
+  const calls = [];
+
+  await waitForCatalogImageElements({
+    evaluate: async (pageFunction, timeoutMs) => {
+      calls.push({ pageFunction, timeoutMs });
+    },
+  }, 1234);
+
+  assert.equal(calls.length, 1);
+  assert.equal(typeof calls[0].pageFunction, 'function');
+  assert.equal(calls[0].timeoutMs, 1234);
 });

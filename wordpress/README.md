@@ -24,6 +24,13 @@ This workspace is owned-code-only. The imported production `Glacier` theme is au
 - `wp-content/mu-plugins/`
 - custom plugins we explicitly add later
 
+WordPress development follows a lean dependency policy:
+- avoid commercial paid plugins, including freemium plugins
+- prefer WordPress core, WooCommerce core, and owned code in this repository
+- consider open-source plugins or add-ons only when the need is proven, quality is sufficient, the implementation remains lean, and the rollback path is documented
+- reject third-party dependencies that create vendor lock-in, broad feature surface, opaque behavior, or maintenance burden disproportionate to the problem
+- keep customer-facing workflows small enough to understand, test, and maintain without vendor lock-in
+
 Use [woocommerce-audit.md](../thoughts/shared/docs/woocommerce-audit.md) to keep the production findings and architecture decision current.
 
 ## Local Tooling
@@ -168,6 +175,20 @@ scripts/wp-test-owned-code.sh
 ```
 
 This command lints the owned PHP files, runs the lightweight PHP tests under `wordpress/wp-content/mu-plugins/tests/`, runs the WordPress smoke helper unit tests, and runs script-level dry-run tests for deployment and local-runtime wrappers.
+
+## Catalog PDF Console
+
+The catalog PDF console lives in owned MU plugin code and calls the deployed Apps Script Web App from server-side WordPress AJAX handlers. Configure it outside git, preferably in `wp-config.php` or host environment variables:
+
+- `LUCIA_CATALOG_API_URL`
+- `LUCIA_CATALOG_API_TOKEN`
+- `LUCIA_CATALOG_DEFAULT_PROFILE`
+- `LUCIA_CATALOG_DEFAULT_DRIVE_FOLDER_ID`
+- `LUCIA_CATALOG_DEFAULT_ACTIVE_SHEET_ID`
+- `LUCIA_CATALOG_DEFAULT_SCOPE_MODE`, optional, defaults to `current_tab`
+- `LUCIA_CATALOG_CONSOLE_CAPABILITY`, optional, defaults to `manage_woocommerce`
+
+Do not expose `LUCIA_CATALOG_API_TOKEN` in browser JavaScript. Browser requests go to WordPress AJAX endpoints with a WordPress nonce; WordPress sends the shared token only from the server.
 
 ## Full Local Validation
 

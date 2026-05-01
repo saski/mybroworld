@@ -83,6 +83,8 @@ npm run catalog-agent:authorize -- --config ~/Library/Application\ Support/MyBro
 npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 
+On macOS, the renderer can use the existing system Google Chrome at `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` when Puppeteer's managed browser cache is empty.
+
 ## Common Errors
 
 - `failed code=input_missing message=Provide --input <path> or --input-url <url>.`
@@ -96,6 +98,9 @@ npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld
 
 - `Authenticated Google identity <email> does not match configured <email>.`
   The local `catalog-agent` is using the wrong Google account for the selected execution profile.
+
+- `failed code=pdf_render_failed message=Unable to render PDF output: ...`
+  Confirm that the local machine can launch Google Chrome in headless mode and that artwork image URLs are reachable.
 
 ## Notes
 

@@ -57,12 +57,22 @@ export const JOB_HEADERS = [
   'error_code',
   'error_message',
   'log_excerpt',
+  'review_status',
+  'reviewed_at',
+  'reviewed_by',
+  'review_notes',
 ];
 
 export const DEFAULT_ARTIST_NAME = 'Lucía Astuy';
 
+export const REVIEW_STATUS_VALUES = ['approved', 'needs_changes'];
+
 function normalizeText(value) {
   return String(value || '').trim();
+}
+
+function normalizeToken(value) {
+  return normalizeText(value).toLowerCase().replace(/[-\s]+/g, '_');
 }
 
 export function normalizeHeader(value) {
@@ -193,6 +203,30 @@ export function resolveOutputFolderId({ explicitOutputFolderId, profileDefaultFo
   return resolvedFolderId;
 }
 
+export function buildCatalogReviewRecord({
+  reviewNotes = '',
+  reviewStatus,
+  reviewedAtIso,
+  reviewedBy = '',
+}) {
+  const normalizedReviewStatus = normalizeToken(reviewStatus);
+  if (!REVIEW_STATUS_VALUES.includes(normalizedReviewStatus)) {
+    throw new Error('Review status must be approved or needs_changes.');
+  }
+
+  const reviewedAt = normalizeText(reviewedAtIso);
+  if (Number.isNaN(new Date(reviewedAt).getTime())) {
+    throw new Error(`Invalid review timestamp: ${reviewedAtIso}`);
+  }
+
+  return {
+    review_notes: normalizeText(reviewNotes),
+    review_status: normalizedReviewStatus,
+    reviewed_at: reviewedAt,
+    reviewed_by: normalizeText(reviewedBy),
+  };
+}
+
 export function buildQueuedJobRecord({
   activeSheetId,
   artistName = '',
@@ -239,6 +273,10 @@ export function buildQueuedJobRecord({
       timestampIso: createdAtIso,
     }),
     output_folder_id: resolvedOutputFolderId,
+    review_notes: '',
+    review_status: '',
+    reviewed_at: '',
+    reviewed_by: '',
     scope_mode: scopeMode,
     sheet_ids_json: JSON.stringify(selectedTabs.map((tab) => tab.sheetId)),
     sheet_titles_json: JSON.stringify(selectedTabs.map((tab) => tab.title)),
