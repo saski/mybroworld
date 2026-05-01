@@ -261,6 +261,8 @@ Implementation notes:
 
 ### Phase 5: Roll Out Safely
 
+Progress: production deployed and validated with the configured `nacho-saski` catalog worker.
+
 Deploy and validate the workflow one environment at a time.
 
 Expected files:
@@ -272,24 +274,36 @@ Expected files:
 
 Rollout steps:
 
-1. Deploy or update the bound Apps Script Web App.
-2. Configure the Apps Script shared token as a script property.
-3. Configure WordPress endpoint URL and token outside git.
-4. Deploy the MU plugin through the owned-code deployment workflow.
-5. Confirm the local or customer machine catalog agent is installed as a LaunchAgent and watching the production spreadsheet id.
-6. Queue one test job from WordPress using a development profile.
-7. Queue one production-profile job with the customer present.
-8. Record the final operator workflow in the docs.
+1. [x] Deploy or update the bound Apps Script Web App.
+2. [x] Configure the Apps Script shared token as a script property.
+3. [x] Configure WordPress endpoint URL and token outside git.
+4. [x] Deploy the MU plugin through the owned-code deployment workflow.
+5. [x] Confirm the local or customer machine catalog agent is installed as a LaunchAgent and watching the production spreadsheet id.
+6. [x] Queue one test job from WordPress using the configured execution profile.
+7. [x] Queue one production WordPress validation job with the operator present.
+8. [x] Record the final operator workflow in the docs.
 
 Automated success criteria:
 
-- `scripts/wp-test-owned-code.sh` passes before deployment.
-- `scripts/wp-push-theme.sh --dry-run` shows only expected owned files.
-- Post-deploy WordPress smoke checks pass for the production site.
+- [x] `scripts/wp-test-owned-code.sh` passes before deployment.
+- [x] `scripts/wp-push-theme.sh --dry-run` shows only expected owned files.
+- [x] Post-deploy WordPress smoke checks pass for the production site.
 
 Manual success criteria:
 
-- The customer can generate and review a catalog using only WordPress login and the catalog console page.
+- [x] The customer can generate and review a catalog using only WordPress login and the catalog console page.
+
+Deployment notes:
+
+- Production owned-code upload completed on 2026-05-01 through FTP to `/public/wp-content/themes/luciastuy` and `/public/wp-content/mu-plugins`.
+- DonDominio's FTP certificate is valid for `*.dondominio.com`, so the deployment used `WP_FTP_HOST=ftp.dondominio.com` while keeping the same remote `/public` paths.
+- `scripts/wp-push-theme.sh` now uses idempotent `mkdir -pf` in its `lftp` script because this FTP server exits non-zero when `mkdir -p` targets an existing directory.
+- Production `wp-config.php` now contains the catalog runtime constants outside git: Apps Script URL, token, default profile, default Drive folder, active sheet id, and scope mode.
+- The local LaunchAgent `com.mybroworld.catalog-agent` is installed and running for `nacho-saski`, watching spreadsheet `15wvN5g8pQmnjF13v3lLzrIbuFysJ7GaTUAb_ps9oqJw`.
+- Production smoke checks returned HTTP 200 for `/`, `/shop/`, `/cart/`, `/checkout/`, and `/product/bottle/` after upload and after the production config update.
+- Production WordPress validation job `catalog_20260501_145137_9d09` was queued from `https://www.luciastuy.com/wp-admin/admin.php?page=lucia-catalog-console` with title `demo con clienta`.
+- The catalog worker completed that job with `result_artwork_count: 14` and Drive result URL `https://drive.google.com/file/d/11mI1A6FWVZE0pcRIE0QERA7KFqRAM5PM/view?usp=drivesdk`.
+- The production WordPress UI showed the completed `Open PDF` link and persisted the review state as `needs_changes`, reviewed by `nacho saski`.
 
 ## Risks And Mitigations
 

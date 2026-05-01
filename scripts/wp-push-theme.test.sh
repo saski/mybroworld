@@ -66,6 +66,8 @@ PATH="$TMP_DIR/bin:$PATH" WP_REMOTE_CONFIG_FILE="$CONFIG_FILE" "$SCRIPT" >/dev/n
 LFTP_COMMANDS=$(cat "$LFTP_CAPTURE")
 
 assert_contains "$LFTP_COMMANDS" "open --user \"ftp-user\" --password \"secret-value\" \"ftp://ftp.luciastuy.test\"" "lftp should authenticate through stdin commands"
+assert_contains "$LFTP_COMMANDS" "mkdir -pf \"/public/wp-content/themes/luciastuy\"" "lftp should tolerate an existing remote theme directory"
+assert_contains "$LFTP_COMMANDS" "mkdir -pf \"/public/wp-content/mu-plugins\"" "lftp should tolerate an existing remote mu-plugin directory"
 assert_contains "$LFTP_COMMANDS" "mirror -R --verbose --exclude-glob .DS_Store \"wordpress/wp-content/themes/luciastuy\" \"/public/wp-content/themes/luciastuy\"" "lftp should upload owned theme"
 assert_contains "$LFTP_COMMANDS" "mirror -R --verbose --exclude-glob .DS_Store \"wordpress/wp-content/mu-plugins\" \"/public/wp-content/mu-plugins\"" "lftp should upload mu-plugins"
 assert_not_contains "$LFTP_COMMANDS" "--delete" "ftp upload should not delete remote files by default"

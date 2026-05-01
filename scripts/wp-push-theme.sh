@@ -118,8 +118,8 @@ if [ "$DEPLOY_TRANSPORT" = "ftp" ]; then
 set cmd:fail-exit true
 set ftp:ssl-allow true
 open --user "$FTP_USER" --password "$FTP_PASSWORD" "ftp://$FTP_HOST"
-mkdir -p "$REMOTE_THEME_DIR"
-mkdir -p "$REMOTE_MU_PLUGIN_DIR"
+mkdir -pf "$REMOTE_THEME_DIR"
+mkdir -pf "$REMOTE_MU_PLUGIN_DIR"
 mirror -R --verbose --exclude-glob .DS_Store "$LOCAL_THEME_DIR" "$REMOTE_THEME_DIR"
 mirror -R --verbose --exclude-glob .DS_Store "$LOCAL_MU_PLUGIN_DIR" "$REMOTE_MU_PLUGIN_DIR"
 bye

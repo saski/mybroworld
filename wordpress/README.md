@@ -199,6 +199,13 @@ After login, shop operators can open `wp-admin/admin.php?page=lucia-catalog-cons
 
 The Apps Script Web App redirects successful responses through `script.googleusercontent.com`. The MU plugin handles that redirect server-side with an allowlisted Google GET follow-up, because WordPress automatic POST redirect handling can otherwise return a Google HTTP 400 response.
 
+On the current operator Mac, the local worker is installed as the user LaunchAgent `com.mybroworld.catalog-agent`. Check it with:
+
+```bash
+launchctl print "gui/$(id -u)/com.mybroworld.catalog-agent"
+tail -n 50 ~/Library/Logs/MyBroworld/catalog-agent.log
+```
+
 ## Full Local Validation
 
 Run the project-level validation loop before committing WordPress simplification or plugin-removal changes:

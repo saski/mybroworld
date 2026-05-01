@@ -21,6 +21,7 @@ It does not deploy:
 ## Deployment Inputs
 Known production defaults:
 - `WP_REMOTE_HOST=ftp.luciastuy.com`
+- `WP_FTP_HOST=ftp.dondominio.com`
 - `WP_REMOTE_PATH=/public`
 - `WP_REMOTE_THEME_DIR=/public/wp-content/themes/luciastuy`
 - `WP_REMOTE_MU_PLUGIN_DIR=/public/wp-content/mu-plugins`
@@ -51,6 +52,7 @@ Populate these environment variables before running the scripts if they are not 
 - `WP_FTP_PASSWORD`
 
 Use `WP_REMOTE_USER` only when `WP_DEPLOY_TRANSPORT=rsync`.
+For FTP deployments, use `ftp.dondominio.com` as `WP_FTP_HOST`. The DonDominio FTP TLS certificate is issued for `*.dondominio.com`, not `ftp.luciastuy.com`.
 
 ## Deployment Commands
 - Audit pull of the current production theme: `scripts/wp-pull-theme.sh`
@@ -63,7 +65,7 @@ Use `WP_REMOTE_USER` only when `WP_DEPLOY_TRANSPORT=rsync`.
 - confirm the owned theme source exists at `wordpress/wp-content/themes/luciastuy`
 - confirm the `mu-plugin` source exists at `wordpress/wp-content/mu-plugins`
 - confirm catalog console secrets are configured on the target host, not in tracked files
-- confirm `scripts/wp-remote.env` points at `ftp.luciastuy.com` and `/public`
+- confirm `scripts/wp-remote.env` points at `ftp.dondominio.com` for FTP and `/public`
 - run `scripts/wp-push-theme.sh --dry-run` and verify the remote target paths
 - verify `WP_DEPLOY_TRANSPORT`, `WP_FTP_HOST`, `WP_FTP_USER`, and `WP_REMOTE_PATH` point to production before any upload
 - confirm `lftp` is installed when using FTP deployment
