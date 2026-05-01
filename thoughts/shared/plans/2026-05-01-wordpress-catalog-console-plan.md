@@ -27,6 +27,8 @@ Project tenet: avoid commercial paid WordPress plugins, including freemium plugi
 - WordPress custom code is maintained as owned theme and MU plugin code under `wordpress/wp-content/`.
 - Production-like local WordPress validation currently uses the imported `glacier` snapshot, so the catalog console should live in an MU plugin rather than depending on the owned theme being active.
 - WooCommerce inventory sync is related but separate. PDF catalog generation should continue to use the canonical Google Sheet contract and its catalog inclusion flags.
+- Production WordPress code is deployed and can queue catalog jobs, but the current validated worker path still depends on the `nacho-saski` LaunchAgent and Google OAuth setup on this Mac.
+- Customer-owned portability remains pending until a `lucia-mybrocorp` worker authenticated as `mybrocorp@gmail.com` completes a production WordPress job from the customer's mybro WordPress account.
 
 ## Desired End State
 
@@ -37,6 +39,7 @@ Project tenet: avoid commercial paid WordPress plugins, including freemium plugi
 - When the job completes, the page shows the Drive result link and a review action.
 - The customer can mark the generated catalog as `approved` or `needs_changes` with an optional note.
 - Review state is stored durably with the generation job so future sessions can see which PDF was approved.
+- The portable production path runs through `mybrocorp@gmail.com`, the `lucia-mybrocorp` execution profile, and the customer's mybro WordPress account without depending on Nacho's Mac, OAuth token, or Google Cloud ownership.
 - No Google OAuth token, API token, client secret, or generated PDF artifact is committed to this repository.
 
 ## Out Of Scope
@@ -103,7 +106,7 @@ Automated success criteria:
 
 ### Phase 2: Add An Apps Script Queue API
 
-Progress: deployed and verified end-to-end with the local catalog agent.
+Progress: deployed and verified end-to-end with the local `nacho-saski` catalog agent. Customer-owned Google/OAuth verification is tracked in Phase 6.
 
 Expose a minimal JSON API from the existing bound Apps Script while preserving the current Google Sheets sidebar.
 
@@ -149,8 +152,8 @@ Deployment notes:
 - Token-authenticated `queue_catalog_job` created smoke-test job `catalog_20260501_110033_b323` for sheet `2026` (`gid=102593401`).
 - Token-authenticated `get_catalog_job` returned the smoke-test job in `queued` status.
 - Local catalog-agent config and OAuth files are stored outside git under `~/Library/Application Support/MyBroworld/catalog-agent/`.
-- Personal Google Cloud project: `mybroworld-catalog-260501` (`MyBroworld Catalog Agent`), owned by `nacho.saski@gmail.com`.
-- OAuth app/client: `MyBroworld Catalog Agent` / `Catalog Agent Local Desktop Client`, configured for `nacho.saski@gmail.com` as a test user.
+- Development smoke Google Cloud project: `mybroworld-catalog-260501` (`MyBroworld Catalog Agent`), owned by `nacho.saski@gmail.com`. This proves the integration path only; it is not the final customer-owned production credential boundary.
+- Development OAuth app/client: `MyBroworld Catalog Agent` / `Catalog Agent Local Desktop Client`, configured for `nacho.saski@gmail.com` as a test user.
 - OAuth scopes configured and granted: Google Sheets, Google Drive, OpenID, email, and profile.
 - The first smoke job, `catalog_20260501_110033_b323`, failed before the renderer fix because Puppeteer had no managed Chrome cache and the initial token lacked Sheets/Drive scopes.
 - After regenerating the OAuth token and updating the renderer, token-authenticated `queue_catalog_job` created smoke-test job `catalog_20260501_113219_5614`.
@@ -261,7 +264,7 @@ Implementation notes:
 
 ### Phase 5: Roll Out Safely
 
-Progress: production deployed and validated with the configured `nacho-saski` catalog worker.
+Progress: production deployed and validated with the configured `nacho-saski` catalog worker. Customer-owned portability is pending Phase 6.
 
 Deploy and validate the workflow one environment at a time.
 
@@ -278,7 +281,7 @@ Rollout steps:
 2. [x] Configure the Apps Script shared token as a script property.
 3. [x] Configure WordPress endpoint URL and token outside git.
 4. [x] Deploy the MU plugin through the owned-code deployment workflow.
-5. [x] Confirm the local or customer machine catalog agent is installed as a LaunchAgent and watching the production spreadsheet id.
+5. [x] Confirm the current operator Mac catalog agent is installed as a LaunchAgent and watching the production spreadsheet id.
 6. [x] Queue one test job from WordPress using the configured execution profile.
 7. [x] Queue one production WordPress validation job with the operator present.
 8. [x] Record the final operator workflow in the docs.
@@ -291,7 +294,8 @@ Automated success criteria:
 
 Manual success criteria:
 
-- [x] The customer can generate and review a catalog using only WordPress login and the catalog console page.
+- [x] The production WordPress console can queue and complete a catalog through the current `nacho-saski` worker.
+- [ ] The customer can generate and review a catalog from the mybro WordPress account through a `lucia-mybrocorp` worker authenticated as `mybrocorp@gmail.com`, without relying on Nacho's Mac or OAuth token.
 
 Deployment notes:
 
@@ -304,6 +308,35 @@ Deployment notes:
 - Production WordPress validation job `catalog_20260501_145137_9d09` was queued from `https://www.luciastuy.com/wp-admin/admin.php?page=lucia-catalog-console` with title `demo con clienta`.
 - The catalog worker completed that job with `result_artwork_count: 14` and Drive result URL `https://drive.google.com/file/d/11mI1A6FWVZE0pcRIE0QERA7KFqRAM5PM/view?usp=drivesdk`.
 - The production WordPress UI showed the completed `Open PDF` link and persisted the review state as `needs_changes`, reviewed by `nacho saski`.
+
+### Phase 6: Customer-Owned Handoff And Portability
+
+Progress: pending.
+
+Make the production workflow portable so the customer can operate it from `mybrocorp@gmail.com` and the mybro WordPress account without depending on the current operator Mac, Nacho's OAuth token, or Nacho-owned Google Cloud resources.
+
+Required actions:
+
+1. [ ] Confirm the Apps Script project and Web App can be administered, redeployed, and recovered by `mybrocorp@gmail.com` or another customer-controlled Google account.
+2. [ ] Create or transfer the production Google Cloud OAuth desktop client so the `lucia-mybrocorp` worker credentials are controlled by the customer account family, not only by `nacho.saski@gmail.com`.
+3. [ ] Install the catalog generator and `catalog-agent` config on the intended customer or always-on machine with:
+   - `profileKey = lucia-mybrocorp`
+   - `googleAccountEmail = mybrocorp@gmail.com`
+   - the production spreadsheet id in `watchSpreadsheetIds`
+   - OAuth client and token files outside git under that user's profile
+4. [ ] Authorize the worker in a browser session for `mybrocorp@gmail.com` and verify the agent fails fast if any other Google identity is used.
+5. [ ] Install and start the `com.mybroworld.catalog-agent` LaunchAgent for the customer-owned worker account.
+6. [ ] Verify the worker claims only `lucia-mybrocorp` jobs and ignores `nacho-saski` jobs.
+7. [ ] Verify the configured Drive output folder is writable by `mybrocorp@gmail.com` and that completed PDFs are readable from the customer's browser session.
+8. [ ] Log into production WordPress as the customer's mybro account and verify the `Catalog PDFs` page is visible.
+9. [ ] Queue one production catalog from that mybro WordPress account and complete it through the `lucia-mybrocorp` worker.
+10. [ ] Confirm the completed row records the customer WordPress identity, shows the Drive PDF link, and persists `approved` or `needs_changes` after reload.
+
+Completion criteria:
+
+- A production WordPress job queued by the customer's mybro WordPress account completes through a `lucia-mybrocorp` worker authenticated as `mybrocorp@gmail.com`.
+- The job does not require the `nacho-saski` LaunchAgent, Nacho's OAuth token, or a Nacho-only Google Cloud project.
+- The final operator workflow and recovery notes are recorded in `wordpress/README.md`, `thoughts/shared/docs/google-sheets-catalog-action.md`, and `PROJECT_STATUS.md`.
 
 ## Risks And Mitigations
 

@@ -42,7 +42,9 @@ The same Apps Script project can also be deployed as a token-protected Web App f
    - `watchSpreadsheetIds`
    - `oauthClientPath`
    - `oauthTokenPath`
-3. Create or reuse a Google Cloud OAuth desktop client owned by the same Google account family as the target profile. For the `nacho-saski` profile, use the personal project `mybroworld-catalog-260501` and OAuth app `MyBroworld Catalog Agent`, not any Eventbrite app.
+3. Create or reuse a Google Cloud OAuth desktop client owned by the same Google account family as the target profile.
+   - For the customer production profile `lucia-mybrocorp`, the OAuth client should be owned or recoverable by `mybrocorp@gmail.com` or another customer-controlled Google account.
+   - For the development profile `nacho-saski`, the personal project `mybroworld-catalog-260501` and OAuth app `MyBroworld Catalog Agent` are acceptable for smoke testing only.
 4. Confirm the OAuth app declares the required scopes before authorizing:
    - `https://www.googleapis.com/auth/spreadsheets`
    - `https://www.googleapis.com/auth/drive`
@@ -72,6 +74,19 @@ npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld
 cd /path/to/mybroworld/catalog-generator
 npm run catalog-agent -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
+
+## Customer-Owned Production Handoff
+
+Do not treat the WordPress catalog console as customer-portable until this production path is verified:
+
+1. The Apps Script project and Web App can be administered and redeployed by `mybrocorp@gmail.com` or another customer-controlled Google account.
+2. A `lucia-mybrocorp` agent config exists on the intended customer or always-on machine.
+3. The agent is authorized as `mybrocorp@gmail.com` and fails fast if any other Google identity is used.
+4. The agent is installed as that user's `com.mybroworld.catalog-agent` LaunchAgent and watches the production spreadsheet id.
+5. The agent claims only `lucia-mybrocorp` jobs and ignores `nacho-saski` jobs.
+6. The configured Drive output folder is writable by `mybrocorp@gmail.com`, and the resulting PDF is readable from the customer's browser session.
+7. The customer logs into production WordPress with the mybro account, opens `Catalog PDFs`, queues a catalog, sees the completed Drive link, and saves `approved` or `needs_changes`.
+8. The completed `catalog_jobs` row records the customer WordPress identity and the review state remains visible after a page reload.
 
 ## Job Contract Highlights
 

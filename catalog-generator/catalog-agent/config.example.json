@@ -1,12 +1,12 @@
 {
-  "profileKey": "nacho-saski",
-  "googleAccountEmail": "nacho.saski@gmail.com",
-  "workspaceRoot": "/Users/nacho/saski/mybroworld",
-  "generatorDir": "/Users/nacho/saski/mybroworld/catalog-generator",
+  "profileKey": "lucia-mybrocorp",
+  "googleAccountEmail": "mybrocorp@gmail.com",
+  "workspaceRoot": "/Users/luciaastuy/path/to/mybroworld",
+  "generatorDir": "/Users/luciaastuy/path/to/mybroworld/catalog-generator",
   "watchSpreadsheetIds": [
     "15wvN5g8pQmnjF13v3lLzrIbuFysJ7GaTUAb_ps9oqJw"
   ],
   "pollIntervalSeconds": 30,
-  "oauthClientPath": "/Users/nacho/Library/Application Support/MyBroworld/catalog-agent/oauth-client.json",
-  "oauthTokenPath": "/Users/nacho/Library/Application Support/MyBroworld/catalog-agent/oauth-token.json"
+  "oauthClientPath": "/Users/luciaastuy/Library/Application Support/MyBroworld/catalog-agent/oauth-client.json",
+  "oauthTokenPath": "/Users/luciaastuy/Library/Application Support/MyBroworld/catalog-agent/oauth-token.json"
 }

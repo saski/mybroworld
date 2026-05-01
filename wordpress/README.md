@@ -197,9 +197,11 @@ After login, shop operators can open `wp-admin/admin.php?page=lucia-catalog-cons
 - keep the local catalog agent running so it can claim the queued job, render the PDF, and upload it to Drive
 - use the `Open PDF`, `Approve`, and `Needs changes` controls from the recent jobs table
 
+Current production deployment was validated through the `nacho-saski` worker on the current operator Mac. Customer-only operation is not complete until a `lucia-mybrocorp` worker is installed on the intended customer or always-on machine, authorized as `mybrocorp@gmail.com`, and a job queued from the customer's mybro WordPress account completes without depending on the current operator Mac.
+
 The Apps Script Web App redirects successful responses through `script.googleusercontent.com`. The MU plugin handles that redirect server-side with an allowlisted Google GET follow-up, because WordPress automatic POST redirect handling can otherwise return a Google HTTP 400 response.
 
-On the current operator Mac, the local worker is installed as the user LaunchAgent `com.mybroworld.catalog-agent`. Check it with:
+On the current operator Mac, the interim local worker is installed as the user LaunchAgent `com.mybroworld.catalog-agent`. Check it with:
 
 ```bash
 launchctl print "gui/$(id -u)/com.mybroworld.catalog-agent"

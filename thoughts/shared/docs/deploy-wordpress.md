@@ -79,3 +79,4 @@ For FTP deployments, use `ftp.dondominio.com` as `WP_FTP_HOST`. The DonDominio F
 - open `https://www.luciastuy.com/wp-admin/` and verify WordPress admin still loads
 - open `https://www.luciastuy.com/wp-admin/admin.php?page=lucia-catalog-console` as a shop operator and verify the `Catalog PDFs` page loads
 - queue one catalog only when the local catalog agent is ready to process it, then confirm the completed Drive link and review state appear in the recent jobs table
+- for customer handoff, repeat the catalog check from the customer's mybro WordPress account with the `lucia-mybrocorp` worker authorized as `mybrocorp@gmail.com`; do not count a `nacho-saski` worker run as portable customer validation
