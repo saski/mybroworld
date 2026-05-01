@@ -1,4 +1,6 @@
 scripts/wp-remote.env
+backups/
 
 # Local AI assistant state
 .claude/
+.playwright-mcp/

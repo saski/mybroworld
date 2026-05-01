@@ -3,6 +3,7 @@
 wordpress.sql
 uploads/
 .tmp/
+.runtime/
 wp-data/
 mysql-data/
 phpmyadmin-data/

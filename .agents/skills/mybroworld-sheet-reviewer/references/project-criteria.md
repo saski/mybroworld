@@ -22,6 +22,10 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 ### Review behavior
 
 - Distinguish between a missing value and an inconsistent value. The reviewer must handle both.
+- Treat commerce inventory parity as part of catalog data quality. When a task involves WooCommerce inventory, compare canonical sheet rows, generated catalog scope, and WooCommerce products before recommending or applying product writes.
+- Example: if the sheet contains `LA-2026-002` with `title_clean = Perrete en tablillas 01` but local WooCommerce only contains demo products such as `Armchair`, report `LA-2026-002` as missing from WooCommerce and `Armchair` as unexpected instead of treating the systems as synced.
+- WooCommerce inventory scope is all canonical sheet artworks, not only `include_in_catalog` or `catalog_ready` rows. `status_normalized` should control storefront visibility and purchasability.
+- Example: an `available` row should be visible and purchasable, a `sold` row should remain visible but not purchasable, and an `archived` row should remain in WooCommerce but be hidden and not purchasable.
 - Do not expand project rules from a single anecdotal row unless the user explicitly states it is a recurring criterion.
 - Do not assume the canonical catalog data lives in one fixed tab name. Multi-year workbooks may expose one canonical tab per year, such as `2026`, `2025`, or `2024`, with the same header contract.
 - For integrations or review passes, identify in-scope tabs by canonical headers and explicit year selection, not by hardcoded names like `Sheet1`.

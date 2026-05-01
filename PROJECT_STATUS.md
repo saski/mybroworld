@@ -1,7 +1,7 @@
 # mybroworld - Project Status
 
-**Last Updated**: 2026-04-26  
-**Overall Status**: 🟡 **Multiple active workstreams** - Catalog editorial uplift has a corrected editorial shell and is awaiting only higher-fidelity asset decisions; WordPress plugin cleanup remains paused on remote execution.
+**Last Updated**: 2026-05-01
+**Overall Status**: 🟡 **Multiple active workstreams** - Catalog editorial uplift has a corrected editorial shell and is awaiting higher-fidelity asset decisions; the production WordPress/WooCommerce shop is imported and validated locally, while production plugin cleanup remains paused on remote backup/admin execution.
 
 ---
 
@@ -10,10 +10,11 @@
 | Component | Status | Progress | Blocking |
 |-----|-----|----|----|
 | Catalog editorial uplift | 🟡 In Progress | 82% | Yes |
+| WordPress production snapshot runtime | 🟢 Ready | 100% | No |
 | WordPress plugin cleanup plan | 🟡 In Progress | 5% | No |
 | Safe cleanup execution + verification | ⚠️ Pending | 0% | Requires admin access + backups |
 
-**Current Readiness**: 🟡 - The catalog generator now matches the original PDF much more closely in cover/footer grammar, centered metadata layout, and fallback typography treatment, but exact Gotham parity and image-selection criteria are still unresolved. Remote/admin execution for WordPress cleanup remains pending.
+**Current Readiness**: 🟡 - The catalog generator now matches the original PDF much more closely in cover/footer grammar, centered metadata layout, and fallback typography treatment, but exact Gotham parity and image-selection criteria are still unresolved. A production-like WordPress/WooCommerce runtime is available at `http://localhost:8080`; remote/admin execution for production cleanup remains pending.
 
 ---
 
@@ -25,6 +26,13 @@
 - Created initial implementation plan for removing unused WordPress plugins (2026-04-02).
 - Created `thoughts/shared/docs/wordpress-plugin-inventory.md` and `thoughts/shared/docs/wordpress-plugin-removal-log.md` (Phase 1 evidence + logging scaffolding).
 - Added repeatable backup scripts (`scripts/wp-backup*.sh`) and documented them.
+- Added local WordPress/WooCommerce setup and validation wrappers (`scripts/wp-local-setup.sh`, `scripts/wp-local-validate.sh`) with dry-run tests.
+- Bootstrapped the local Docker runtime on 2026-04-30 and validated `/`, `/shop/`, `/cart/`, and `/checkout/` at `http://localhost:8080`.
+- Mirrored production `wp-content`, exported the production database through a temporary token-protected exporter, imported the snapshot locally, and validated the production `glacier` theme runtime on 2026-04-30.
+- Deactivated local `all-in-one-wp-migration-src` after baseline validation, verified the plugin is inactive, and reran the `glacier` validation loop successfully on 2026-05-01.
+- Added product-detail smoke coverage to local WordPress validation on 2026-05-01; the `glacier` validation loop now requires one published product page and passed against `/product/armchair/`.
+- Added a read-only WooCommerce/sheet inventory parity audit on 2026-05-01. Current local baseline is out of sync: 20 sheet artworks are missing from WooCommerce and 15 local WooCommerce products are unexpected relative to the sheet.
+- Recorded the WooCommerce inventory scope decision on 2026-05-01: all canonical sheet artworks belong in WooCommerce, and `status_normalized` controls visibility and purchasability.
 
 ---
 
@@ -38,6 +46,11 @@
   - latest outputs available under `catalog-generator/output/`
 - Phased plan creation and safety criteria definition.
 - Creating inventory + executing cleanup phases on the WordPress admin site (remote backup record + plugin versions still pending).
+- Local WordPress runtime remains available through Docker Compose for production snapshot testing, owned-theme work, and `mu-plugin` validation.
+- Local plugin cleanup now has one passing deactivation entry; production remains untouched until explicit remote backup/admin execution.
+- Product-detail smoke coverage is now in place before the next one-plugin-at-a-time simplification cycle.
+- Inventory sync is now the active blocker before further WooCommerce simplification: local WooCommerce still has imported/demo products rather than the canonical sheet/catalog artwork inventory.
+- The next local-only sync step is to turn the tested product drafts into a dry-run/apply importer that creates or updates local WooCommerce products by `artwork_id`.
 
 ---
 
@@ -45,10 +58,11 @@
 
 1. Resolve the remaining catalog blockers: Gotham font files, final brand assets, and the client's reusable photo-selection criteria.
 2. Run the next catalog iteration after client feedback using `thoughts/shared/plans/2026-04-26-catalog-editorial-uplift-handoff.md` as the session bootstrap.
-3. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
-4. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
-5. Execute Phase 4: monitor stability and finalize removal log statuses.
-6. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
+3. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
+4. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
+5. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
+6. Execute Phase 4: monitor stability and finalize removal log statuses.
+7. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
 
 ---
 

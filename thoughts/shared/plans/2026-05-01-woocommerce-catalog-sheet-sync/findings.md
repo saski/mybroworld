@@ -1,0 +1,32 @@
+# Findings
+
+## 2026-05-01
+- The sheet-review rule applies because the task involves Google Sheets, catalog data, inventory readiness, and synchronization.
+- Existing reviewer criteria already warn not to assume a fixed sheet tab; target tabs should be detected by metadata and canonical headers.
+- Current repo status is dirty from prior WordPress local-runtime and validation work; avoid reverting unrelated edits.
+- Existing WordPress direction remains split: imported `glacier` is valid for production-like local validation, while repo-owned code remains the long-term maintainable surface.
+- `thoughts/shared/docs/artwork-data-contract.md` already defines canonical artwork fields shared by WooCommerce custom code and the catalog generator, but it explicitly predates sync logic.
+- `catalog-generator/src/catalog-generator.mjs` consumes CSV rows by canonical headers, filters to `include_in_catalog && catalog_ready`, normalizes status, image URLs, and public display fields, and ignores extra columns.
+- The catalog generator currently produces PDF artifacts from sheet/CSV data; it does not write WooCommerce products.
+- The owned WordPress MU layer currently stores only a small subset of artwork metadata: current location, location history, and submission history.
+- Owned WordPress status rules mirror the catalog status normalization/labels, but there is not yet an owned product import/update path.
+- `scripts/wp-local-import-snapshot.sh` can restore local look and feel plus inventory from a downloaded production snapshot by copying `wp-content` and importing the production DB locally.
+- The current local parity mechanism is snapshot-based, not continuous sync-based.
+- The linked Google Sheet is accessible as `Lucía Astuy - CATALOGO_BASE`, spreadsheet ID `15wvN5g8pQmnjF13v3lLzrIbuFysJ7GaTUAb_ps9oqJw`.
+- Drive metadata shows the sheet was modified on `2026-05-01T01:43:40.629Z`.
+- The fetched sheet content includes a `2026` data sheet export with the canonical artwork headers and 20 visible artwork rows from `LA-2026-001` through `LA-2026-020`.
+- The same export includes validation metadata and a status/location lookup table, so sync tooling must avoid treating every fetched table fragment as artwork rows.
+- Local WooCommerce currently has 15 published products.
+- Local WooCommerce product titles are imported/demo-style products such as `Bottle`, `Audio`, `Vases`, `Clock`, `Coffee Pot`, `Armchair`, and `Black Armchair`.
+- Local WooCommerce inventory does not match the current sheet/catalog artwork rows, which are `LA-2026-*` artworks with titles such as `Perrete en tablillas 01` and `More human than human`.
+- Current state: local look-and-feel parity exists through the imported `glacier` snapshot, but inventory parity with the sheet/PDF catalog contract does not exist.
+- Repo-level validation runs `scripts/wp-test-owned-code.sh` and `npm --prefix catalog-generator test`; there is no root `package.json`.
+- A small inventory parity comparator should live either under `scripts/` with Node's built-in test runner or under `catalog-generator/` only if it is PDF-generator specific.
+- `catalog-generator/data/CATALOGO_BASE.csv` is a local CSV snapshot matching the same canonical headers and visible 2026 artwork set as the linked sheet export.
+- The catalog generator already uses `csv-parse/sync` under `catalog-generator`, so a comparator under that package can reuse the existing structured CSV parser instead of ad hoc parsing.
+- Added a read-only inventory parity comparator and CLI.
+- Current parity baseline using `catalog-generator/data/CATALOGO_BASE.csv` against local WooCommerce: `sheet=20 woo=15 missing=20 unexpected=15`.
+- Every `LA-2026-*` sheet artwork is currently missing from local WooCommerce, and every local WooCommerce product is unexpected relative to the sheet.
+- This confirms the next inventory step must be a controlled local import/update plan, not another plugin/theme simplification.
+- User decision on 2026-05-01: WooCommerce should contain all canonical sheet artworks, with `status_normalized` controlling storefront visibility and purchasability.
+- Implemented a pure WooCommerce product draft mapper that includes all canonical artworks and maps `available` to visible/purchasable, historical non-available statuses to visible/not purchasable, and `archived` to hidden/not purchasable.

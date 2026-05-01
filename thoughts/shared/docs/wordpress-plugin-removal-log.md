@@ -21,7 +21,9 @@ Track each plugin you consider removing so you can prove:
 
 ## Current Entries
 
-*(No entries yet — Phase 1 created this log file.)*
+| Date (local) | Plugin | Action | Evidence | Result |
+|---|---|---|---|---|
+| 2026-05-01 | `all-in-one-wp-migration-src` | local deactivated | Baseline and post-change `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` passed; WP-CLI inactive-state assertion passed after deactivation; smoke checks returned 200 for `/`, `/shop/`, `/cart/`, and `/checkout/`. | pass; keep inactive locally; production untouched; rollback with `wp plugin activate all-in-one-wp-migration-src` |
 
 ## Standard Verification Command
 

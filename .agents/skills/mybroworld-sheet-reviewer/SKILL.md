@@ -46,6 +46,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 - When a new canonical enum value is explicitly approved for a range-backed field such as `status_normalized`, add it consistently across the hidden validation list, header note, and any matching conditional-format rules rather than only editing one cell.
 - When a catalog workbook is split across multiple yearly tabs, keep judgments and automations generic across tabs. Use the canonical headers to detect compatible year sheets, and prefer explicit `sheetId` or selected-year scope over hardcoded tab names.
 - Treat missing values and inconsistent values as different review cases. Some tasks require filling data; others require judging whether an existing value violates the project pattern.
+- For commerce inventory work, treat sheet/catalog/WooCommerce parity as a review concern. Before writing product data, compare the canonical sheet rows, generated catalog scope, and WooCommerce products, then report missing, unexpected, and ambiguous records separately. WooCommerce inventory scope is all canonical sheet artworks; status controls visibility and purchasability.
 
 ## Manual Review Mode
 

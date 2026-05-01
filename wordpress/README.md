@@ -47,51 +47,116 @@ colima start
 
 ## Local Boot
 
-1. Copy `.env.example` to `.env` and adjust ports or passwords if needed.
-   The default table prefix is `wp_lucia_` to keep clean local installs separate from the production `wp_nueva` tables.
-2. Start the disposable stack from the repository root:
+Start or repair the local WordPress/WooCommerce runtime from the repository root:
 
 ```bash
-docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml up -d
+scripts/wp-local-setup.sh
 ```
 
-3. Open:
+The setup script:
+- creates `wordpress/.env` from `wordpress/.env.example` when missing
+- starts Docker Compose
+- installs WordPress when the local database is empty
+- installs and activates WooCommerce
+- creates WooCommerce pages
+- activates the owned `luciastuy` theme
+- flushes permalinks
+
+Open:
 - WordPress: `http://localhost:8080`
 - phpMyAdmin: `http://localhost:8081`
 
-4. Install WordPress into the disposable local runtime:
+To preview the commands without changing containers, run:
 
 ```bash
-docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml run --rm wpcli core install --url=http://localhost:8080 --title="Lucia Stuy Local" --admin_user=admin --admin_password=change-me-now --admin_email=studio@example.test --skip-email
-```
-
-5. Install and activate WooCommerce locally:
-
-```bash
-docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml run --rm wpcli plugin install woocommerce --activate
+scripts/wp-local-setup.sh --dry-run
 ```
 
 The local runtime is meant to boot cleanly without production content. Import the production database only when you are doing targeted migration or debugging work, not as part of the default bootstrap path.
 
-## Importing Production Data
+## Local Runtime Validation
 
-After you export a production DB dump:
+Run the local validation loop after WordPress/WooCommerce changes:
 
 ```bash
-scripts/wp-pull-db.sh /absolute/path/to/export.sql
+scripts/wp-local-validate.sh
 ```
 
-This copies the dump into `wordpress/wordpress.sql` for manual import.
+This command checks owned WordPress code, confirms the local WordPress install, confirms WooCommerce is active, confirms the expected theme is active, and smoke-tests `/`, `/shop/`, `/cart/`, `/checkout/`, plus one product-detail page when a published product can be discovered.
 
-If you also need media for visual work, sync only the required subset of uploads.
+For the imported production snapshot, validate against the production theme:
+
+```bash
+WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh
+```
+
+When validating the imported `glacier` snapshot, product-detail smoke coverage is required because the production snapshot is expected to contain published WooCommerce products.
+
+## Importing Production Data
+
+Production snapshots are imported locally only. The import helper reads the latest
+snapshot path from `/tmp/mybroworld-last-prod-snapshot-dir` by default, or from an
+explicit `--snapshot-dir` argument:
+
+```bash
+scripts/wp-local-import-snapshot.sh --dry-run
+scripts/wp-local-import-snapshot.sh
+```
+
+The import helper:
+- starts the local Docker Compose runtime
+- copies snapshot `wp-content/plugins/`, `themes/`, `uploads/`, `languages/`, and
+  `fonts/` into the local Docker WordPress runtime
+- imports `wordpress-db.sql` or `wordpress.sql` from the snapshot when the dump is
+  present and non-empty
+- uses the snapshot `wp-config.php` table prefix only when importing a real dump
+- rewrites `https://www.luciastuy.com` to the configured local WordPress URL
+
+To import content without touching the database intentionally, run:
+
+```bash
+scripts/wp-local-import-snapshot.sh --skip-db
+```
+
+After you export a production DB dump separately, you can either place it in the
+snapshot as `wordpress-db.sql` or pass it explicitly:
+
+```bash
+scripts/wp-local-import-snapshot.sh --db-dump /absolute/path/to/export.sql
+```
+
+The current production snapshot was captured into an ignored `backups/` folder.
+It includes production `wp-content`, `wp-config.php`, and a production DB export.
+After import, the local shop uses the production `glacier` theme and production
+plugin set. A local-only administrator is available for testing:
+- URL: `http://localhost:8080/wp-admin/`
+- User: `localadmin`
+- Password: `change-me-now`
+
+The production `Glacier` theme has host-dependent code that breaks normal WP-CLI
+bootstrap on `localhost`; local validation uses `--skip-themes --skip-plugins`
+for status checks and validates runtime health through HTTP smoke checks.
+
+## Exporting Production DB For Local Import
+
+Use the remote DB exporter only for local snapshot creation, never for deploys:
+
+```bash
+scripts/wp-remote-db-export.sh --dry-run
+WP_BACKUP_OUT_DIR=/absolute/ignored/snapshot scripts/wp-remote-db-export.sh
+```
+
+The exporter creates a random-name, token-protected PHP file on production,
+downloads `wordpress-db.sql`, and removes the temporary exporter through a cleanup
+trap. Keep the resulting SQL dump out of git.
 
 ## Verification
 
 ```bash
 docker compose --env-file wordpress/.env.example -f wordpress/docker-compose.yml config
-docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml up -d
+scripts/wp-local-setup.sh
 docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml ps
-docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml run --rm wpcli core version
+scripts/wp-local-validate.sh
 ```
 
 ## Owned-Code Tests
@@ -102,7 +167,7 @@ Run the fast PHP checks before changing the owned theme or `mu-plugins`:
 scripts/wp-test-owned-code.sh
 ```
 
-This command lints the owned PHP files, runs the lightweight PHP tests under `wordpress/wp-content/mu-plugins/tests/`, and runs the WordPress smoke helper unit tests.
+This command lints the owned PHP files, runs the lightweight PHP tests under `wordpress/wp-content/mu-plugins/tests/`, runs the WordPress smoke helper unit tests, and runs script-level dry-run tests for deployment and local-runtime wrappers.
 
 ## Full Local Validation
 
@@ -119,11 +184,22 @@ This command validates active OpenSpec changes, runs the WordPress owned-code ch
 Before and after deactivating a plugin, run:
 
 ```bash
-WP_BASE_URL=http://localhost:8080 scripts/wp-plugin-removal-smoke.sh
+WP_BASE_URL=http://localhost:8080 WP_SMOKE_INCLUDE_FIRST_PRODUCT=1 scripts/wp-plugin-removal-smoke.sh
 ```
 
-For production or staging, point `WP_BASE_URL` at the target site. The default smoke paths are `/`, `/shop/`, `/cart/`, and `/checkout/`. Override them when needed:
+For production or staging, point `WP_BASE_URL` at the target site. The default smoke paths are `/`, `/shop/`, `/cart/`, and `/checkout/`. Set `WP_SMOKE_INCLUDE_FIRST_PRODUCT=1` to add one discovered product-detail page, and set `WP_REQUIRE_PRODUCT_SMOKE=1` when products are expected and missing product coverage should fail validation. Override paths when needed:
 
 ```bash
-WP_BASE_URL=https://www.luciastuy.com WP_SMOKE_PATHS="/,/shop/,/cart/,/checkout/" scripts/wp-plugin-removal-smoke.sh
+WP_BASE_URL=https://www.luciastuy.com WP_SMOKE_INCLUDE_FIRST_PRODUCT=1 WP_REQUIRE_PRODUCT_SMOKE=1 WP_SMOKE_PATHS="/,/shop/,/cart/,/checkout/" scripts/wp-plugin-removal-smoke.sh
 ```
+
+## Inventory Parity Audit
+
+Use the read-only parity audit before WooCommerce product import/update work. It compares canonical artwork rows from a sheet CSV export with the current WooCommerce product list:
+
+```bash
+docker compose --env-file wordpress/.env -f wordpress/docker-compose.yml run --rm wpcli --skip-themes --skip-plugins post list --post_type=product --fields=ID,post_title,post_status,post_name --format=csv --posts_per_page=500 > /tmp/mybroworld-woo-products.csv
+scripts/wp-inventory-parity.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --woo-csv /tmp/mybroworld-woo-products.csv
+```
+
+The command exits non-zero when inventory is out of sync and prints `missing_in_woo` and `unexpected_in_woo` rows. It does not mutate WordPress, WooCommerce, the Google Sheet, or catalog files.

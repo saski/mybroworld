@@ -43,6 +43,18 @@ Define the canonical artwork fields shared by the WooCommerce custom layer and t
 - The first version remains a single optional text field rather than a normalized submission model.
 - In any canonical yearly tab, `submission_history` must keep its canonical header name, but its physical column position may move with other editing-oriented layout changes.
 
+## Commerce Sync Notes
+
+- The Google Sheet canonical artwork rows are the current source for artwork identity and display fields used by PDF catalog generation and WooCommerce inventory sync planning.
+- WooCommerce inventory should contain all canonical sheet artworks. PDF catalog generation may use a subset of rows through `include_in_catalog` and `catalog_ready`, but WooCommerce inventory scope is not limited by those catalog flags.
+- Use `artwork_id` as the stable cross-system identity for future WooCommerce product import/update work. Title matching is acceptable only for the current read-only parity audit because existing local WooCommerce products do not yet carry `artwork_id` metadata.
+- `status_normalized` controls WooCommerce storefront behavior:
+  - `available` artworks are visible and purchasable.
+  - Non-available historical statuses are visible but not purchasable.
+  - `archived` artworks remain in WooCommerce inventory but are hidden and not purchasable.
+- Local look-and-feel parity with the remote shop is snapshot-based through the imported production `glacier` runtime; inventory parity is a separate data sync concern.
+- Do not write inventory changes to production WooCommerce without an explicit production task, backup, and rollback path.
+
 ## Canonical Status Enum
 
 Allowed normalized values:
