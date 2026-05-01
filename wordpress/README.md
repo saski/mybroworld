@@ -190,6 +190,15 @@ The catalog PDF console lives in owned MU plugin code and calls the deployed App
 
 Do not expose `LUCIA_CATALOG_API_TOKEN` in browser JavaScript. Browser requests go to WordPress AJAX endpoints with a WordPress nonce; WordPress sends the shared token only from the server.
 
+After login, shop operators can open `wp-admin/admin.php?page=lucia-catalog-console` or the `Catalog PDFs` admin menu item. The workflow is:
+- enter or accept the catalog title
+- keep the default scope unless a multi-year catalog is needed
+- click `Generate PDF`
+- keep the local catalog agent running so it can claim the queued job, render the PDF, and upload it to Drive
+- use the `Open PDF`, `Approve`, and `Needs changes` controls from the recent jobs table
+
+The Apps Script Web App redirects successful responses through `script.googleusercontent.com`. The MU plugin handles that redirect server-side with an allowlisted Google GET follow-up, because WordPress automatic POST redirect handling can otherwise return a Google HTTP 400 response.
+
 ## Full Local Validation
 
 Run the project-level validation loop before committing WordPress simplification or plugin-removal changes:

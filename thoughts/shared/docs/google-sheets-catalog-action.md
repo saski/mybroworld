@@ -11,6 +11,8 @@ The implementation is split into two installable parts:
 
 The sheet writes jobs into `catalog_jobs`. The local agent claims only jobs whose `execution_profile` matches its own config.
 
+The same Apps Script project can also be deployed as a token-protected Web App for the WordPress catalog console. WordPress should call that endpoint server-side and keep the shared token outside tracked files.
+
 ## Workbook Install
 
 1. Open the target spreadsheet.
@@ -40,23 +42,31 @@ The sheet writes jobs into `catalog_jobs`. The local agent claims only jobs whos
    - `watchSpreadsheetIds`
    - `oauthClientPath`
    - `oauthTokenPath`
-3. Place the Google OAuth desktop client JSON outside the repository.
-4. Run the one-time authorization flow:
+3. Create or reuse a Google Cloud OAuth desktop client owned by the same Google account family as the target profile. For the `nacho-saski` profile, use the personal project `mybroworld-catalog-260501` and OAuth app `MyBroworld Catalog Agent`, not any Eventbrite app.
+4. Confirm the OAuth app declares the required scopes before authorizing:
+   - `https://www.googleapis.com/auth/spreadsheets`
+   - `https://www.googleapis.com/auth/drive`
+   - `openid`
+   - `email`
+   - `profile`
+5. Place the Google OAuth desktop client JSON outside the repository.
+6. Run the one-time authorization flow:
 
 ```bash
 cd /path/to/mybroworld/catalog-generator
 npm run catalog-agent:authorize -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 
-5. Verify the token was stored at the configured `oauthTokenPath`.
-6. Run one controlled poll:
+7. Verify the token was stored at the configured `oauthTokenPath` and that the granted scope list includes Google Sheets and Drive.
+8. Confirm the machine can render with Puppeteer. On macOS, the generator falls back to `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` when Puppeteer's managed Chrome cache is empty.
+9. Run one controlled poll:
 
 ```bash
 cd /path/to/mybroworld/catalog-generator
 npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 
-7. After verification, install the user-level LaunchAgent that runs:
+10. After verification, install the user-level LaunchAgent that runs:
 
 ```bash
 cd /path/to/mybroworld/catalog-generator
@@ -80,6 +90,45 @@ npm run catalog-agent -- --config ~/Library/Application\ Support/MyBroworld/cata
   - `uploading`
   - `completed`
   - `failed`
+- Completed jobs can later carry review fields written by a trusted operator UI:
+  - `review_status`
+  - `reviewed_at`
+  - `reviewed_by`
+  - `review_notes`
+
+## WordPress Web App API
+
+Deploy the bound Apps Script as a Web App when WordPress needs to queue and monitor catalog jobs.
+
+Deployment settings:
+
+- Execute as the script owner account that can edit the workbook.
+- Use an access mode reachable by the production WordPress server.
+- Store the deployed Web App URL in WordPress configuration outside tracked files.
+- Keep the shared API token, OAuth client JSON, and OAuth token files outside the repository.
+
+Before deployment, set the script property:
+
+- `CATALOG_API_TOKEN`
+
+Supported JSON actions:
+
+- `queue_catalog_job`
+- `get_catalog_job`
+- `list_recent_catalog_jobs`
+- `record_catalog_review`
+
+All requests use this envelope:
+
+```json
+{
+  "token": "<shared-token>",
+  "action": "queue_catalog_job",
+  "data": {}
+}
+```
+
+The WordPress side must send this request from server-side code, not from browser JavaScript, so the token is not exposed to the customer browser.
 
 ## Verification Checklist
 
@@ -92,8 +141,12 @@ Run the following acceptance checks after both profiles are installed:
    - `result_file_id`
    - `result_file_url`
    - `result_artwork_count`
+   - blank review fields ready for later approval workflow
 5. Open the sidebar on an incompatible tab and verify it lists the exact missing required headers instead of queueing a broken job.
 6. Remove both the explicit folder input and the profile default folder, then confirm the sidebar blocks queueing.
+7. Deploy the Apps Script Web App, send a token-authenticated `queue_catalog_job` request from a controlled local client, and verify the row appears in `catalog_jobs`.
+8. Poll the queued job through `get_catalog_job`, then run the local agent once and verify the completed response includes `result_file_url`.
+9. Record an approval with `record_catalog_review` and verify the job row includes `review_status`, `reviewed_at`, and `reviewed_by`.
 
 ## Common Operational Issues
 
@@ -107,4 +160,10 @@ Run the following acceptance checks after both profiles are installed:
   The profile row and the sidebar input both lack a Drive folder id.
 
 - `failed code=pdf_render_failed message=Unable to render PDF output: ...`
-  Chromium could not start in the current environment. Verify the local runtime can launch Puppeteer outside any restrictive sandbox.
+  Chromium could not start or the catalog images did not finish loading in the render window. Verify the local runtime can launch Puppeteer outside any restrictive sandbox, and on macOS confirm `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` exists.
+
+- `Catalog API token is not configured.`
+  The Apps Script Web App was called before setting `CATALOG_API_TOKEN` in script properties.
+
+- `Unauthorized catalog API request.`
+  The WordPress-side token does not match the Apps Script `CATALOG_API_TOKEN` property.

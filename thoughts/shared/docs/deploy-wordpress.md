@@ -25,6 +25,15 @@ Known production defaults:
 - `WP_REMOTE_THEME_DIR=/public/wp-content/themes/luciastuy`
 - `WP_REMOTE_MU_PLUGIN_DIR=/public/wp-content/mu-plugins`
 
+Catalog PDF console runtime config belongs outside git, in `wp-config.php` or host environment variables:
+- `LUCIA_CATALOG_API_URL`
+- `LUCIA_CATALOG_API_TOKEN`
+- `LUCIA_CATALOG_DEFAULT_PROFILE`
+- `LUCIA_CATALOG_DEFAULT_DRIVE_FOLDER_ID`
+- `LUCIA_CATALOG_DEFAULT_ACTIVE_SHEET_ID`
+- optional `LUCIA_CATALOG_DEFAULT_SCOPE_MODE`
+- optional `LUCIA_CATALOG_CONSOLE_CAPABILITY`
+
 Remote script config:
 - copy `scripts/wp-remote.env.example` to `scripts/wp-remote.env`
 - fill in credential variables locally
@@ -53,6 +62,7 @@ Use `WP_REMOTE_USER` only when `WP_DEPLOY_TRANSPORT=rsync`.
 ## Pre-Deploy Checklist
 - confirm the owned theme source exists at `wordpress/wp-content/themes/luciastuy`
 - confirm the `mu-plugin` source exists at `wordpress/wp-content/mu-plugins`
+- confirm catalog console secrets are configured on the target host, not in tracked files
 - confirm `scripts/wp-remote.env` points at `ftp.luciastuy.com` and `/public`
 - run `scripts/wp-push-theme.sh --dry-run` and verify the remote target paths
 - verify `WP_DEPLOY_TRANSPORT`, `WP_FTP_HOST`, `WP_FTP_USER`, and `WP_REMOTE_PATH` point to production before any upload
@@ -65,3 +75,5 @@ Use `WP_REMOTE_USER` only when `WP_DEPLOY_TRANSPORT=rsync`.
 - open `https://www.luciastuy.com/shop/` and verify WooCommerce catalog pages load
 - open a representative artwork page and verify images, title, and availability messaging still render
 - open `https://www.luciastuy.com/wp-admin/` and verify WordPress admin still loads
+- open `https://www.luciastuy.com/wp-admin/admin.php?page=lucia-catalog-console` as a shop operator and verify the `Catalog PDFs` page loads
+- queue one catalog only when the local catalog agent is ready to process it, then confirm the completed Drive link and review state appear in the recent jobs table

@@ -122,6 +122,10 @@ Recommended columns:
 | `error_code` | string | optional | Short machine-readable error code |
 | `error_message` | string | optional | Human-readable error summary |
 | `log_excerpt` | string | optional | Short diagnostic excerpt |
+| `review_status` | enum | optional | Blank until reviewed, then `approved` or `needs_changes` |
+| `reviewed_at` | ISO datetime | optional | When the generated PDF was reviewed |
+| `reviewed_by` | string | optional | Best-effort reviewer name or email from WordPress |
+| `review_notes` | string | optional | Short reviewer note, especially when changes are needed |
 
 ## Job Lifecycle
 
@@ -148,6 +152,18 @@ Valid flow:
 4. Agent finishes with:
    - `completed`, or
    - `failed`
+
+## Review Contract
+
+Review fields are written after generation by the WordPress catalog console or another trusted operator UI. They do not affect agent claiming or rendering.
+
+Allowed `review_status` values:
+
+- blank: not reviewed yet
+- `approved`: the generated PDF is accepted
+- `needs_changes`: the generated PDF requires follow-up edits
+
+When a review decision is recorded, the writer should set `review_status`, `reviewed_at`, and `reviewed_by`. `review_notes` is optional, but recommended when the status is `needs_changes`.
 
 ## Claim Contract
 
@@ -379,11 +395,65 @@ Defaults at enqueue time:
 - `status = queued`
 - `artist_name = Lucía Astuy` when left blank
 - `output_folder_id` falls back to the profile default when blank
+- review fields default to blank until a trusted operator UI records a decision
 
 Recommended `output_filename` rule when blank:
 
 - Build from catalog title plus timestamp, for example `catalog_2026_20260419_154500.pdf`
 - Sanitize spaces and unsafe filesystem characters before queueing
+
+## WordPress Catalog API Contract
+
+The bound Apps Script can also be deployed as a Web App for the WordPress catalog console. WordPress sends server-side JSON requests to the Web App; the browser must not see the shared token.
+
+Deployment rule:
+
+- Deploy the Web App to execute as the script owner account that can edit the workbook.
+- Choose an access mode reachable by the production WordPress server, then rely on the shared token as the application-level authorization check.
+- Record the deployed Web App URL in WordPress configuration outside tracked files.
+
+Shared token rule:
+
+- Store the token in Apps Script `ScriptProperties` as `CATALOG_API_TOKEN`.
+- Store the matching token in WordPress configuration outside tracked files.
+- Reject requests when the token is missing or does not match.
+
+Request envelope:
+
+```json
+{
+  "token": "<shared-token>",
+  "action": "queue_catalog_job",
+  "data": {}
+}
+```
+
+Supported actions:
+
+- `queue_catalog_job`: validates profile, scope, selected sheet ids, catalog title, and output folder before appending a queued row.
+- `get_catalog_job`: returns one serialized `catalog_jobs` row by `jobId`.
+- `list_recent_catalog_jobs`: returns recent serialized job rows, capped to 50.
+- `record_catalog_review`: writes `review_status`, `reviewed_at`, `reviewed_by`, and `review_notes` for an existing job.
+
+Response envelope:
+
+```json
+{
+  "ok": true,
+  "result": {}
+}
+```
+
+Error response envelope:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "message": "Select an enabled execution profile."
+  }
+}
+```
 
 ## Local Agent API Contract
 
@@ -426,8 +496,10 @@ Secret handling rules:
 
 Apps Script auth rule:
 
-- The bound Apps Script should not need external backend secrets in the first version.
-- It only needs the spreadsheet permissions required to read/write the current workbook UI and helper tabs.
+- The spreadsheet UI path does not need backend secrets.
+- The WordPress Web App path requires only one shared token stored in Apps Script `ScriptProperties`.
+- Do not hardcode the API token in Apps Script source, WordPress source, or repository docs.
+- The script needs the spreadsheet permissions required to read/write the current workbook UI and helper tabs.
 
 ## Agent Processing Pipeline
 

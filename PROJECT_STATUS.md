@@ -11,6 +11,7 @@
 |-----|-----|----|----|
 | Catalog editorial uplift | 🟡 In Progress | 82% | Yes |
 | WordPress production snapshot runtime | 🟢 Ready | 100% | No |
+| WordPress catalog PDF console | 🟢 Ready locally | 90% | Production rollout pending |
 | WordPress plugin cleanup plan | 🟡 In Progress | 5% | No |
 | Safe cleanup execution + verification | ⚠️ Pending | 0% | Requires admin access + backups |
 
@@ -33,6 +34,7 @@
 - Added product-detail smoke coverage to local WordPress validation on 2026-05-01; the `glacier` validation loop now requires one published product page and passed against `/product/armchair/`.
 - Added a read-only WooCommerce/sheet inventory parity audit on 2026-05-01. Current local baseline is out of sync: 20 sheet artworks are missing from WooCommerce and 15 local WooCommerce products are unexpected relative to the sheet.
 - Recorded the WooCommerce inventory scope decision on 2026-05-01: all canonical sheet artworks belong in WooCommerce, and `status_normalized` controls visibility and purchasability.
+- Completed Phase 4 of the WordPress catalog PDF console on 2026-05-01. The local WordPress admin UI queued `catalog_20260501_120151_899f`, the local catalog agent rendered and uploaded a 14-artwork PDF, and the UI persisted the review state as `approved`.
 
 ---
 
@@ -51,6 +53,7 @@
 - Product-detail smoke coverage is now in place before the next one-plugin-at-a-time simplification cycle.
 - Inventory sync is now the active blocker before further WooCommerce simplification: local WooCommerce still has imported/demo products rather than the canonical sheet/catalog artwork inventory.
 - The next local-only sync step is to turn the tested product drafts into a dry-run/apply importer that creates or updates local WooCommerce products by `artwork_id`.
+- The WordPress catalog PDF console is ready for safe rollout planning. Runtime config and secrets still belong outside git, and production validation should queue a catalog only when the local catalog agent is ready to process it.
 
 ---
 
@@ -63,6 +66,7 @@
 5. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
 6. Execute Phase 4: monitor stability and finalize removal log statuses.
 7. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
+8. Roll out the WordPress catalog PDF console with `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md` Phase 5 after production secrets are configured.
 
 ---
 

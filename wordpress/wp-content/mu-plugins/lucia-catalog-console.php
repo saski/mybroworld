@@ -225,6 +225,84 @@ function lucia_catalog_console_current_user_payload(): array
     ];
 }
 
+function lucia_catalog_console_response_code(mixed $response): int
+{
+    if (function_exists('wp_remote_retrieve_response_code')) {
+        return (int) wp_remote_retrieve_response_code($response);
+    }
+
+    return (int) ($response['response']['code'] ?? 0);
+}
+
+function lucia_catalog_console_response_body(mixed $response): string
+{
+    if (function_exists('wp_remote_retrieve_body')) {
+        return (string) wp_remote_retrieve_body($response);
+    }
+
+    return (string) ($response['body'] ?? '');
+}
+
+function lucia_catalog_console_response_header(mixed $response, string $header): string
+{
+    if (function_exists('wp_remote_retrieve_header')) {
+        return (string) wp_remote_retrieve_header($response, $header);
+    }
+
+    $headers = $response['headers'] ?? [];
+    if (! is_array($headers)) {
+        return '';
+    }
+
+    $normalizedHeader = strtolower($header);
+    foreach ($headers as $name => $value) {
+        if (strtolower((string) $name) === $normalizedHeader) {
+            return is_array($value) ? (string) reset($value) : (string) $value;
+        }
+    }
+
+    return '';
+}
+
+function lucia_catalog_console_is_allowed_api_redirect(string $location): bool
+{
+    $host = strtolower((string) parse_url($location, PHP_URL_HOST));
+
+    return in_array($host, ['script.google.com', 'script.googleusercontent.com'], true);
+}
+
+function lucia_catalog_console_post_api_request(array $body, array $config): mixed
+{
+    $requestArgs = [
+        'body' => function_exists('wp_json_encode') ? wp_json_encode($body) : json_encode($body),
+        'headers' => [
+            'Content-Type' => 'application/json',
+        ],
+        'redirection' => 0,
+        'timeout' => 30,
+    ];
+    $response = wp_remote_post($config['api_url'], $requestArgs);
+
+    if (function_exists('is_wp_error') && is_wp_error($response)) {
+        return $response;
+    }
+
+    $responseCode = lucia_catalog_console_response_code($response);
+    $location = lucia_catalog_console_response_header($response, 'location');
+    if ($responseCode >= 300 && $responseCode < 400 && $location !== '' && lucia_catalog_console_is_allowed_api_redirect($location)) {
+        if (! function_exists('wp_remote_get')) {
+            return $response;
+        }
+
+        return wp_remote_get($location, [
+            'redirection' => 0,
+            'timeout' => 30,
+        ]);
+    }
+
+    return $response;
+}
+
 function lucia_catalog_console_call_api(string $action, array $data, ?array $config = null): mixed
 {
     $resolvedConfig = $config ?? lucia_catalog_console_config();
@@ -241,24 +319,14 @@ function lucia_catalog_console_call_api(string $action, array $data, ?array $con
         'data' => $data,
         'token' => $resolvedConfig['api_token'],
     ];
-    $response = wp_remote_post($resolvedConfig['api_url'], [
-        'body' => function_exists('wp_json_encode') ? wp_json_encode($body) : json_encode($body),
-        'headers' => [
-            'Content-Type' => 'application/json',
-        ],
-        'timeout' => 30,
-    ]);
+    $response = lucia_catalog_console_post_api_request($body, $resolvedConfig);
 
     if (function_exists('is_wp_error') && is_wp_error($response)) {
         throw new RuntimeException($response->get_error_message());
     }
 
-    $responseCode = function_exists('wp_remote_retrieve_response_code')
-        ? (int) wp_remote_retrieve_response_code($response)
-        : (int) ($response['response']['code'] ?? 0);
-    $responseBody = function_exists('wp_remote_retrieve_body')
-        ? (string) wp_remote_retrieve_body($response)
-        : (string) ($response['body'] ?? '');
+    $responseCode = lucia_catalog_console_response_code($response);
+    $responseBody = lucia_catalog_console_response_body($response);
 
     if ($responseCode < 200 || $responseCode >= 300) {
         throw new RuntimeException('Catalog API request failed with HTTP ' . $responseCode . '.');
@@ -414,11 +482,33 @@ function lucia_catalog_console_register_admin_page(): void
     );
 }
 
+function lucia_catalog_console_default_catalog_title(?int $timestamp = null): string
+{
+    return 'Catalog ' . gmdate('Y-m-d', $timestamp ?? time());
+}
+
+function lucia_catalog_console_json_encode(array $data): string
+{
+    $options = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+    $encoded = function_exists('wp_json_encode')
+        ? wp_json_encode($data, $options)
+        : json_encode($data, $options);
+
+    return is_string($encoded) ? $encoded : '{}';
+}
+
 function lucia_catalog_console_render_admin_page(): void
 {
     $config = lucia_catalog_console_config();
     $nonce = function_exists('wp_create_nonce') ? wp_create_nonce('lucia_catalog_console') : '';
     $ajaxUrl = function_exists('admin_url') ? admin_url('admin-ajax.php') : '';
+    $settings = [
+        'ajaxUrl' => $ajaxUrl,
+        'defaultActiveSheetId' => $config['default_active_sheet_id'],
+        'defaultProfile' => $config['default_profile'],
+        'defaultScopeMode' => lucia_catalog_console_scope_mode('', $config),
+        'nonce' => $nonce,
+    ];
 
     echo '<div class="wrap" id="lucia-catalog-console" data-ajax-url="' . esc_attr($ajaxUrl) . '" data-nonce="' . esc_attr($nonce) . '">';
     echo '<h1>Catalog PDFs</h1>';
@@ -426,6 +516,253 @@ function lucia_catalog_console_render_admin_page(): void
     if (! lucia_catalog_console_is_configured($config)) {
         echo '<div class="notice notice-warning"><p>Catalog API configuration is required.</p></div>';
     }
+
+    echo '<form id="lucia-catalog-generate-form" class="lucia-catalog-console__form">';
+    echo '<input type="hidden" name="active_sheet_id" value="' . esc_attr($config['default_active_sheet_id']) . '">';
+    echo '<input type="hidden" name="execution_profile_key" value="' . esc_attr($config['default_profile']) . '">';
+    echo '<table class="form-table" role="presentation"><tbody>';
+    echo '<tr>';
+    echo '<th scope="row"><label for="lucia-catalog-title">Catalog title</label></th>';
+    echo '<td><input class="regular-text" id="lucia-catalog-title" name="catalog_title" type="text" value="' . esc_attr(lucia_catalog_console_default_catalog_title()) . '" required></td>';
+    echo '</tr>';
+    echo '<tr>';
+    echo '<th scope="row"><label for="lucia-catalog-scope">Scope</label></th>';
+    echo '<td><select id="lucia-catalog-scope" name="scope_mode">';
+    foreach ([
+        'current_tab' => 'Current year',
+        'all_compatible_tabs' => 'All compatible years',
+    ] as $scopeMode => $label) {
+        $selected = $scopeMode === $settings['defaultScopeMode'] ? ' selected' : '';
+        echo '<option value="' . esc_attr($scopeMode) . '"' . $selected . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select></td>';
+    echo '</tr>';
+    echo '</tbody></table>';
+    echo '<p class="submit"><button class="button button-primary" id="lucia-catalog-generate-button" type="submit">Generate PDF</button></p>';
+    echo '</form>';
+
+    echo '<div id="lucia-catalog-status" class="notice notice-info hidden" aria-live="polite"></div>';
+
+    echo '<h2>Recent Jobs</h2>';
+    echo '<table class="widefat striped" id="lucia-catalog-jobs">';
+    echo '<thead><tr><th>Created</th><th>Title</th><th>Status</th><th>Result</th><th>Review</th><th>Actions</th></tr></thead>';
+    echo '<tbody><tr><td colspan="6">Loading catalog jobs...</td></tr></tbody>';
+    echo '</table>';
+
+    echo '<script id="lucia-catalog-console-settings" type="application/json">' . lucia_catalog_console_json_encode($settings) . '</script>';
+    echo '<style>
+        #lucia-catalog-console .lucia-catalog-console__form {
+            max-width: 760px;
+        }
+        #lucia-catalog-status {
+            margin-top: 12px;
+            padding: 10px 12px;
+        }
+        #lucia-catalog-jobs {
+            margin-top: 8px;
+            max-width: 1180px;
+        }
+        #lucia-catalog-jobs th,
+        #lucia-catalog-jobs td {
+            vertical-align: middle;
+        }
+        .lucia-catalog-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+    </style>';
+    echo '<script>
+(() => {
+    const root = document.getElementById("lucia-catalog-console");
+    const settingsEl = document.getElementById("lucia-catalog-console-settings");
+    if (!root || !settingsEl) {
+        return;
+    }
+
+    const settings = JSON.parse(settingsEl.textContent || "{}");
+    const form = document.getElementById("lucia-catalog-generate-form");
+    const statusBox = document.getElementById("lucia-catalog-status");
+    const jobsBody = document.querySelector("#lucia-catalog-jobs tbody");
+    const generateButton = document.getElementById("lucia-catalog-generate-button");
+    let activeJobId = "";
+    let pollTimer = null;
+
+    function setStatus(message, type = "info") {
+        statusBox.className = `notice notice-${type}`;
+        statusBox.textContent = message;
+    }
+
+    function clearStatus() {
+        statusBox.className = "notice notice-info hidden";
+        statusBox.textContent = "";
+    }
+
+    async function postCatalogAction(action, fields = {}) {
+        const body = new URLSearchParams({
+            action,
+            nonce: settings.nonce,
+            ...fields,
+        });
+        const response = await fetch(settings.ajaxUrl, {
+            credentials: "same-origin",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            },
+            body,
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            const message = payload?.data?.message || "Catalog request failed.";
+            throw new Error(message);
+        }
+        return payload.data;
+    }
+
+    function statusLabel(job) {
+        const status = String(job.status || "");
+        const inProgress = ["queued", "claimed", "exporting", "merging", "rendering", "uploading"].includes(status);
+        if (inProgress && job.heartbeat_at) {
+            const heartbeatMs = Date.parse(job.heartbeat_at);
+            if (Number.isFinite(heartbeatMs) && Date.now() - heartbeatMs > 15 * 60 * 1000) {
+                return "Waiting for catalog worker";
+            }
+        }
+        return status || "unknown";
+    }
+
+    function escapeText(value) {
+        const span = document.createElement("span");
+        span.textContent = value == null ? "" : String(value);
+        return span.innerHTML;
+    }
+
+    function resultCell(job) {
+        if (job.status === "completed" && job.result_file_url) {
+            return `<a href="${escapeText(job.result_file_url)}" target="_blank" rel="noopener">Open PDF</a>`;
+        }
+        if (job.status === "failed") {
+            return escapeText(job.error_message || job.error_code || "Generation failed");
+        }
+        return "Pending";
+    }
+
+    function reviewCell(job) {
+        if (job.review_status) {
+            return escapeText(job.review_status.replace("_", " "));
+        }
+        return job.status === "completed" ? "Not reviewed" : "";
+    }
+
+    function actionsCell(job) {
+        if (job.status !== "completed" || !job.result_file_url) {
+            return "";
+        }
+        return `<div class="lucia-catalog-actions">
+            <button class="button button-small" data-review-status="approved" data-job-id="${escapeText(job.job_id)}" type="button">Approve</button>
+            <button class="button button-small" data-review-status="needs_changes" data-job-id="${escapeText(job.job_id)}" type="button">Needs changes</button>
+        </div>`;
+    }
+
+    function renderJobs(jobs) {
+        if (!Array.isArray(jobs) || jobs.length === 0) {
+            jobsBody.innerHTML = `<tr><td colspan="6">No catalog jobs yet.</td></tr>`;
+            return;
+        }
+
+        jobsBody.innerHTML = jobs.map((job) => `<tr data-job-id="${escapeText(job.job_id)}">
+            <td>${escapeText(job.created_at || "")}</td>
+            <td>${escapeText(job.catalog_title || "")}</td>
+            <td>${escapeText(statusLabel(job))}</td>
+            <td>${resultCell(job)}</td>
+            <td>${reviewCell(job)}</td>
+            <td>${actionsCell(job)}</td>
+        </tr>`).join("");
+    }
+
+    async function loadRecentJobs() {
+        const jobs = await postCatalogAction("lucia_catalog_console_recent_jobs", { limit: "10" });
+        renderJobs(jobs);
+        return jobs;
+    }
+
+    function stopPolling() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    async function pollActiveJob() {
+        if (!activeJobId) {
+            return;
+        }
+        const job = await postCatalogAction("lucia_catalog_console_get_job", { job_id: activeJobId });
+        await loadRecentJobs();
+        if (job.status === "completed") {
+            setStatus("Catalog PDF is ready.", "success");
+            stopPolling();
+            generateButton.disabled = false;
+        } else if (job.status === "failed") {
+            setStatus(job.error_message || "Catalog generation failed.", "error");
+            stopPolling();
+            generateButton.disabled = false;
+        } else {
+            setStatus(`Catalog job ${statusLabel(job)}...`, "info");
+        }
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearStatus();
+        generateButton.disabled = true;
+        const formData = new FormData(form);
+        try {
+            const job = await postCatalogAction("lucia_catalog_console_queue", Object.fromEntries(formData.entries()));
+            activeJobId = job.job_id || "";
+            setStatus("Catalog job queued.", "success");
+            await loadRecentJobs();
+            stopPolling();
+            pollTimer = window.setInterval(() => {
+                pollActiveJob().catch((error) => {
+                    setStatus(error.message, "error");
+                    stopPolling();
+                    generateButton.disabled = false;
+                });
+            }, 5000);
+            await pollActiveJob();
+        } catch (error) {
+            setStatus(error.message, "error");
+            generateButton.disabled = false;
+        }
+    });
+
+    jobsBody.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-review-status][data-job-id]");
+        if (!button) {
+            return;
+        }
+        button.disabled = true;
+        try {
+            await postCatalogAction("lucia_catalog_console_review", {
+                job_id: button.dataset.jobId,
+                review_status: button.dataset.reviewStatus,
+            });
+            setStatus("Catalog review saved.", "success");
+            await loadRecentJobs();
+        } catch (error) {
+            setStatus(error.message, "error");
+            button.disabled = false;
+        }
+    });
+
+    loadRecentJobs().catch((error) => {
+        setStatus(error.message, "error");
+        jobsBody.innerHTML = `<tr><td colspan="6">Unable to load catalog jobs.</td></tr>`;
+    });
+})();
+    </script>';
 
     echo '</div>';
 }

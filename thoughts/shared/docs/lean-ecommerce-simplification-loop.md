@@ -2,6 +2,8 @@
 
 Use this loop to reduce WordPress/WooCommerce complexity without guessing. Each cycle removes or reduces one addition only after the proposal, baseline, change, measurement, and learning are explicit.
 
+Project tenet: avoid commercial paid WordPress plugins, including freemium plugins. Prefer WordPress core, WooCommerce core, and owned code. Open-source plugins or add-ons may be considered when they meet a clear quality bar and preserve the lean simplicity principle. Treat new third-party dependencies as exceptions that require evidence, a rollback path, and explicit documentation before adoption.
+
 ## Loop
 
 1. Propose one simplification.
