@@ -22,6 +22,22 @@ Primary reference page:
 | Site Kit by Google | yes | infrastructure | UNKNOWN | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
 | All-in-One WP Migration | yes | infrastructure | CANDIDATE | unknown (pending capture) | `thoughts/shared/docs/woocommerce-audit.md` |
 
+## UX Uncoupling Review
+
+Captured on 2026-05-02 while implementing `thoughts/shared/plans/2026-05-02-online-shop-ux-quality-plan.md`.
+
+| Plugin | Shop UX Role | Current Decision |
+|---|---|---|
+| WooCommerce | Commerce engine, product model, cart, checkout | Keep as the baseline dependency. |
+| Elementor | Builder coupling risk | Do not build new shop UX on it; candidate for staged deactivation after owned theme validation. |
+| Slider Revolution | Visual/builder coupling risk | Do not use for shop UX; first staged deactivation candidate after front-page impact is checked. |
+| All-in-One WP Migration | Backup/migration utility | Keep out of runtime UX; candidate after backup and rollback workflow is proven. |
+| Yoast SEO | SEO infrastructure | Do not allow it to shape UX scope; decide separately after SEO evidence. |
+| Contact Form 7 | Content/form utility | Do not use for product purchase flow unless explicitly approved. |
+| Site Kit by Google | Analytics infrastructure | Do not couple shop UI to it; decide separately after analytics evidence. |
+
+Version recapture remains pending because this repository session did not access the live production plugins admin table. Do not infer versions from the older audit snapshot.
+
 ## Local Backup Evidence (For Staged Rollback in Development)
 
 If you are using the local WordPress runtime, the repository currently contains:
@@ -49,4 +65,3 @@ How to create a repeatable backup locally:
 ## Next Action Needed (Before Phase 2 Execution)
 Re-capture missing plugin versions (and confirm active/inactive status) directly from:
 - `https://www.luciastuy.com/wp-admin/plugins.php`
-
