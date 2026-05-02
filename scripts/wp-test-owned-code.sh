@@ -37,6 +37,7 @@ else
 fi
 
 echo "Running WordPress deploy script tests..."
+scripts/wp-deploy-manifest.test.sh
 sh scripts/wp-push-theme.test.sh
 scripts/wp-remote-db-export.test.sh
 

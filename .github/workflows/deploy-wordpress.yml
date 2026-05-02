@@ -1,0 +1,109 @@
+name: Deploy WordPress Owned Code
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - wordpress/wp-content/themes/luciastuy/**
+      - wordpress/wp-content/mu-plugins/**
+      - scripts/wp-push-theme.sh
+      - scripts/wp-test-owned-code.sh
+      - scripts/wp-deploy-manifest.sh
+      - scripts/wp-smoke-test.mjs
+      - scripts/woo-storefront-assert.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-wordpress
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy owned WordPress code
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.ENABLE_WORDPRESS_AUTO_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production-wordpress
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      WP_BASE_URL: ${{ vars.WP_BASE_URL || 'https://www.luciastuy.com' }}
+      WOO_BASE_URL: ${{ vars.WOO_BASE_URL || 'https://www.luciastuy.com' }}
+      WP_FTP_HOST: ${{ vars.WP_FTP_HOST || 'ftp.dondominio.com' }}
+      WP_REMOTE_PATH: ${{ vars.WP_REMOTE_PATH || '/public' }}
+      WP_REMOTE_THEME_DIR: ${{ vars.WP_REMOTE_THEME_DIR || '/public/wp-content/themes/luciastuy' }}
+      WP_REMOTE_MU_PLUGIN_DIR: ${{ vars.WP_REMOTE_MU_PLUGIN_DIR || '/public/wp-content/mu-plugins' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: catalog-generator/package-lock.json
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: Install deployment tools
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Install catalog dependencies
+        run: npm ci --prefix catalog-generator
+
+      - name: Run WordPress owned-code checks
+        run: scripts/wp-test-owned-code.sh
+
+      - name: Build deployment manifest
+        run: scripts/wp-deploy-manifest.sh --output wp-deploy-manifest.txt
+
+      - name: Write FTP runtime config
+        env:
+          WP_FTP_USER: ${{ secrets.WP_FTP_USER }}
+          WP_FTP_PASSWORD: ${{ secrets.WP_FTP_PASSWORD }}
+        run: |
+          set -eu
+          config_file="$RUNNER_TEMP/wp-remote.env"
+          {
+            printf 'WP_DEPLOY_TRANSPORT=ftp\n'
+            printf 'WP_FTP_HOST=%s\n' "$WP_FTP_HOST"
+            printf 'WP_FTP_USER=%s\n' "$WP_FTP_USER"
+            printf 'WP_FTP_PASSWORD=%s\n' "$WP_FTP_PASSWORD"
+            printf 'WP_REMOTE_PATH=%s\n' "$WP_REMOTE_PATH"
+            printf 'WP_REMOTE_THEME_DIR=%s\n' "$WP_REMOTE_THEME_DIR"
+            printf 'WP_REMOTE_MU_PLUGIN_DIR=%s\n' "$WP_REMOTE_MU_PLUGIN_DIR"
+          } > "$config_file"
+          chmod 600 "$config_file"
+          printf 'WP_REMOTE_CONFIG_FILE=%s\n' "$config_file" >> "$GITHUB_ENV"
+
+      - name: Preview WordPress upload
+        run: scripts/wp-push-theme.sh --dry-run
+
+      - name: Deploy WordPress owned code
+        run: scripts/wp-push-theme.sh
+
+      - name: Smoke-test production storefront
+        env:
+          WP_SMOKE_INCLUDE_FIRST_PRODUCT: "1"
+          WP_REQUIRE_PRODUCT_SMOKE: "1"
+          WP_SMOKE_PATHS: "/,/shop/,/cart/,/checkout/"
+        run: node scripts/wp-smoke-test.mjs
+
+      - name: Assert production Store API inventory
+        run: node scripts/woo-storefront-assert.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --require-managed-products --require-images --forbid-unmanaged-products
+
+      - name: Upload deployment artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wordpress-owned-code-deployment
+          path: wp-deploy-manifest.txt
+          if-no-files-found: ignore

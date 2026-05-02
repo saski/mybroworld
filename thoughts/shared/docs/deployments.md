@@ -1,0 +1,119 @@
+# Production Deployments
+
+This document records the automated deployment surfaces for the Lucía Astuy production stack.
+
+## GitHub Environments
+
+Create these GitHub Environments before enabling unattended production deployments:
+
+- `production-catalog-agent`
+- `production-wordpress`
+
+Both environments should require manual approval from a repository maintainer. Without required reviewers, GitHub will run the deployment jobs immediately after a matching push to `main`.
+
+Automatic deployment on push is disabled until these GitHub Environment or repository variables are set:
+
+- `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true`
+- `ENABLE_WORDPRESS_AUTO_DEPLOY=true`
+
+Manual `workflow_dispatch` deployments remain available without these variables, but still use the configured GitHub Environment.
+
+## Required GitHub Secrets
+
+### `production-catalog-agent`
+
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`: Workload Identity Federation provider resource name.
+- `GCP_DEPLOY_SERVICE_ACCOUNT`: Google service account email used by GitHub Actions to deploy Cloud Run.
+
+The deploy service account needs the minimum Google Cloud permissions to:
+
+- submit Cloud Build builds
+- push/read Artifact Registry images through Cloud Build
+- read and update Cloud Run Jobs
+- execute Cloud Run Jobs for verification
+- read Cloud Logging entries for verification
+- act as the Cloud Run runtime service account when updating jobs
+
+Do not use a downloaded Google service account JSON key.
+
+### `production-wordpress`
+
+- `WP_FTP_USER`: DonDominio FTP username.
+- `WP_FTP_PASSWORD`: DonDominio FTP password.
+
+Optional environment variables:
+
+- `WP_BASE_URL`, defaults to `https://www.luciastuy.com`
+- `WOO_BASE_URL`, defaults to `https://www.luciastuy.com`
+- `WP_FTP_HOST`, defaults to `ftp.dondominio.com`
+- `WP_REMOTE_PATH`, defaults to `/public`
+- `WP_REMOTE_THEME_DIR`, defaults to `/public/wp-content/themes/luciastuy`
+- `WP_REMOTE_MU_PLUGIN_DIR`, defaults to `/public/wp-content/mu-plugins`
+
+## Workflows
+
+### CI
+
+Workflow: `.github/workflows/ci.yml`
+
+Runs on pull requests and pushes to `main`.
+
+Checks:
+
+- npm install for `catalog-generator`
+- high-confidence secret scan
+- WordPress owned-code PHP lint and tests
+- WordPress deploy/local-runtime script tests
+- catalog generator tests
+- Cloud Run deploy helper dry-run tests
+- `git diff --check`
+
+### Catalog Agent Deployment
+
+Workflow: `.github/workflows/deploy-catalog-agent.yml`
+
+Runs on pushes to `main` that change catalog generator, catalog-agent, assets, package, Docker, or Cloud Run files. It can also be run manually.
+
+Push-triggered deployment is skipped unless `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` is configured. This prevents the first workflow commit from trying to deploy before Workload Identity Federation and Environment reviewers are configured.
+
+The workflow:
+
+1. Authenticates to Google Cloud through Workload Identity Federation.
+2. Builds a Cloud Run image with Cloud Build.
+3. Tags the image with the git SHA or explicit workflow input tag.
+4. Records the previous Cloud Run Job image.
+5. Updates `lucia-mybrocorp-catalog-agent`.
+6. Executes the job once.
+7. Verifies Cloud Run logs include `authenticated as mybrocorp@gmail.com`.
+8. Rolls back to the previous image if verification fails.
+
+The workflow does not deploy `latest`.
+
+### WordPress Owned-Code Deployment
+
+Workflow: `.github/workflows/deploy-wordpress.yml`
+
+Runs on pushes to `main` that change owned WordPress theme, MU plugins, or WordPress deployment scripts. It can also be run manually.
+
+Push-triggered deployment is skipped unless `ENABLE_WORDPRESS_AUTO_DEPLOY=true` is configured. This prevents accidental FTP uploads before the Environment reviewers and secrets are configured.
+
+The workflow:
+
+1. Runs WordPress owned-code checks.
+2. Creates a checksum manifest for owned deployable files.
+3. Writes FTP runtime config from GitHub Environment secrets into a temporary file.
+4. Runs `scripts/wp-push-theme.sh --dry-run`.
+5. Uploads only the owned theme and MU plugin directories.
+6. Smoke-tests the public storefront.
+7. Verifies the WooCommerce Store API exposes the canonical managed catalog with images.
+8. Stores the deploy manifest as a workflow artifact.
+
+## Rollback Notes
+
+Cloud Run rollback is automated in `catalog-generator/cloud-run/deploy.sh`: if verification fails, the script restores the previous Cloud Run Job image.
+
+WordPress rollback is not fully automated yet. The deployment manifest records what was sent, but restoring the previous remote owned-code archive still needs an explicit archive/restore helper before this gate is complete.
+
+## Source Changes
+
+Google Sheet and Drive source changes are monitored by the Cloud Run catalog monitor and the existing source/data validation scripts. Production WooCommerce auto-apply remains disabled until dry-run stability and backup gates are encoded.

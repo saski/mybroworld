@@ -12,6 +12,7 @@
 | Catalog editorial uplift | 🟡 Awaiting customer image selections | 94% | Yes |
 | WordPress production snapshot runtime | 🟢 Ready | 100% | No |
 | WordPress catalog PDF console | 🟡 Customer validation pending | 99% | Requires one catalog queued/reviewed from the customer's mybro WordPress account |
+| Safe CI/CD automation | 🟡 Repository automation implemented | 70% | GitHub Environments/secrets, auto-deploy enable flags, and remote workflow run still pending |
 | WordPress plugin cleanup plan | 🟡 In Progress | 5% | No |
 | Safe cleanup execution + verification | ⚠️ Pending | 0% | Requires admin access + backups |
 
@@ -47,6 +48,7 @@
 - Implemented the 2026-05-01 client PDF catalog feedback on 2026-05-02: `include_in_catalog` + `catalog_ready` filtering, newest-first ordering, reduced artwork metadata, PVP-only display, final contact details, official PNG logos, embedded Gotham font files, optional strict `_cat` image manifests, and Cloud Run redeploy of the updated worker image. Manual Cloud Run execution `lucia-mybrocorp-catalog-agent-bblht` completed successfully as `mybrocorp@gmail.com`.
 - Fixed the first production Cloud Run PDF render failure on 2026-05-02. The failed WordPress job `catalog_20260502_155151_3dcb` was caused by Chromium running as root without sandbox launch flags; image `catalog-agent:sandbox-fix-20260502-1818` is now deployed, and verification job `catalog_20260502_161854_retry` completed with 14 artworks at `https://drive.google.com/file/d/1eR-wTNJn5mMxGzgz5CCV6xahb5mIPHwa/view?usp=drivesdk`.
 - Added production monitoring for the Cloud Run catalog path on 2026-05-02. Image `catalog-agent:monitoring-20260502-163238` is deployed to the worker; monitor job `lucia-mybrocorp-catalog-monitor` runs every 10 minutes, direct and Scheduler-triggered monitor executions completed with `[catalog-monitor] ok spreadsheets=1 jobs=2`, and Cloud Monitoring alert policy `projects/mybroworld-catalog-260501/alertPolicies/6576773883271781072` is attached to the project email channel.
+- Added repository CI/CD automation on 2026-05-02: GitHub Actions CI, Cloud Run catalog-agent deployment workflow, WordPress owned-code deployment workflow, Dependabot config, secret scanning, WordPress deployment manifests, and SHA-tagged Cloud Run deploy/verify helpers with rollback to the previous image on verification failure.
 - Imported the legacy `2025`, `2024`, and `2023` tabs from `Obra TODO - Lucia Astuy` into `Lucia Astuy - CATALOGO_BASE` on 2026-05-02 using the consolidated `2026` header contract. The imported tabs are ordered `2026`, `2025`, `2024`, `2023`; verification counted 89 rows/89 images for 2025, 46 rows/46 images for 2024, and 35 rows/31 images for 2023.
 
 ---
@@ -68,21 +70,23 @@
 - Inventory sync is unblocked locally: local WooCommerce contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are no longer exposed by the local Store API after explicit unmanaged cleanup.
 - Production WooCommerce now contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are hidden from the public Store API.
 - The WordPress catalog PDF console is live in production. Runtime config and secrets remain outside git. New jobs now target the scheduled and monitored Cloud Run `lucia-mybrocorp` worker; the remaining handoff gate is customer validation from the mybro WordPress account using `thoughts/shared/docs/customer-testing-and-handoff.md`.
+- CI/CD workflows are committed in the repository but still need GitHub Environment configuration before remote production deploys should be trusted: `production-catalog-agent` with Google Workload Identity Federation secrets, `production-wordpress` with DonDominio FTP secrets, and explicit auto-deploy enable variables if push-triggered deploys should run automatically.
 
 ---
 
 ## 📋 Next Steps
 
 1. Run `fic-validate-plan thoughts/shared/plans/2026-05-01-woocommerce-catalog-photo-gap-plan.md` to close the WooCommerce catalog photo-gap workstream.
-2. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
-3. Complete Phase 6 of `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md`: queue one catalog from the customer's mybro WordPress account, verify Cloud Run completes it, verify Drive read/write from the customer session, and persist a review state.
-4. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
-5. After `_cat` files exist, enable `catalogImageFolderId` in the `catalog-agent-config` Secret Manager value and run one Cloud Run test job to verify strict image matching.
-6. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
-7. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
-8. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
-9. Execute Phase 4: monitor stability and finalize removal log statuses.
-10. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
+2. Configure GitHub Environments and secrets for CI/CD using `thoughts/shared/docs/deployments.md`, then run the CI workflow and one manual catalog-agent deployment workflow. Enable push-triggered deploys only after that by setting `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true`.
+3. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
+4. Complete Phase 6 of `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md`: queue one catalog from the customer's mybro WordPress account, verify Cloud Run completes it, verify Drive read/write from the customer session, and persist a review state.
+5. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
+6. After `_cat` files exist, enable `catalogImageFolderId` in the `catalog-agent-config` Secret Manager value and run one Cloud Run test job to verify strict image matching.
+7. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
+8. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
+9. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
+10. Execute Phase 4: monitor stability and finalize removal log statuses.
+11. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
 
 ---
 
@@ -92,6 +96,7 @@
 - The imported historical tabs still need manual blocker review before catalog generation: 2025 has 30 blocker rows, 2024 has 3 blocker rows, and 2023 has 12 blocker rows. The 2023 import has four rows without deterministic image matches: `LA-2023-011`, `LA-2023-021`, `LA-2023-022`, and `LA-2023-034`.
 - The original Google Drive template link was not reliably readable without authentication in this session.
 - Customer-operated catalog generation is not yet fully verified; Cloud Run, Scheduler, and monitoring are live, production WordPress now targets `lucia-mybrocorp`, and a direct Cloud Run PDF job completed, but the final proof still requires a catalog queued/reviewed from the customer's mybro WordPress account.
+- CI/CD remote execution is not fully verified until GitHub Environment reviewers, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT`, `WP_FTP_USER`, `WP_FTP_PASSWORD`, and the optional auto-deploy enable variables are configured and one workflow run completes.
 - Remote admin execution is not performed yet in this environment; exact plugin versions/status still need re-capture from `wp-admin/plugins.php`.
 - The actual “remove no longer needed” set will be confirmed only after Phase 2 deactivation + smoke tests.
 

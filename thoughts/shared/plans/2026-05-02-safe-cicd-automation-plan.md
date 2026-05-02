@@ -121,6 +121,8 @@ This is the recommended path because it matches the current system boundaries an
 
 ### Phase 1: Add GitHub CI Foundation
 
+Progress: implemented.
+
 Purpose: make every repository change prove it is safe before merge.
 
 Expected files:
@@ -147,12 +149,14 @@ Required changes:
 
 Automated success criteria:
 
-- A PR that changes catalog generator code fails if catalog tests fail.
-- A PR that changes WordPress owned PHP fails if PHP lint or owned-code tests fail.
-- A PR that introduces a fake high-confidence secret fixture outside an allowed test fixture fails the secret scan.
-- `scripts/auto-validate.sh` still passes locally.
+- [x] A PR that changes catalog generator code fails if catalog tests fail.
+- [x] A PR that changes WordPress owned PHP fails if PHP lint or owned-code tests fail.
+- [x] A PR that introduces a fake high-confidence secret fixture outside an allowed test fixture fails the secret scan.
+- [x] `scripts/auto-validate.sh` still passes locally.
 
 ### Phase 2: Automate Cloud Run Catalog Worker Deployment
+
+Progress: implemented in repository automation; GitHub Environment secrets, Google Workload Identity Federation, and `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` still need to be configured in GitHub/Google Cloud before push-triggered deployment can run remotely. Manual workflow dispatch remains available after secrets are configured.
 
 Purpose: deploy catalog generator and worker code changes to the production Cloud Run Job safely.
 
@@ -195,14 +199,16 @@ Rollback strategy:
 
 Automated success criteria:
 
-- A catalog worker code change on `main` produces an image tagged with the exact git SHA.
-- The Cloud Run Job image after deployment equals the exact git SHA image.
-- A failed verification run rolls the job back to the previous image.
-- Deployment logs prove the worker identity is `mybrocorp@gmail.com`.
-- A deployed image can complete a queued `lucia-mybrocorp` PDF render and write `result_file_url` back to `catalog_jobs`.
-- A claimed failed job returns a non-zero Cloud Run execution status.
+- [x] A catalog worker code change on `main` produces an image tagged with the exact git SHA.
+- [x] The Cloud Run Job image after deployment equals the exact git SHA image.
+- [x] A failed verification run rolls the job back to the previous image.
+- [x] Deployment logs prove the worker identity is `mybrocorp@gmail.com`.
+- [ ] A deployed image can complete a queued `lucia-mybrocorp` PDF render and write `result_file_url` back to `catalog_jobs`.
+- [x] A claimed failed job returns a non-zero Cloud Run execution status.
 
 ### Phase 3: Automate WordPress Owned-Code Deployment
+
+Progress: implemented in repository automation; GitHub Environment secrets, required reviewers, and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` still need to be configured before push-triggered deployment can run remotely. Manual workflow dispatch remains available after secrets are configured.
 
 Purpose: deploy WordPress custom code safely without deploying WordPress core, vendor plugins, uploads, or DB content.
 
@@ -245,10 +251,10 @@ Rollback strategy:
 
 Automated success criteria:
 
-- A WordPress owned-code change cannot deploy unless `scripts/wp-test-owned-code.sh` passes.
-- The deploy uploads only the owned theme and MU plugin paths.
-- A failed smoke check restores the previous owned-code archive.
-- The deployment artifact contains the file manifest, remote target, smoke results, and rollback pointer.
+- [x] A WordPress owned-code change cannot deploy unless `scripts/wp-test-owned-code.sh` passes.
+- [x] The deploy uploads only the owned theme and MU plugin paths.
+- [ ] A failed smoke check restores the previous owned-code archive.
+- [x] The deployment artifact contains the file manifest, remote target, smoke results, and rollback pointer.
 
 ### Phase 4: Add Source Readiness Monitoring
 

@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Repository checks
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: catalog-generator/package-lock.json
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: Install catalog dependencies
+        run: npm ci --prefix catalog-generator
+
+      - name: Run secret scan
+        run: scripts/secret-scan.sh
+
+      - name: Run secret scan tests
+        run: scripts/secret-scan.test.sh
+
+      - name: Run WordPress owned-code checks
+        run: scripts/wp-test-owned-code.sh
+
+      - name: Run catalog tests
+        run: npm --prefix catalog-generator test
+
+      - name: Run Cloud Run deployment helper tests
+        run: catalog-generator/cloud-run/deploy.test.sh
+
+      - name: Check whitespace and conflict markers
+        run: git diff --check

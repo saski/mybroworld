@@ -58,14 +58,33 @@ For FTP deployments, use `ftp.dondominio.com` as `WP_FTP_HOST`. The DonDominio F
 - Audit pull of the current production theme: `scripts/wp-pull-theme.sh`
 - Dry-run preview: `scripts/wp-push-theme.sh --dry-run`
 - Owned theme and `mu-plugin` upload: `scripts/wp-push-theme.sh`
+- Owned-code checksum manifest: `scripts/wp-deploy-manifest.sh --output wp-deploy-manifest.txt`
 - DB dump staging: `scripts/wp-pull-db.sh /path/to/export.sql`
 - Upload sync placeholder: `scripts/wp-pull-uploads.sh`
+
+## GitHub Actions Deployment
+
+The automated owned-code deployment workflow lives at
+`.github/workflows/deploy-wordpress.yml`.
+
+It runs after pushes to `main` that touch owned WordPress code or deployment
+scripts, and it can also be run manually. The workflow uses the
+`production-wordpress` GitHub Environment and expects these Environment secrets:
+
+- `WP_FTP_USER`
+- `WP_FTP_PASSWORD`
+
+The Environment should require maintainer approval before deployment. The
+workflow writes credentials only to a temporary runner file, runs the same
+dry-run preview as local operators, uploads only owned code, then smoke-tests the
+public storefront and Store API.
 
 ## Pre-Deploy Checklist
 - confirm the owned theme source exists at `wordpress/wp-content/themes/luciastuy`
 - confirm the `mu-plugin` source exists at `wordpress/wp-content/mu-plugins`
 - confirm catalog console secrets are configured on the target host, not in tracked files
 - confirm `scripts/wp-remote.env` points at `ftp.dondominio.com` for FTP and `/public`
+- run `scripts/wp-deploy-manifest.sh --output wp-deploy-manifest.txt` and keep the manifest with deployment evidence
 - run `scripts/wp-push-theme.sh --dry-run` and verify the remote target paths
 - verify `WP_DEPLOY_TRANSPORT`, `WP_FTP_HOST`, `WP_FTP_USER`, and `WP_REMOTE_PATH` point to production before any upload
 - confirm `lftp` is installed when using FTP deployment

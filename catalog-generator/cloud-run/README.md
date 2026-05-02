@@ -53,6 +53,21 @@ a per-job Drive manifest and blocks missing or duplicate catalog image matches.
 
 ## Build Image
 
+For normal production deployment, prefer the GitHub Actions workflow in
+`.github/workflows/deploy-catalog-agent.yml`. It builds SHA-tagged images,
+updates `lucia-mybrocorp-catalog-agent`, verifies the job, and rolls back to the
+previous image if verification fails.
+
+The local helper below mirrors the same deployment shape:
+
+```bash
+catalog-generator/cloud-run/deploy.sh --dry-run
+catalog-generator/cloud-run/deploy.sh
+```
+
+Set `CATALOG_AGENT_IMAGE_TAG` to override the default git SHA tag. Do not deploy
+`latest` to production.
+
 ```bash
 PROJECT_ID=mybroworld-catalog-260501
 REGION=europe-west1
@@ -113,6 +128,15 @@ Run one manual execution before enabling the schedule:
 ```bash
 gcloud run jobs execute "$JOB_NAME" --region "$REGION" --wait
 ```
+
+Production CI/CD verification uses:
+
+```bash
+catalog-generator/cloud-run/verify-job.sh --project "$PROJECT_ID" --region "$REGION" --job "$JOB_NAME"
+```
+
+That check requires the Cloud Run execution logs to include
+`authenticated as mybrocorp@gmail.com`.
 
 ## Schedule
 

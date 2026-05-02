@@ -1,0 +1,68 @@
+name: Deploy Catalog Agent
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - catalog-generator/src/**
+      - catalog-generator/catalog-agent/**
+      - catalog-generator/assets/**
+      - catalog-generator/package.json
+      - catalog-generator/package-lock.json
+      - catalog-generator/Dockerfile.catalog-agent
+      - catalog-generator/.dockerignore
+      - catalog-generator/cloud-run/**
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Optional immutable image tag. Defaults to the workflow git SHA.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production-catalog-agent
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy Cloud Run job
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.ENABLE_CATALOG_AGENT_AUTO_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production-catalog-agent
+    env:
+      PROJECT_ID: mybroworld-catalog-260501
+      REGION: europe-west1
+      REPOSITORY: mybroworld
+      JOB_NAME: lucia-mybrocorp-catalog-agent
+      CATALOG_AGENT_IMAGE_TAG: ${{ github.event.inputs.image_tag || github.sha }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy catalog worker
+        run: catalog-generator/cloud-run/deploy.sh
+
+      - name: Upload deployment artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-agent-deployment
+          path: |
+            catalog-generator/cloud-run/deployment-summary.txt
+            catalog-generator/cloud-run/previous-image.txt
+          if-no-files-found: ignore

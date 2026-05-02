@@ -18,17 +18,27 @@ require_command() {
 require_command git
 require_command node
 require_command npm
-require_command openspec
 
-echo "Validating active OpenSpec changes..."
-for change_dir in openspec/changes/*; do
-  [ -d "$change_dir" ] || continue
+if command -v openspec >/dev/null 2>&1; then
+  echo "Validating active OpenSpec changes..."
+  for change_dir in openspec/changes/*; do
+    [ -d "$change_dir" ] || continue
 
-  change_name="$(basename -- "$change_dir")"
-  [ "$change_name" = "archive" ] && continue
+    change_name="$(basename -- "$change_dir")"
+    [ "$change_name" = "archive" ] && continue
 
-  openspec validate "$change_name"
-done
+    openspec validate "$change_name"
+  done
+else
+  echo "Skipping OpenSpec validation because openspec is not installed."
+fi
+
+echo "Running secret scan..."
+scripts/secret-scan.sh
+
+echo "Running CI helper tests..."
+scripts/secret-scan.test.sh
+catalog-generator/cloud-run/deploy.test.sh
 
 echo "Running WordPress owned-code checks..."
 scripts/wp-test-owned-code.sh
