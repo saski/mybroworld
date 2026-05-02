@@ -86,10 +86,15 @@ export async function loadAgentConfig(configPath = resolveDefaultConfigPath()) {
 
   return {
     applicationSupportRoot,
+    catalogImageFolderId: rawConfig.catalogImageFolderId
+      ? assertString(rawConfig.catalogImageFolderId, 'catalogImageFolderId')
+      : '',
     configPath,
     generatorDir: expandHomePath(assertString(rawConfig.generatorDir, 'generatorDir'), homeDirectory),
     googleAccountEmail: assertString(rawConfig.googleAccountEmail, 'googleAccountEmail').toLowerCase(),
-    jobWorkingRoot: path.join(applicationSupportRoot, 'jobs'),
+    jobWorkingRoot: rawConfig.jobWorkingRoot
+      ? expandHomePath(assertString(rawConfig.jobWorkingRoot, 'jobWorkingRoot'), homeDirectory)
+      : path.join(applicationSupportRoot, 'jobs'),
     oauthClientPath: expandHomePath(assertString(rawConfig.oauthClientPath, 'oauthClientPath'), homeDirectory),
     oauthTokenPath: expandHomePath(assertString(rawConfig.oauthTokenPath, 'oauthTokenPath'), homeDirectory),
     pollIntervalSeconds,

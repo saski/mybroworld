@@ -1,0 +1,14 @@
+node_modules
+output
+.DS_Store
+.env
+catalog-agent/config.json
+catalog-agent/oauth-client.json
+catalog-agent/oauth-token.json
+**/oauth-client.json
+**/oauth-token.json
+assets/fonts/*
+!assets/fonts/Gotham-Black.otf
+!assets/fonts/Gotham-Bold.otf
+!assets/fonts/Gotham-Book.otf
+!assets/fonts/Gotham-Medium.otf

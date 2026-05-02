@@ -42,6 +42,23 @@ The original Drive links were not directly readable without authentication in th
 - The closing page is now minimal and white, with the wordmark centered above the contact details.
 - The CSS fallback typography now uses Avenir Next only, which removes the earlier Futura/Avenir mixture and gets closer to Gotham's overall color and spacing.
 
+## Client Feedback Accepted On 2026-05-01
+
+- Catalog image selection: the customer will manually mark one catalog image per artwork by making its filename end in `_cat`. Do not build automatic generation or copy creation for `_cat` images.
+- Catalog inclusion: use `include_in_catalog` (column L in the live sheet) as the editorial inclusion gate. Do not infer inclusion from availability/status alone.
+- Catalog ordering: newest works first.
+- Artwork page fields: show only artwork title, production year, dimensions, technique, and PVP price.
+- Artwork page layout: place the metadata block immediately after the image, separated by whitespace comparable to the side margin around the image.
+- Unavailable/sold/reserved treatment: defer to `include_in_catalog`; included works should show PVP price and should not add availability/status copy unless the customer later requests it.
+- Cover: current cover image is approved.
+- Closing-page contact details:
+  - `hola@luciastuy.com`
+  - `635.166.253`
+  - `IG: @luciastuy`
+  - `www.luciastuy.com`
+- Fonts and brand assets: the customer says Gotham fonts and PNG logos are in `https://drive.google.com/drive/folders/1J98-QwFiEkRu99BLjvEbfE_J3C5FxRy9`.
+- Asset access note: this session's Google Drive connector could not list either the image-selection folder or the assets folder, so asset download and verification remain pending.
+
 ## Source Files Carrying The Work
 
 - Layout and page structure: [catalog-generator/src/template.js](/Users/nacho/saski/mybroworld/catalog-generator/src/template.js)
@@ -73,7 +90,7 @@ These are temporary production aids, not yet confirmed as final client-approved 
 
 ## Known Gaps And Blockers
 
-### 1. Gotham Fonts Are Still Missing
+### 1. Gotham Fonts And Logo Assets Need Verification
 
 The original `.ai` explicitly references:
 
@@ -83,7 +100,7 @@ The original `.ai` explicitly references:
 - `Gotham-BoldIta.otf`
 - `Gotham-Black.otf`
 
-However, no installable Gotham font files were found in:
+No installable Gotham font files were found locally in the earlier session:
 
 - `/Users/nacho`
 - `/Users/luciaastuy`
@@ -91,51 +108,41 @@ However, no installable Gotham font files were found in:
 - `/System/Library/Fonts`
 - typical Adobe cache and support directories searched during the session
 
-Current CSS therefore uses `Avenir Next` fallback weights instead of Gotham. This is closer than the earlier mixed `Futura`/`Avenir` treatment, but it is still not exact Gotham parity.
+Current CSS therefore uses `Avenir Next` fallback weights instead of Gotham. The customer reports that Gotham fonts and logo PNGs are now in the shared Drive folder `https://drive.google.com/drive/folders/1J98-QwFiEkRu99BLjvEbfE_J3C5FxRy9`, but this session could not list that folder through the available Drive connector. Download and verification are still required before replacing the fallback assets.
 
-### 2. Photo Selection Criteria Are Not Defined
+### 2. `_cat` Image Selection Needs Implementation
 
-This is the main unresolved product decision for continuing the catalog with quality:
+The client decision is now clear:
 
 - Drive folder under review: `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`
+- The customer will make the chosen catalog image filename end in `_cat`.
+- The system should use that existing `_cat` image for the catalog.
+- The system should not generate, copy, or infer `_cat` images automatically.
 
-The team still needs a reusable decision model for:
+Implementation still needs to decide how to map `_cat` files back to artwork rows. Missing or duplicate `_cat` images should be reported as blockers instead of guessed.
 
-- artwork-only photo vs contextual/studio photo
-- multiple available shots for the same work
-- crop preference
-- portrait vs landscape preference
-- whether detail shots should ever replace the main artwork image
+### 3. Catalog Layout And Data Rules Need Implementation
 
-### 3. Final Brand Assets Are Not Confirmed
+The generator still needs to be updated to match the latest accepted rules:
 
-Still needed from the client:
-
-- final approved logo/wordmark asset
-- final approved cover image
-- final typography package if Gotham must be exact
+- sort newest first
+- filter by `include_in_catalog` as editorial selection, with `catalog_ready` only as a technical QA gate
+- show only title, year, dimensions, technique, and PVP price
+- remove status labels, public notes, location/history, and non-PVP price variants from artwork pages
+- move the metadata block directly under the image with the approved spacing
 
 ### 4. Drive References Were Not Reliably Readable Anonymously
 
-The original Google Drive file link provided by the user redirected to authentication in this session. Future sessions should prefer:
-
-- already-downloaded local reference files, or
-- authenticated browser access, or
-- client-provided exported reference files inside the workspace
+The Google Drive folders provided by the user were not readable through this session's available Drive connector. Future sessions should use an authenticated Drive context, have the client share the folders with the connected account, or copy approved exported files into the workspace.
 
 ## Client Input Still Needed
 
 To continue without rework, the next session should collect or confirm:
 
-1. Exact photo selection criteria for the Drive image folder.
-2. Final list of works that must be included.
-3. Final ordering rule for the catalog.
-4. Treatment rules for sold, reserved, historical, and unavailable works.
-5. Gotham font files or an approved fallback.
-6. Final logo/wordmark files.
-7. Final approved cover image.
-8. Final contact details and any additional contact channels.
-9. Whether multiple output variants are needed (commercial PDF, dossier PDF, print PDF, etc.).
+1. Access to the Drive folder that contains Gotham fonts and logo PNGs.
+2. Access to the Drive image folder after the customer has added `_cat` suffixes.
+3. Confirmation of the exact mapping rule between `_cat` filenames and `artwork_id` or title if filenames are not already deterministic.
+4. Whether multiple output variants are needed (commercial PDF, dossier PDF, print PDF, etc.).
 
 ## Recommended Next Session Start
 

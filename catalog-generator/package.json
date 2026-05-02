@@ -6,6 +6,7 @@
   "scripts": {
     "catalog-agent": "node catalog-agent/src/cli.mjs",
     "catalog-agent:authorize": "node catalog-agent/src/authorize.mjs",
+    "catalog-agent:cloud-run-once": "node catalog-agent/src/cloud-run-once.mjs",
     "catalog-agent:once": "node catalog-agent/src/cli.mjs --once",
     "generate": "node src/generate.mjs",
     "test": "node --test test/*.test.mjs"

@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
+import { writeCatalogImageManifest } from '../catalog-agent/src/agent.mjs';
 import {
   findOldestQueuedJob,
   mergeCatalogSheetsToCsv,
@@ -66,6 +70,35 @@ test('findOldestQueuedJob only returns queued jobs for the configured profile', 
   });
 
   assert.equal(job.job_id, 'catalog_1');
+});
+
+test('writeCatalogImageManifest materializes configured Drive image candidates for the generator', async () => {
+  const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-image-manifest-'));
+  const listedFolderIds = [];
+
+  const manifestPath = await writeCatalogImageManifest({
+    config: {
+      catalogImageFolderId: 'folder-id',
+    },
+    googleClient: {
+      listDriveFolderFiles: async (folderId) => {
+        listedFolderIds.push(folderId);
+        return [
+          {
+            id: 'cat-image-1',
+            mimeType: 'image/jpeg',
+            name: 'LA-2026-001_cat.jpg',
+          },
+        ];
+      },
+    },
+    workDirectory,
+  });
+
+  const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+  assert.deepEqual(listedFolderIds, ['folder-id']);
+  assert.equal(path.basename(manifestPath), 'catalog-images.json');
+  assert.equal(manifest.files[0].id, 'cat-image-1');
 });
 
 test('mergeCatalogSheetsToCsv rejects incompatible tabs with a precise error', () => {

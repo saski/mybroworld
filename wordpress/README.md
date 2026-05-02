@@ -194,10 +194,10 @@ After login, shop operators can open `wp-admin/admin.php?page=lucia-catalog-cons
 - enter or accept the catalog title
 - keep the default scope unless a multi-year catalog is needed
 - click `Generate PDF`
-- keep the local catalog agent running so it can claim the queued job, render the PDF, and upload it to Drive
+- keep the configured catalog worker running so it can claim the queued job, render the PDF, and upload it to Drive
 - use the `Open PDF`, `Approve`, and `Needs changes` controls from the recent jobs table
 
-Current production deployment was validated through the `nacho-saski` worker on the current operator Mac. Customer-only operation is not complete until a `lucia-mybrocorp` worker is installed on the intended customer or always-on machine, authorized as `mybrocorp@gmail.com`, and a job queued from the customer's mybro WordPress account completes without depending on the current operator Mac.
+Current production deployment now defaults new catalog jobs to the scheduled Cloud Run `lucia-mybrocorp` worker in `mybroworld-catalog-260501`, authorized as `mybrocorp@gmail.com`. Customer-operated production is not complete until a job queued from the customer's mybro WordPress account completes and the customer can open/review the resulting Drive PDF without depending on the current operator Mac or Nacho's OAuth token.
 
 The Apps Script Web App redirects successful responses through `script.googleusercontent.com`. The MU plugin handles that redirect server-side with an allowlisted Google GET follow-up, because WordPress automatic POST redirect handling can otherwise return a Google HTTP 400 response.
 
@@ -207,6 +207,8 @@ On the current operator Mac, the interim local worker is installed as the user L
 launchctl print "gui/$(id -u)/com.mybroworld.catalog-agent"
 tail -n 50 ~/Library/Logs/MyBroworld/catalog-agent.log
 ```
+
+Production Cloud Run worker packaging and deployment notes live in [catalog-generator/cloud-run/README.md](../catalog-generator/cloud-run/README.md).
 
 ## Full Local Validation
 
@@ -242,3 +244,55 @@ scripts/wp-inventory-parity.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE
 ```
 
 The command exits non-zero when inventory is out of sync and prints `missing_in_woo` and `unexpected_in_woo` rows. It does not mutate WordPress, WooCommerce, the Google Sheet, or catalog files.
+
+## WooCommerce Catalog Sync Dry Run
+
+Use the catalog sync dry run after the parity audit and before any product writes. The command reads canonical sheet CSV rows, reads WooCommerce products through the WooCommerce REST API, and prints the planned create/update/image/unmanaged actions. Dry run is the default; it does not mutate WooCommerce.
+
+Store WooCommerce REST credentials outside git, for example in your shell or an ignored local env file:
+
+```bash
+export WOO_BASE_URL=http://localhost:8080
+export WOO_CONSUMER_KEY=<local-consumer-key>
+export WOO_CONSUMER_SECRET=<local-consumer-secret>
+```
+
+Run a local dry run:
+
+```bash
+scripts/woo-catalog-sync.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --target local --json-output /tmp/mybroworld-woo-sync-plan.json
+```
+
+The command requires `--target local` or `--target production`. Production apply mode additionally requires `--backup-id`; do not use production apply until the production rollout phase is explicitly approved and backed up.
+
+## WooCommerce Catalog Sync Local Apply
+
+After the dry run shows only expected actions, apply the managed product sync to the local Docker runtime:
+
+```bash
+scripts/woo-catalog-sync.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --target local --apply --json-output /tmp/mybroworld-woo-sync-apply.json
+```
+
+Then verify that the public Store API exposes the managed artwork products and their images:
+
+```bash
+WOO_BASE_URL=http://localhost:8080 scripts/woo-storefront-assert.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --require-managed-products --require-images
+```
+
+This apply phase creates or updates only managed `LA-YYYY-NNN` artwork products. It reports unmanaged legacy/demo products but leaves them unchanged until the explicit unmanaged cleanup phase.
+
+## WooCommerce Catalog Sync Local Cleanup
+
+After managed products and images validate locally, hide unmanaged legacy/demo products from the storefront:
+
+```bash
+scripts/woo-catalog-sync.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --target local --apply --hide-unmanaged --json-output /tmp/mybroworld-woo-sync-cleanup.json
+```
+
+Then verify that the Store API exposes only canonical managed artworks:
+
+```bash
+WOO_BASE_URL=http://localhost:8080 scripts/woo-storefront-assert.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --require-managed-products --require-images --forbid-unmanaged-products
+```
+
+For local cleanup, unmanaged products are set to `draft` and hidden from catalog visibility. Production unmanaged cleanup is blocked unless `--backup-id` and `--allow-unmanaged-cleanup` are both passed with `--target production`.

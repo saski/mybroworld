@@ -7,9 +7,9 @@ This guide documents the first local rollout of the Google Sheets catalog action
 The implementation is split into two installable parts:
 
 1. A bound Google Apps Script project stored in [catalog-generator/apps-script](../../../catalog-generator/apps-script)
-2. A local `catalog-agent` process stored in [catalog-generator/catalog-agent](../../../catalog-generator/catalog-agent)
+2. A `catalog-agent` process stored in [catalog-generator/catalog-agent](../../../catalog-generator/catalog-agent), running locally for development and as a scheduled Cloud Run Job for production portability
 
-The sheet writes jobs into `catalog_jobs`. The local agent claims only jobs whose `execution_profile` matches its own config.
+The sheet writes jobs into `catalog_jobs`. The agent claims only jobs whose `execution_profile` matches its own config.
 
 The same Apps Script project can also be deployed as a token-protected Web App for the WordPress catalog console. WordPress should call that endpoint server-side and keep the shared token outside tracked files.
 
@@ -42,9 +42,9 @@ The same Apps Script project can also be deployed as a token-protected Web App f
    - `watchSpreadsheetIds`
    - `oauthClientPath`
    - `oauthTokenPath`
-3. Create or reuse a Google Cloud OAuth desktop client owned by the same Google account family as the target profile.
-   - For the customer production profile `lucia-mybrocorp`, the OAuth client should be owned or recoverable by `mybrocorp@gmail.com` or another customer-controlled Google account.
-   - For the development profile `nacho-saski`, the personal project `mybroworld-catalog-260501` and OAuth app `MyBroworld Catalog Agent` are acceptable for smoke testing only.
+3. Create or reuse a Google Cloud OAuth desktop client appropriate for the target profile.
+   - For local development profile `nacho-saski`, the existing project `mybroworld-catalog-260501` and OAuth app `MyBroworld Catalog Agent` are acceptable for smoke testing.
+   - For production profile `lucia-mybrocorp`, the Cloud Run worker should use OAuth token material authorized by `mybrocorp@gmail.com`, stored outside git in Secret Manager within `mybroworld-catalog-260501`.
 4. Confirm the OAuth app declares the required scopes before authorizing:
    - `https://www.googleapis.com/auth/spreadsheets`
    - `https://www.googleapis.com/auth/drive`
@@ -75,18 +75,33 @@ cd /path/to/mybroworld/catalog-generator
 npm run catalog-agent -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 ```
 
-## Customer-Owned Production Handoff
+## Customer-Operable Production Handoff
 
 Do not treat the WordPress catalog console as customer-portable until this production path is verified:
 
-1. The Apps Script project and Web App can be administered and redeployed by `mybrocorp@gmail.com` or another customer-controlled Google account.
-2. A `lucia-mybrocorp` agent config exists on the intended customer or always-on machine.
-3. The agent is authorized as `mybrocorp@gmail.com` and fails fast if any other Google identity is used.
-4. The agent is installed as that user's `com.mybroworld.catalog-agent` LaunchAgent and watches the production spreadsheet id.
+1. Google Cloud project `mybroworld-catalog-260501` remains the production runtime project, administered and billed by `nacho.saski@gmail.com`.
+2. A `lucia-mybrocorp` agent config exists in Secret Manager for the Cloud Run worker.
+3. The Cloud Run worker is authorized as `mybrocorp@gmail.com` and fails fast if any other Google identity is configured.
+4. The Cloud Run Job watches the production spreadsheet id and is triggered by Cloud Scheduler.
 5. The agent claims only `lucia-mybrocorp` jobs and ignores `nacho-saski` jobs.
 6. The configured Drive output folder is writable by `mybrocorp@gmail.com`, and the resulting PDF is readable from the customer's browser session.
-7. The customer logs into production WordPress with the mybro account, opens `Catalog PDFs`, queues a catalog, sees the completed Drive link, and saves `approved` or `needs_changes`.
-8. The completed `catalog_jobs` row records the customer WordPress identity and the review state remains visible after a page reload.
+7. The local `nacho-saski` LaunchAgent is stopped or irrelevant during the validation run.
+8. The customer logs into production WordPress with the mybro account, opens `Catalog PDFs`, queues a catalog, sees the completed Drive link, and saves `approved` or `needs_changes`.
+9. The completed `catalog_jobs` row records the customer WordPress identity and the review state remains visible after a page reload.
+
+Current status as of 2026-05-02: the Cloud Run worker, Secret Manager material,
+and Cloud Scheduler trigger are deployed. Manual and scheduled executions
+authenticate as `mybrocorp@gmail.com` and ignore the queue when no
+`lucia-mybrocorp` jobs are pending. The remaining gate is one customer-account
+WordPress job that produces a Drive PDF and persisted review state.
+
+Cloud Run implementation notes:
+
+- Build the worker from [catalog-generator/Dockerfile.catalog-agent](../../../catalog-generator/Dockerfile.catalog-agent).
+- Use `npm run catalog-agent:cloud-run-once` as the Cloud Run Job command.
+- The entrypoint reads Secret Manager-provided JSON from `CATALOG_AGENT_CONFIG_JSON`, `CATALOG_AGENT_OAUTH_CLIENT_JSON`, and `CATALOG_AGENT_OAUTH_TOKEN_JSON`, or from the corresponding `*_PATH` variables if secrets are mounted as files.
+- The entrypoint writes those secrets into `CATALOG_AGENT_RUNTIME_ROOT` before loading the normal agent config, so OAuth refresh can update `oauthTokenPath` in a writable location.
+- Deployment and scheduler commands live in [catalog-generator/cloud-run/README.md](../../../catalog-generator/cloud-run/README.md).
 
 ## Job Contract Highlights
 

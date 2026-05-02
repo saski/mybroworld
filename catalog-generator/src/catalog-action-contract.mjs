@@ -1,71 +1,18 @@
-export const HELPER_SHEET_TITLES = new Set([
-  'catalog_jobs',
-  'catalog_profiles',
-  'validation_lists',
-  'nvscriptsproperties',
-]);
+import {
+  CATALOG_DEFAULT_ARTIST_NAME,
+  CATALOG_HELPER_SHEET_TITLES,
+  CATALOG_JOB_HEADERS,
+  CATALOG_PROFILE_HEADERS,
+  CATALOG_REQUIRED_HEADERS,
+  CATALOG_REVIEW_STATUS_VALUES,
+} from './shared-catalog-contract.mjs';
 
-export const REQUIRED_COMPATIBILITY_HEADERS = [
-  'artwork_id',
-  'title_clean',
-  'year',
-  'medium_clean',
-  'support_clean',
-  'dimensions_clean',
-  'status_normalized',
-  'image_main',
-  'include_in_catalog',
-  'catalog_ready',
-];
-
-export const PROFILE_HEADERS = [
-  'profile_key',
-  'label',
-  'enabled',
-  'google_account_email',
-  'macos_user_hint',
-  'default_drive_folder_id',
-  'notes',
-];
-
-export const JOB_HEADERS = [
-  'job_id',
-  'created_at',
-  'created_by_email',
-  'created_by_user_key',
-  'execution_profile',
-  'scope_mode',
-  'sheet_ids_json',
-  'sheet_titles_json',
-  'catalog_title',
-  'artist_name',
-  'output_folder_id',
-  'output_filename',
-  'status',
-  'claim_token',
-  'claimed_at',
-  'claimed_by_profile',
-  'claimed_by_host',
-  'claimed_by_user',
-  'heartbeat_at',
-  'started_at',
-  'completed_at',
-  'result_file_id',
-  'result_file_url',
-  'result_local_path',
-  'result_artwork_count',
-  'error_code',
-  'error_message',
-  'log_excerpt',
-  'review_status',
-  'reviewed_at',
-  'reviewed_by',
-  'review_notes',
-];
-
-export const DEFAULT_ARTIST_NAME = 'Lucía Astuy';
-
-export const REVIEW_STATUS_VALUES = ['approved', 'needs_changes'];
+export const HELPER_SHEET_TITLES = new Set(CATALOG_HELPER_SHEET_TITLES);
+export const REQUIRED_COMPATIBILITY_HEADERS = [...CATALOG_REQUIRED_HEADERS];
+export const PROFILE_HEADERS = [...CATALOG_PROFILE_HEADERS];
+export const JOB_HEADERS = [...CATALOG_JOB_HEADERS];
+export const DEFAULT_ARTIST_NAME = CATALOG_DEFAULT_ARTIST_NAME;
+export const REVIEW_STATUS_VALUES = [...CATALOG_REVIEW_STATUS_VALUES];
 
 function normalizeText(value) {
   return String(value || '').trim();

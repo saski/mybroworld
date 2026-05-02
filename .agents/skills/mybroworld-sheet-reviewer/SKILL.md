@@ -47,6 +47,8 @@ Use this skill to review project spreadsheets as living operational data, not ju
 - When a catalog workbook is split across multiple yearly tabs, keep judgments and automations generic across tabs. Use the canonical headers to detect compatible year sheets, and prefer explicit `sheetId` or selected-year scope over hardcoded tab names.
 - Treat missing values and inconsistent values as different review cases. Some tasks require filling data; others require judging whether an existing value violates the project pattern.
 - For commerce inventory work, treat sheet/catalog/WooCommerce parity as a review concern. Before writing product data, compare the canonical sheet rows, generated catalog scope, and WooCommerce products, then report missing, unexpected, and ambiguous records separately. WooCommerce inventory scope is all canonical sheet artworks; status controls visibility and purchasability.
+- For PDF catalog selection, treat `include_in_catalog` as the customer-owned editorial inclusion gate. Do not infer catalog inclusion from `status_normalized`, availability wording, or price presence.
+- For PDF catalog image review, treat one existing Drive image whose filename ends in `_cat` as the customer-selected catalog image. Missing or multiple `_cat` candidates for the same artwork are blockers; do not generate or copy `_cat` files automatically.
 
 ## Manual Review Mode
 
@@ -92,6 +94,8 @@ Use this skill to review project spreadsheets as living operational data, not ju
 - A notes trail such as `Residencia Escala House 07.01/20.02 / El Grifo / Vendido a Juan Roller` should keep the current holder in `location_clean` and the full route in `location_history`, for example `Residencia Escala House 07.01/20.02 -> El Grifo -> Juan Roller`.
 - `title_clean` values `Perrete en tablillas 01` through `Perrete en tablillas 05` with a new `series_name` column present: fill `series_name` as `Perrete en tablillas`.
 - Existing value conflicts with a repeated project normalization pattern: treat it as a review issue, not just a blank-cell issue.
+- `include_in_catalog = TRUE` means include the row in the PDF catalog even if `status_normalized` is not `available`; `include_in_catalog = FALSE` means exclude it even if the work is available.
+- A folder contains two files for the same artwork ending in `_cat`: flag the artwork for review instead of choosing one.
 
 ## References
 

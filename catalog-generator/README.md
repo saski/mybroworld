@@ -25,6 +25,7 @@ GOOGLE_SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/.../export?format=c
 - `--artist-name` overrides the artist name shown on the cover and closing page.
 - `--output` sets the PDF destination path.
 - `--limit` renders only the first N eligible artworks.
+- `--catalog-image-manifest` points to a Drive file manifest JSON. When provided, every included artwork must have exactly one matching filename ending in `_cat`.
 - When the CSV includes `date_label` values such as `03/26`, the cover caption uses the latest included month as an editorial period label, for example `Marzo 2026`.
 
 ## Expected CSV Fields
@@ -46,18 +47,27 @@ Minimum columns:
 - `show_price`
 - `catalog_notes_public`
 
+The optional catalog image manifest accepts either an array or an object with a
+`files` array. Each file needs `id` and `name` fields from Google Drive, for
+example:
+
+```json
+{
+  "files": [
+    { "id": "drive-file-id", "name": "LA-2026-001_cat.jpg", "mimeType": "image/jpeg" }
+  ]
+}
+```
+
 ## Included Rules
 
 - An artwork is included only when:
   - `include_in_catalog = TRUE`
   - `catalog_ready = TRUE`
-- The price is shown only when:
-  - `status_normalized = available`
-  - `show_price = TRUE`
-- If the price is hidden, the PDF shows an editorial availability label instead:
-  - `Reservada`
-  - `Obra no disponible`
-  - `Obra histórica`
+- Included artworks are sorted newest first from `date_label`, then `year`, then `catalog_order`, then title.
+- Artwork pages show only title, production year, dimensions, technique, and the PVP price.
+- The PDF does not show availability labels, public notes, location/history, section labels, or non-PVP price variants.
+- If a catalog image manifest is configured, filenames ending in `_cat` are matched by `artwork_id` first and title slug second. Missing or duplicate matches fail the render instead of falling back to another image.
 
 ## Google Sheets Action
 
@@ -65,6 +75,7 @@ This generator now ships with a first installable Google Sheets action:
 
 - Bound Apps Script source: [catalog-generator/apps-script](apps-script)
 - Local queue agent source: [catalog-generator/catalog-agent](catalog-agent)
+- Cloud Run worker packaging: [catalog-generator/cloud-run](cloud-run)
 - Admin rollout guide: [thoughts/shared/docs/google-sheets-catalog-action.md](../thoughts/shared/docs/google-sheets-catalog-action.md)
 
 The Google Sheets flow supports:
@@ -74,6 +85,7 @@ The Google Sheets flow supports:
 - all compatible yearly tabs
 - explicit execution-profile routing
 - Drive upload of the generated PDF
+- optional `_cat` image resolution through the agent config field `catalogImageFolderId`
 
 ## Commands
 
@@ -81,9 +93,14 @@ The Google Sheets flow supports:
 npm run generate
 npm run catalog-agent:authorize -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
 npm run catalog-agent:once -- --config ~/Library/Application\ Support/MyBroworld/catalog-agent/config.json
+npm run catalog-agent:cloud-run-once
 ```
 
 On macOS, the renderer can use the existing system Google Chrome at `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` when Puppeteer's managed browser cache is empty.
+
+For production portability, run the `lucia-mybrocorp` worker as a scheduled Cloud Run Job from the existing Google Cloud project `mybroworld-catalog-260501`. The Cloud Run entrypoint reads Secret Manager-provided JSON from `CATALOG_AGENT_CONFIG_JSON`, `CATALOG_AGENT_OAUTH_CLIENT_JSON`, and `CATALOG_AGENT_OAUTH_TOKEN_JSON`, copies those secrets into a writable runtime directory, then runs one catalog-agent polling pass.
+
+Set `catalogImageFolderId` in the agent config only after the image folder has one `_cat` file for every included, catalog-ready artwork. With that field set, the worker writes a per-job `catalog-images.json` manifest before rendering and the generator blocks ambiguous image selections.
 
 ## Common Errors
 
@@ -99,6 +116,9 @@ On macOS, the renderer can use the existing system Google Chrome at `/Applicatio
 - `Authenticated Google identity <email> does not match configured <email>.`
   The local `catalog-agent` is using the wrong Google account for the selected execution profile.
 
+- `failed code=catalog_image_selection_blocked message=No _cat image found for artwork ...`
+  The configured image folder does not contain exactly one customer-selected `_cat` image for an included artwork.
+
 - `failed code=pdf_render_failed message=Unable to render PDF output: ...`
   Confirm that the local machine can launch Google Chrome in headless mode and that artwork image URLs are reachable.
 
@@ -106,6 +126,6 @@ On macOS, the renderer can use the existing system Google Chrome at `/Applicatio
 
 - The PDF is rendered with HTML/CSS and Puppeteer.
 - The stylesheet is tuned for portrait A4.
-- The current template follows the original editorial PDF more closely: section-led photographic cover, white artwork pages with a top kicker and centered metadata block, and a centered closing brand stack.
-- Reference art-direction assets live in [catalog-generator/assets](assets).
+- The template uses the approved cover image, official PNG logos, and embedded Gotham font files when those assets are present.
+- Reference art-direction and brand assets live in [catalog-generator/assets](assets).
 - You can refine the visual design in `src/styles.css` and `src/template.js`.

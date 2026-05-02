@@ -1,7 +1,7 @@
 # mybroworld - Project Status
 
-**Last Updated**: 2026-05-01
-**Overall Status**: 🟡 **Multiple active workstreams** - Catalog editorial uplift has a corrected editorial shell and is awaiting higher-fidelity asset decisions; the WordPress catalog PDF console is production-deployed but still needs customer-owned handoff; production plugin cleanup remains paused on remote backup/admin execution.
+**Last Updated**: 2026-05-02
+**Overall Status**: 🟡 **Multiple active workstreams** - Catalog editorial uplift now implements the approved client feedback and official assets, with strict `_cat` image selection prepared but waiting on customer-renamed files; the WordPress catalog PDF console is production-deployed with the Cloud Run worker scheduled and now awaits customer-account validation; production plugin cleanup remains paused on remote backup/admin execution.
 
 ---
 
@@ -9,13 +9,13 @@
 
 | Component | Status | Progress | Blocking |
 |-----|-----|----|----|
-| Catalog editorial uplift | 🟡 In Progress | 82% | Yes |
+| Catalog editorial uplift | 🟡 Awaiting customer image selections | 94% | Yes |
 | WordPress production snapshot runtime | 🟢 Ready | 100% | No |
-| WordPress catalog PDF console | 🟡 Customer handoff pending | 85% | Requires `lucia-mybrocorp` worker and mybro WordPress validation |
+| WordPress catalog PDF console | 🟡 Customer validation pending | 96% | Requires one catalog queued/reviewed from the customer's mybro WordPress account |
 | WordPress plugin cleanup plan | 🟡 In Progress | 5% | No |
 | Safe cleanup execution + verification | ⚠️ Pending | 0% | Requires admin access + backups |
 
-**Current Readiness**: 🟡 - The catalog generator now matches the original PDF much more closely in cover/footer grammar, centered metadata layout, and fallback typography treatment, but exact Gotham parity and image-selection criteria are still unresolved. The WordPress catalog PDF console is deployed and operator-validated, but customer-only operation is not complete until the `lucia-mybrocorp` worker runs under `mybrocorp@gmail.com` and the customer's mybro WordPress account completes a job.
+**Current Readiness**: 🟡 - The catalog generator now implements the client-approved rules for inclusion, ordering, metadata, PVP price, contact details, cover use, Gotham fonts, and official logos. `_cat` image resolution is implemented and wired as an optional worker config, but the shared image folder currently has 0 `_cat` candidates, so strict image-folder selection should remain disabled until the customer renames one image per included artwork. The WordPress catalog PDF console is deployed and operator-validated, and the `lucia-mybrocorp` Cloud Run worker is authorized as `mybrocorp@gmail.com`, scheduled, and updated with the latest PDF generator. Customer operation is not complete until one catalog is queued and reviewed from the customer's mybro WordPress account.
 
 ---
 
@@ -34,51 +34,60 @@
 - Added product-detail smoke coverage to local WordPress validation on 2026-05-01; the `glacier` validation loop now requires one published product page and passed against `/product/armchair/`.
 - Added a read-only WooCommerce/sheet inventory parity audit on 2026-05-01. Current local baseline is out of sync: 20 sheet artworks are missing from WooCommerce and 15 local WooCommerce products are unexpected relative to the sheet.
 - Recorded the WooCommerce inventory scope decision on 2026-05-01: all canonical sheet artworks belong in WooCommerce, and `status_normalized` controls visibility and purchasability.
+- Added the local WooCommerce catalog sync dry-run/apply path on 2026-05-01. The local apply created 20 managed `LA-2026-*` products with images, the Store API assertion initially reported `products=35 expected=20 missing=0 missing_images=0`, and unmanaged cleanup then hid the 15 legacy/demo products so the final Store API assertion reported `products=20 expected=20 missing=0 missing_images=0 unexpected=0`.
+- Captured the public production Store API baseline on 2026-05-01 before any production write: `products=15 expected=20 missing=20 missing_images=0 unexpected=15`.
+- Completed the production WooCommerce catalog sync dry-run on 2026-05-01 without applying catalog writes. Backup identifier `production-db-export-20260501-195148` maps to `backups/production-db-export-20260501-195148/wordpress-db.sql`; the dry-run plan reported `create=20 update=0 needs_image=0 unchanged=0 invalid_source=0 unexpected_unmanaged=15` and only targeted canonical `LA-2026-*` products for writes.
+- Completed the production WooCommerce managed-product apply on 2026-05-01. The owned Drive image sideload MU helper was deployed first, then 20 canonical `LA-2026-*` products were created with images; Store API verification reported `products=35 expected=20 missing=0 missing_images=0 unexpected=15`, and the post-apply dry-run reported `create=0 update=0 needs_image=0 unchanged=20 invalid_source=0 unexpected_unmanaged=15`.
+- Completed the production unmanaged legacy/demo cleanup on 2026-05-01 after fresh backup identifier `production-db-export-20260501-203207`. Store API verification now reports `products=20 expected=20 missing=0 missing_images=0 unexpected=0`, and the post-cleanup dry-run reports `create=0 update=0 needs_image=0 unchanged=20 invalid_source=0 unexpected_unmanaged=15`.
 - Completed Phase 4 of the WordPress catalog PDF console on 2026-05-01. The local WordPress admin UI queued `catalog_20260501_120151_899f`, the local catalog agent rendered and uploaded a 14-artwork PDF, and the UI persisted the review state as `approved`.
 - Completed interim production validation of the WordPress catalog PDF console on 2026-05-01. Production WordPress queued `catalog_20260501_145137_9d09` with title `demo con clienta`, the LaunchAgent-backed `nacho-saski` local catalog worker completed it with 14 artworks, and the production UI persisted review status `needs_changes`.
+- Captured client PDF catalog feedback on 2026-05-01: `_cat` manually selected images, `include_in_catalog` as editorial selection, newest-first ordering, PVP-only price display, reduced artwork metadata, approved current cover, final contact details, and Drive folder for Gotham/logo assets.
+- Added local Cloud Run packaging for the catalog worker on 2026-05-02: Dockerfile, cloudbuild config, one-pass Cloud Run entrypoint, Secret Manager JSON materialization into writable runtime paths, and automated coverage for the runtime materializer.
+- Deployed the `lucia-mybrocorp` Cloud Run catalog worker on 2026-05-02 in `mybroworld-catalog-260501`: OAuth token authorized as `mybrocorp@gmail.com`, secrets stored in Secret Manager, job deployed in `europe-west1`, Scheduler enabled every 5 minutes, and production WordPress default profile switched to `lucia-mybrocorp` outside git.
+- Implemented the 2026-05-01 client PDF catalog feedback on 2026-05-02: `include_in_catalog` + `catalog_ready` filtering, newest-first ordering, reduced artwork metadata, PVP-only display, final contact details, official PNG logos, embedded Gotham font files, optional strict `_cat` image manifests, and Cloud Run redeploy of the updated worker image. Manual Cloud Run execution `lucia-mybrocorp-catalog-agent-bblht` completed successfully as `mybrocorp@gmail.com`.
 
 ---
 
 ## 🚧 In Progress
 
 - Catalog editorial uplift iteration:
-  - white-background layout aligned more closely to the original template
-  - restored original editorial shell on cover, artwork pages, and closing page
-  - centered artwork metadata treatment that now matches the original PDF's alignment more closely
+  - client-approved reduced metadata layout is implemented locally and in the Cloud Run worker
+  - official Gotham and PNG logo assets are embedded into the portable PDF render
+  - strict `_cat` resolution is implemented but remains disabled until the shared image folder contains customer-selected `_cat` files
   - derived catalog period from `date_label`
   - latest outputs available under `catalog-generator/output/`
+  - client feedback implementation plan now lives at `thoughts/shared/plans/2026-05-01-catalog-client-feedback-implementation-plan.md`
 - Phased plan creation and safety criteria definition.
 - Creating inventory + executing cleanup phases on the WordPress admin site (remote backup record + plugin versions still pending).
 - Local WordPress runtime remains available through Docker Compose for production snapshot testing, owned-theme work, and `mu-plugin` validation.
 - Local plugin cleanup now has one passing deactivation entry; production remains untouched until explicit remote backup/admin execution.
 - Product-detail smoke coverage is now in place before the next one-plugin-at-a-time simplification cycle.
-- Inventory sync is now the active blocker before further WooCommerce simplification: local WooCommerce still has imported/demo products rather than the canonical sheet/catalog artwork inventory.
-- The next local-only sync step is to turn the tested product drafts into a dry-run/apply importer that creates or updates local WooCommerce products by `artwork_id`.
-- The WordPress catalog PDF console is live in production. Runtime config and secrets remain outside git, and the current production worker depends on the user LaunchAgent `com.mybroworld.catalog-agent` running on this Mac.
-- Customer-owned catalog console handoff is pending: install and authorize a `lucia-mybrocorp` worker under `mybrocorp@gmail.com`, then validate the flow from the customer's mybro WordPress account.
+- Inventory sync is unblocked locally: local WooCommerce contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are no longer exposed by the local Store API after explicit unmanaged cleanup.
+- Production WooCommerce now contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are hidden from the public Store API.
+- The WordPress catalog PDF console is live in production. Runtime config and secrets remain outside git. New jobs now target the scheduled Cloud Run `lucia-mybrocorp` worker; the remaining handoff gate is customer validation from the mybro WordPress account using `thoughts/shared/docs/customer-testing-and-handoff.md`.
 
 ---
 
 ## 📋 Next Steps
 
-1. Complete Phase 6 of `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md`: customer-owned Apps Script/OAuth control, `lucia-mybrocorp` LaunchAgent under `mybrocorp@gmail.com`, Drive write/read verification, and mybro WordPress account validation.
-2. Resolve the remaining catalog blockers: Gotham font files, final brand assets, and the client's reusable photo-selection criteria.
-3. Run the next catalog iteration after client feedback using `thoughts/shared/plans/2026-04-26-catalog-editorial-uplift-handoff.md` as the session bootstrap.
-4. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
-5. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
-6. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
-7. Execute Phase 4: monitor stability and finalize removal log statuses.
-8. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
+1. Run `fic-validate-plan thoughts/shared/plans/2026-05-01-woocommerce-catalog-photo-gap-plan.md` to close the WooCommerce catalog photo-gap workstream.
+2. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
+3. Complete Phase 6 of `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md`: queue one catalog from the customer's mybro WordPress account, verify Cloud Run completes it, verify Drive read/write from the customer session, and persist a review state.
+4. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
+5. After `_cat` files exist, enable `catalogImageFolderId` in the `catalog-agent-config` Secret Manager value and run one Cloud Run test job to verify strict image matching.
+6. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
+7. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
+8. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
+9. Execute Phase 4: monitor stability and finalize removal log statuses.
+10. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
 
 ---
 
 ## 🐛 Known Issues
 
-- The catalog still does not use real Gotham files because no installable Gotham assets were found on disk during the session.
-- The generated catalog now uses Avenir Next fallback consistently, but that still differs from the original Gotham package in fine spacing and weight.
-- Photo selection policy for the Google Drive image folder is still undefined, which is the main product blocker for a high-confidence final catalog.
+- The shared catalog image folder currently has 51 files and 0 `_cat` candidates. Strict `_cat` production selection is implemented but should not be enabled until the customer renames one image per included, catalog-ready artwork.
 - The original Google Drive template link was not reliably readable without authentication in this session.
-- Customer-only catalog generation is not yet verified; the production console currently depends on the `nacho-saski` LaunchAgent running on this Mac.
+- Customer-operated catalog generation is not yet fully verified; Cloud Run and Scheduler are live and production WordPress now targets `lucia-mybrocorp`, but the final proof still requires a catalog queued/reviewed from the customer's mybro WordPress account.
 - Remote admin execution is not performed yet in this environment; exact plugin versions/status still need re-capture from `wp-admin/plugins.php`.
 - The actual “remove no longer needed” set will be confirmed only after Phase 2 deactivation + smoke tests.
 

@@ -1,5 +1,7 @@
 import { parse } from 'csv-parse/sync';
 
+import { normalizeCatalogStatus } from './shared-catalog-contract.mjs';
+
 function parseCsvRecords(csvText) {
   return parse(csvText, {
     bom: true,
@@ -26,10 +28,7 @@ function compareByTitle(left, right) {
 }
 
 function normalizeStatus(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[-\s]+/g, '_');
+  return normalizeCatalogStatus(value);
 }
 
 function normalizePrice(value) {
@@ -74,7 +73,7 @@ export function parseSheetInventoryCsv(csvText, { scope = 'all' } = {}) {
       artworkId: String(row.artwork_id || '').trim(),
       catalogReady: normalizeBoolean(row.catalog_ready),
       includeInCatalog: normalizeBoolean(row.include_in_catalog),
-      status: String(row.status_normalized || '').trim(),
+      status: normalizeStatus(row.status_normalized),
       title: String(row.title_clean || row.title_raw || '').trim(),
     }))
     .filter((row) => /^LA-\d{4}-\d+$/u.test(row.artworkId) && row.title)
@@ -84,7 +83,7 @@ export function parseSheetInventoryCsv(csvText, { scope = 'all' } = {}) {
       }
 
       if (scope === 'available') {
-        return row.status === 'available';
+        return normalizeStatus(row.status) === 'available';
       }
 
       return true;

@@ -62,6 +62,17 @@ Types:
 - Uploads size estimate: not measured yet
 - Upload sync needed for current work: only for targeted migration or visual QA sessions that need real media
 - Critical product/artwork custom fields discovered: pending deeper DB inspection
+- Production catalog inventory baseline from 2026-05-01 research: the public Store API exposed 15 legacy/demo products with zero images, while the canonical sheet/CSV contained 20 `LA-2026-*` artwork rows with populated image sources.
+- Local sync validation on 2026-05-01 created 20 managed `LA-2026-*` WooCommerce products with images, then hid 15 unmanaged legacy/demo products from the local Store API.
+- Production sync dry-run on 2026-05-01 used backup identifier `production-db-export-20260501-195148` and saved its plan to `backups/production-db-export-20260501-195148/production-woo-sync-dry-run.json`.
+- Production sync dry-run result: `create=20 update=0 needs_image=0 unchanged=0 invalid_source=0 unexpected_unmanaged=15`; plan review found zero validation errors and zero non-canonical writes.
+- Production managed-product sync was applied on 2026-05-01 after deploying the owned Drive image sideload MU helper. The apply used an ephemeral read/write WooCommerce key that was revoked after the run.
+- Production apply result: `create=20 update=0 needs_image=0 unchanged=0 invalid_source=0 unexpected_unmanaged=15`; public Store API assertion returned `products=35 expected=20 missing=0 missing_images=0 unexpected=15`.
+- Production post-apply dry-run result: `create=0 update=0 needs_image=0 unchanged=20 invalid_source=0 unexpected_unmanaged=15`.
+- Production unmanaged cleanup was applied on 2026-05-01 after backup identifier `production-db-export-20260501-203207`. The cleanup used an ephemeral read/write WooCommerce key that was revoked after the run.
+- Production cleanup result: `create=0 update=0 needs_image=0 unchanged=20 invalid_source=0 unexpected_unmanaged=15`; public Store API assertion returned `products=20 expected=20 missing=0 missing_images=0 unexpected=0`.
+- Production post-cleanup dry-run result: `create=0 update=0 needs_image=0 unchanged=20 invalid_source=0 unexpected_unmanaged=15`.
+- Production sync status: managed canonical products are applied with images, and unmanaged legacy/demo products are hidden from the public Store API.
 
 ## Decision Gate
 
@@ -90,6 +101,8 @@ Choose this if any are true:
 - Plugins page confirms presence of `WooCommerce`, `Elementor`, `Slider Revolution`, `Yoast SEO`, `Contact Form 7`, `Site Kit by Google`, and `All-in-One WP Migration`.
 - Admin payload confirms WordPress version `6.9.4`.
 - WooCommerce admin warns that the active theme contains outdated WooCommerce template overrides.
+- Production DB export for WooCommerce sync guardrail: `backups/production-db-export-20260501-195148/wordpress-db.sql`, sha256 `cfb23ca6901da64c784ad63fdc779649a345a3464e252b0d2dd1e198a7864ebb`.
+- Production DB export before unmanaged cleanup: `backups/production-db-export-20260501-203207/wordpress-db.sql`, sha256 `8f7755d7ed7af56b0b85ef33006396054f77267e96118227738bfe31f0e3d2bf`.
 
 ## Hosting Facts Confirmed
 

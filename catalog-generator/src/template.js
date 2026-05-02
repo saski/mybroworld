@@ -24,6 +24,31 @@ function loadAssetDataUri(fileName, mimeType) {
   }
 }
 
+function renderFontFace({ fileName, fontStyle = 'normal', fontWeight }) {
+  const source = loadAssetDataUri(`fonts/${fileName}`, 'font/otf');
+  if (!source) {
+    return '';
+  }
+
+  return `
+@font-face {
+  font-family: "Gotham";
+  font-style: ${fontStyle};
+  font-weight: ${fontWeight};
+  src: url("${source}") format("opentype");
+}
+`;
+}
+
+const catalogFontFaces = [
+  renderFontFace({ fileName: 'Gotham-Book.otf', fontWeight: 400 }),
+  renderFontFace({ fileName: 'Gotham-Medium.otf', fontWeight: 500 }),
+  renderFontFace({ fileName: 'Gotham-Bold.otf', fontWeight: 700 }),
+  renderFontFace({ fileName: 'Gotham-Black.otf', fontWeight: 800 }),
+].join('');
+
+const customerWordmarkDark = loadAssetDataUri('brand/LOGO_LA_2.png', 'image/png');
+const customerWordmarkLight = loadAssetDataUri('brand/logo_blanco_transp_2.png', 'image/png');
 const referenceCoverPhoto = loadAssetDataUri('reference-cover.jpg', 'image/jpeg');
 const referenceWordmark = loadAssetDataUri('reference-wordmark.png', 'image/png');
 const referenceWordmarkDark = loadAssetDataUri('reference-wordmark-dark.png', 'image/png');
@@ -32,9 +57,9 @@ function renderWordmark({ artistName, className = '', tone = 'light' }) {
   const classes = ['catalog-wordmark', className, tone === 'dark' ? 'catalog-wordmark-dark' : '']
     .filter(Boolean)
     .join(' ');
-  const source = tone === 'dark' && referenceWordmarkDark
-    ? referenceWordmarkDark
-    : referenceWordmark;
+  const source = tone === 'dark'
+    ? customerWordmarkDark || referenceWordmarkDark || referenceWordmark
+    : customerWordmarkLight || referenceWordmark || customerWordmarkDark || referenceWordmarkDark;
 
   if (source) {
     return `<img class="${classes}" src="${escapeHtml(source)}" alt="${escapeHtml(artistName)}" />`;
@@ -55,33 +80,9 @@ function renderCoverCaption({ catalogPeriodLabel, catalogTitle }) {
   `;
 }
 
-function resolveArtworkPageLabel(artwork) {
-  if (artwork.statusLabel) {
-    return artwork.statusLabel;
-  }
-
-  return artwork.section === 'historical' ? 'Obra histórica' : 'Obra disponible';
-}
-
-function renderArtworkKicker(artwork) {
-  return `
-    <div class="artwork-kicker">
-      <span class="artwork-kicker-primary">Catálogo</span>
-      <span class="artwork-kicker-separator">|</span>
-      <span class="artwork-kicker-secondary">${escapeHtml(resolveArtworkPageLabel(artwork))}</span>
-    </div>
-  `;
-}
-
 function renderArtworkPage(artwork, { artistName }) {
-  const priceOrStatus = artwork.showPrice && artwork.price
+  const price = artwork.showPrice && artwork.price
     ? `<div class="artwork-price">${escapeHtml(artwork.price)}</div>`
-    : artwork.statusLabel
-      ? `<div class="artwork-status">${escapeHtml(artwork.statusLabel)}</div>`
-      : '';
-
-  const note = artwork.note
-    ? `<div class="artwork-note">${escapeHtml(artwork.note)}</div>`
     : '';
 
   const year = artwork.year
@@ -99,7 +100,7 @@ function renderArtworkPage(artwork, { artistName }) {
   return `
     <section class="page artwork-page">
       <div class="artwork-header">
-        ${renderArtworkKicker(artwork)}
+        <div></div>
         ${renderWordmark({ artistName, className: 'artwork-header-wordmark', tone: 'dark' })}
       </div>
       <div class="artwork-shell">
@@ -113,8 +114,7 @@ function renderArtworkPage(artwork, { artistName }) {
           ${year}
           ${dimensions}
           ${technique}
-          ${priceOrStatus}
-          ${note}
+          ${price}
         </div>
       </div>
     </section>
@@ -127,7 +127,6 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogP
     .join('\n');
 
   const coverPhoto = referenceCoverPhoto || artworks[0]?.imageUrl || '';
-  const coverLabel = artworks[0] ? resolveArtworkPageLabel(artworks[0]) : catalogTitle;
   const coverPhotoMarkup = coverPhoto
     ? `<img class="cover-photo" src="${escapeHtml(coverPhoto)}" alt="${escapeHtml(`${artistName} cover portrait`)}" />`
     : '<div class="cover-photo cover-photo-fallback"></div>';
@@ -138,13 +137,13 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogP
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>${escapeHtml(catalogTitle)}</title>
-      <style>${styles}</style>
+      <style>${catalogFontFaces}${styles}</style>
     </head>
     <body>
       <section class="page cover-page">
         ${coverPhotoMarkup}
         <div class="cover-footer">
-          ${renderCoverCaption({ catalogPeriodLabel, catalogTitle: coverLabel })}
+          ${renderCoverCaption({ catalogPeriodLabel, catalogTitle })}
           ${renderWordmark({ artistName, className: 'cover-wordmark', tone: 'light' })}
         </div>
       </section>
@@ -157,6 +156,8 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogP
           <div class="closing-inner">
             <div class="closing-contact">hola@luciastuy.com</div>
             <div class="closing-contact">635.166.253</div>
+            <div class="closing-contact">IG: @luciastuy</div>
+            <div class="closing-contact">www.luciastuy.com</div>
           </div>
         </div>
       </section>

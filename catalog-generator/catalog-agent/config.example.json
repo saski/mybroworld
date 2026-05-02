@@ -6,6 +6,7 @@
   "watchSpreadsheetIds": [
     "15wvN5g8pQmnjF13v3lLzrIbuFysJ7GaTUAb_ps9oqJw"
   ],
+  "catalogImageFolderId": "1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh",
   "pollIntervalSeconds": 30,
   "oauthClientPath": "/Users/luciaastuy/Library/Application Support/MyBroworld/catalog-agent/oauth-client.json",
   "oauthTokenPath": "/Users/luciaastuy/Library/Application Support/MyBroworld/catalog-agent/oauth-token.json"

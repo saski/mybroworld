@@ -11,8 +11,8 @@
   --muted-ink: #4d4747;
   --soft-ink: #8e8a8a;
   --soft-white: #ffffff;
-  --display-font: "Avenir Next", "AvenirNext", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --body-font: "Avenir Next", "AvenirNext", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --display-font: "Gotham", "Avenir Next", "AvenirNext", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --body-font: "Gotham", "Avenir Next", "AvenirNext", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 * {
@@ -73,7 +73,7 @@ img {
   font-family: var(--display-font);
   font-size: 15pt;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 1;
 }
 
@@ -86,7 +86,7 @@ img {
 .cover-caption-secondary {
   font-size: 14pt;
   font-weight: 450;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   line-height: 1;
 }
 
@@ -102,7 +102,7 @@ img {
   font-family: "Marker Felt", "Noteworthy", cursive;
   font-size: 12pt;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .catalog-wordmark-text.catalog-wordmark-dark {
@@ -127,22 +127,6 @@ img {
   gap: 8mm;
 }
 
-.artwork-kicker {
-  display: flex;
-  align-items: center;
-  gap: 1.8mm;
-  color: var(--muted-ink);
-  font-size: 7.5pt;
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: 0.005em;
-  line-height: 1;
-}
-
-.artwork-kicker-separator {
-  opacity: 0.88;
-}
-
 .artwork-header-wordmark {
   width: 18mm;
   opacity: 0.38;
@@ -161,14 +145,14 @@ img {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-height: 0;
 }
 
 .artwork-stage-frame {
   width: 150mm;
   max-width: 100%;
-  height: 184mm;
+  height: 176mm;
   max-height: 100%;
   display: flex;
   align-items: center;
@@ -184,6 +168,7 @@ img {
 .artwork-meta-block {
   width: 128mm;
   max-width: 100%;
+  margin-top: 11mm;
   text-align: center;
   color: var(--ink);
 }
@@ -193,7 +178,7 @@ img {
   font-size: 15.4pt;
   font-weight: 800;
   line-height: 1.04;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -206,28 +191,21 @@ img {
 }
 
 .artwork-meta-line,
-.artwork-note,
-.artwork-price,
-.artwork-status {
+.artwork-price {
   margin-top: 1.7mm;
   font-size: 8.2pt;
   line-height: 1.22;
   color: var(--muted-ink);
 }
 
-.artwork-price,
-.artwork-status {
+.artwork-price {
   margin-top: 4.1mm;
   font-family: var(--display-font);
   font-size: 10.8pt;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--ink);
-}
-
-.artwork-note {
-  font-style: italic;
 }
 
 .closing-page {

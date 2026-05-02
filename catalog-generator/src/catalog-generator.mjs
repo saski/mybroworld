@@ -3,9 +3,15 @@ import path from 'node:path';
 
 import { parse } from 'csv-parse/sync';
 
+import {
+  CATALOG_DEFAULT_ARTIST_NAME,
+  catalogStatusLabel,
+  normalizeCatalogStatus,
+} from './shared-catalog-contract.mjs';
+import { normalizeDriveImageUrl } from './drive-image-url.mjs';
 import { renderCatalogHtml } from './template.js';
 
-const DEFAULT_ARTIST_NAME = 'Lucía Astuy';
+const DEFAULT_ARTIST_NAME = CATALOG_DEFAULT_ARTIST_NAME;
 const DEFAULT_CATALOG_TITLE = 'Catálogo 2026';
 const DEFAULT_OUTPUT_PATH = 'output/catalogo.pdf';
 const PDF_RENDER_TIMEOUT_MS = 120_000;
@@ -121,72 +127,23 @@ function normalizeBoolean(value) {
   return ['true', '1', 'yes', 'y', 'sí', 'si'].includes(text);
 }
 
-function normalizeArtworkStatus(status) {
-  const normalized = String(status || '')
+function normalizeMatchKey(value) {
+  return String(value || '')
     .trim()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\.[^.]+$/u, '')
     .toLowerCase()
-    .replace(/[-\s]+/g, '_');
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
-  switch (normalized) {
-    case 'available':
-    case 'for_sale':
-    case 'disponible':
-      return 'available';
-    case 'gifted':
-    case 'gift':
-    case 'regalo':
-    case 'donated':
-    case 'donation':
-      return 'gifted';
-    case 'exchanged':
-    case 'exchange':
-    case 'intercambio':
-    case 'traded':
-      return 'exchanged';
-    case 'sold':
-    case 'vendido':
-      return 'sold';
-    case 'commissioned':
-    case 'commission':
-    case 'encargo':
-      return 'commissioned';
-    case 'reserved':
-    case 'reservado':
-    case 'reservada':
-      return 'reserved';
-    case 'not_for_sale':
-    case 'nfs':
-    case 'no_disponible':
-      return 'not_for_sale';
-    case 'personal_collection':
-    case 'collection':
-    case 'coleccion_personal':
-      return 'personal_collection';
-    case 'archived':
-    case 'archive':
-    case 'archivada':
-      return 'archived';
-    default:
-      return '';
-  }
+function normalizeArtworkStatus(status) {
+  return normalizeCatalogStatus(status);
 }
 
 function statusLabel(status) {
-  switch (normalizeArtworkStatus(status)) {
-    case 'gifted':
-    case 'exchanged':
-    case 'personal_collection':
-    case 'archived':
-      return 'Obra histórica';
-    case 'reserved':
-      return 'Reservada';
-    case 'sold':
-    case 'commissioned':
-    case 'not_for_sale':
-      return 'Obra no disponible';
-    default:
-      return '';
-  }
+  return catalogStatusLabel(status);
 }
 
 function buildTechnique(row) {
@@ -201,6 +158,22 @@ function buildTechnique(row) {
 function toSortableNumber(value, fallback = 999999) {
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function formatEuroPrice(value) {
+  const numericValue = Number(String(value || '').replace(',', '.'));
+  if (!Number.isFinite(numericValue)) {
+    return '';
+  }
+
+  return `${new Intl.NumberFormat('es-ES', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  }).format(numericValue)} €`;
+}
+
+function resolvePvpPrice(row) {
+  return String(row.price_display_clean || '').trim() || formatEuroPrice(row.price_eur);
 }
 
 function parseCatalogDateLabel(value) {
@@ -239,23 +212,89 @@ function buildCatalogPeriodLabel(artworks) {
   return `${SPANISH_MONTHS[latestPeriod.month - 1]} ${latestPeriod.year}`;
 }
 
-function normalizeDriveImage(url) {
-  if (!url) {
-    return '';
+function buildArtworkRecencyKey(row) {
+  const datePeriod = parseCatalogDateLabel(row.date_label);
+  if (datePeriod) {
+    return datePeriod.sortKey;
   }
 
-  const trimmed = String(url).trim();
-  const pathMatch = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (pathMatch) {
-    return `https://lh3.googleusercontent.com/d/${pathMatch[1]}`;
+  const year = Number(row.year || row.source_year);
+  return Number.isFinite(year) ? year * 100 : 0;
+}
+
+function parseCatalogImageManifest(manifestText) {
+  let payload;
+  try {
+    payload = JSON.parse(manifestText);
+  } catch (error) {
+    throw new CatalogCliError({
+      code: 'catalog_image_manifest_invalid',
+      exitCode: 2,
+      message: 'The catalog image manifest must be valid JSON.',
+      cause: error,
+    });
   }
 
-  const queryMatch = trimmed.match(/id=([a-zA-Z0-9_-]+)/);
-  if (queryMatch) {
-    return `https://lh3.googleusercontent.com/d/${queryMatch[1]}`;
+  const files = Array.isArray(payload) ? payload : payload.files;
+  if (!Array.isArray(files)) {
+    throw new CatalogCliError({
+      code: 'catalog_image_manifest_invalid',
+      exitCode: 2,
+      message: 'The catalog image manifest must be an array or contain a files array.',
+    });
   }
 
-  return trimmed;
+  const byMatchKey = new Map();
+  for (const file of files) {
+    const fileName = String(file?.name || '').trim();
+    const match = fileName.match(/^(.*)_cat(?:\.[^.]+)?$/i);
+    if (!match || !file?.id) {
+      continue;
+    }
+
+    const matchKey = normalizeMatchKey(match[1]);
+    if (!matchKey) {
+      continue;
+    }
+
+    const entries = byMatchKey.get(matchKey) || [];
+    entries.push({
+      id: String(file.id).trim(),
+      name: fileName,
+    });
+    byMatchKey.set(matchKey, entries);
+  }
+
+  return byMatchKey;
+}
+
+function resolveCatalogImageUrl(row, catalogImageManifest) {
+  if (!catalogImageManifest) {
+    return normalizeDriveImageUrl(row.image_main);
+  }
+
+  const matchKeys = [
+    normalizeMatchKey(row.artwork_id),
+    normalizeMatchKey(row.title_clean),
+    normalizeMatchKey(row.title_raw),
+  ].filter(Boolean);
+  const matchingFiles = matchKeys
+    .flatMap((matchKey) => catalogImageManifest.get(matchKey) || []);
+  const uniqueMatchingFiles = [
+    ...new Map(matchingFiles.map((file) => [file.id, file])).values(),
+  ];
+
+  if (uniqueMatchingFiles.length !== 1) {
+    throw new CatalogCliError({
+      code: 'catalog_image_selection_blocked',
+      exitCode: 3,
+      message: uniqueMatchingFiles.length === 0
+        ? `No _cat image found for artwork ${row.artwork_id || row.title_clean || row.title_raw}.`
+        : `Multiple _cat images found for artwork ${row.artwork_id || row.title_clean || row.title_raw}.`,
+    });
+  }
+
+  return normalizeDriveImageUrl(`https://drive.google.com/file/d/${uniqueMatchingFiles[0].id}/view`);
 }
 
 function parseLimit(value) {
@@ -283,6 +322,7 @@ function resolveOptions({ argv, env }) {
   const catalogTitle = args['catalog-title'] || env.CATALOG_TITLE || DEFAULT_CATALOG_TITLE;
   const artistName = args['artist-name'] || env.CATALOG_ARTIST_NAME || DEFAULT_ARTIST_NAME;
   const puppeteerExecutablePath = args['puppeteer-executable-path'] || env.PUPPETEER_EXECUTABLE_PATH || '';
+  const catalogImageManifestPath = args['catalog-image-manifest'] || env.CATALOG_IMAGE_MANIFEST || '';
   const limit = parseLimit(args.limit);
 
   if (!inputPath && !inputUrl) {
@@ -295,6 +335,7 @@ function resolveOptions({ argv, env }) {
 
   return {
     artistName,
+    catalogImageManifestPath,
     catalogTitle,
     inputPath,
     inputUrl,
@@ -330,24 +371,23 @@ async function defaultReadCsvText({ inputPath, inputUrl }) {
   }
 }
 
-export function buildCatalogArtworks(records, { limit }) {
+export function buildCatalogArtworks(records, { catalogImageManifest = null, limit }) {
   const artworks = records
     .filter((row) => normalizeBoolean(row.include_in_catalog) && normalizeBoolean(row.catalog_ready))
     .map((row) => {
       const status = normalizeArtworkStatus(row.status_normalized);
-      const showPrice = normalizeBoolean(row.show_price) && status === 'available';
-      const note = String(row.catalog_notes_public || '').trim();
+      const price = resolvePvpPrice(row);
 
       return {
         artworkId: String(row.artwork_id || '').trim(),
         dateLabel: String(row.date_label || '').trim(),
         dimensions: String(row.dimensions_clean || '').trim(),
-        imageUrl: normalizeDriveImage(row.image_main),
-        note,
+        imageUrl: resolveCatalogImageUrl(row, catalogImageManifest),
         order: toSortableNumber(row.catalog_order, 999999),
-        price: showPrice ? String(row.price_display_clean || '').trim() : '',
+        price,
+        recencyKey: buildArtworkRecencyKey(row),
         section: String(row.catalog_section || '').trim().toLowerCase() || (status === 'available' ? 'available' : 'historical'),
-        showPrice,
+        showPrice: price !== '',
         status,
         statusLabel: statusLabel(status),
         technique: buildTechnique(row),
@@ -357,9 +397,9 @@ export function buildCatalogArtworks(records, { limit }) {
     })
     .filter((row) => row.title && row.imageUrl)
     .sort((left, right) => {
-      const sectionOrder = left.section.localeCompare(right.section);
-      if (sectionOrder !== 0) {
-        return sectionOrder;
+      const recencyOrder = right.recencyKey - left.recencyKey;
+      if (recencyOrder !== 0) {
+        return recencyOrder;
       }
 
       const rowOrder = left.order - right.order;
@@ -404,6 +444,7 @@ async function defaultRenderPdf({ html, outputPath, puppeteerExecutablePath }) {
 export async function generateCatalog(options, dependencies = {}) {
   const {
     artistName,
+    catalogImageManifestPath,
     catalogTitle,
     inputPath,
     inputUrl,
@@ -418,13 +459,19 @@ export async function generateCatalog(options, dependencies = {}) {
   const writeTextFile = dependencies.writeTextFile || ((filePath, contents) => fs.writeFile(filePath, contents, 'utf8'));
 
   const csvText = await readCsvText({ inputPath, inputUrl });
+  const catalogImageManifest = catalogImageManifestPath
+    ? parseCatalogImageManifest(await readCsvText({
+        inputPath: catalogImageManifestPath,
+        inputUrl: '',
+      }))
+    : null;
   const records = parse(csvText, {
     bom: true,
     columns: true,
     skip_empty_lines: true,
   });
 
-  const artworks = buildCatalogArtworks(records, { limit });
+  const artworks = buildCatalogArtworks(records, { catalogImageManifest, limit });
   const catalogPeriodLabel = buildCatalogPeriodLabel(artworks);
   const html = renderCatalogHtml(artworks, {
     artistName,

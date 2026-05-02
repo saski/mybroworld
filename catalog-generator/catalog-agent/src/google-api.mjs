@@ -7,6 +7,10 @@ function normalizeHeader(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function escapeDriveQueryValue(value) {
+  return String(value).replaceAll("'", "\\'");
+}
+
 function mapValuesRow(headers, rowValues) {
   return headers.reduce((row, header, index) => {
     row[header] = rowValues[index] ?? '';
@@ -155,6 +159,33 @@ export class GoogleApiClient {
       method: 'POST',
       url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`,
     });
+  }
+
+  async listDriveFolderFiles(folderId) {
+    const files = [];
+    let pageToken = '';
+
+    do {
+      const url = new URL('https://www.googleapis.com/drive/v3/files');
+      url.searchParams.set('q', `'${escapeDriveQueryValue(folderId)}' in parents and trashed = false`);
+      url.searchParams.set('fields', 'nextPageToken,files(id,name,mimeType,size,modifiedTime)');
+      url.searchParams.set('pageSize', '1000');
+      url.searchParams.set('supportsAllDrives', 'true');
+      url.searchParams.set('includeItemsFromAllDrives', 'true');
+      url.searchParams.set('orderBy', 'name_natural');
+      if (pageToken) {
+        url.searchParams.set('pageToken', pageToken);
+      }
+
+      const payload = await this.requestJson({
+        errorCode: 'drive_folder_list_failed',
+        url: String(url),
+      });
+      files.push(...(payload.files || []));
+      pageToken = payload.nextPageToken || '';
+    } while (pageToken);
+
+    return files;
   }
 
   async uploadPdfToDrive({ fileName, filePath, folderId }) {

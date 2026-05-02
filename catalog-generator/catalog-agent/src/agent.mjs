@@ -55,6 +55,21 @@ async function writeHeartbeat({ googleClient, headerMap, job, logger, spreadshee
   });
 }
 
+export async function writeCatalogImageManifest({
+  config,
+  googleClient,
+  workDirectory,
+}) {
+  if (!config.catalogImageFolderId) {
+    return '';
+  }
+
+  const files = await googleClient.listDriveFolderFiles(config.catalogImageFolderId);
+  const manifestPath = path.join(workDirectory, 'catalog-images.json');
+  await fs.writeFile(manifestPath, `${JSON.stringify({ files }, null, 2)}\n`, 'utf8');
+  return manifestPath;
+}
+
 async function processClaimedJob({
   config,
   googleClient,
@@ -125,6 +140,11 @@ async function processClaimedJob({
 
     const mergedCsv = mergeCatalogSheetsToCsv(sheetPayloads);
     await fs.writeFile(mergedCsvPath, mergedCsv, 'utf8');
+    const catalogImageManifestPath = await writeCatalogImageManifest({
+      config,
+      googleClient,
+      workDirectory,
+    });
 
     await updateJobFieldsOrThrow({
       googleClient,
@@ -140,6 +160,7 @@ async function processClaimedJob({
     const generationResult = await generateCatalog({
       artistName: job.artist_name || DEFAULT_ARTIST_NAME,
       catalogTitle: job.catalog_title,
+      catalogImageManifestPath,
       inputPath: mergedCsvPath,
       inputUrl: '',
       limit: null,

@@ -36,6 +36,12 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - Example: if `medium_clean` contains ad hoc green fills in some rows but the column has no conditional formatting and no documented color meaning, reset those cells to the neutral background.
 - Legacy ad hoc orange or green fills are not canonical review colors. Keep only documented conditional-format colors and the standard unresolved-review light red when the issue still exists.
 - Example: if `notes_raw`, `dimensions_clean`, `catalog_blocker`, or `price_eur` keep an old orange highlight after the underlying review point has been resolved or the column has no color rule, reset the cell to the neutral background.
+- For PDF catalog selection, `include_in_catalog` is the explicit editorial inclusion gate. Do not infer inclusion from `status_normalized`, availability labels, price, or whether a work is purchasable.
+- Example: if `status_normalized = available` but `include_in_catalog = FALSE`, exclude the work from the PDF catalog; if `status_normalized = sold` but `include_in_catalog = TRUE`, include it unless another technical blocker such as missing title, image, or dimensions prevents rendering.
+- Keep `catalog_ready` as the technical render-readiness gate after editorial selection. A row with `include_in_catalog = TRUE` and `catalog_ready = FALSE` should remain out of generated PDFs until its blockers are resolved.
+- For PDF catalog image selection, the customer will manually identify the catalog image by keeping one existing Drive file per artwork whose filename ends in `_cat`. Missing or duplicate `_cat` images are blockers; do not auto-create, copy, or infer the `_cat` file.
+- Do not enable strict production `_cat` image-folder selection until the shared folder contains one `_cat` file for every included, catalog-ready artwork.
+- The PDF catalog should sort newest works first and display only title, year, dimensions, technique, and PVP price for each artwork.
 
 ### Manual review behavior
 

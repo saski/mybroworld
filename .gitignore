@@ -3,4 +3,15 @@ backups/
 
 # Local AI assistant state
 .claude/
+.codex/
 .playwright-mcp/
+
+# Generated catalog render outputs
+catalog-generator/output/
+
+# Keep only the Gotham weights embedded by the PDF template.
+catalog-generator/assets/fonts/*
+!catalog-generator/assets/fonts/Gotham-Black.otf
+!catalog-generator/assets/fonts/Gotham-Bold.otf
+!catalog-generator/assets/fonts/Gotham-Book.otf
+!catalog-generator/assets/fonts/Gotham-Medium.otf
