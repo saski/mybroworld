@@ -12,7 +12,7 @@
 | Catalog editorial uplift | 🟡 Awaiting customer image selections | 94% | Yes |
 | WordPress production snapshot runtime | 🟢 Ready | 100% | No |
 | WordPress catalog PDF console | 🟡 Customer validation pending | 99% | Requires one catalog queued/reviewed from the customer's mybro WordPress account |
-| Safe CI/CD automation | 🟡 Repository automation implemented | 70% | GitHub Environments/secrets, auto-deploy enable flags, and remote workflow run still pending |
+| Safe CI/CD automation | 🟡 Catalog-agent CD validated | 85% | WordPress rollback automation, WordPress manual deploy validation, source readiness monitor, and auto-deploy enable flags still pending |
 | WordPress plugin cleanup plan | 🟡 In Progress | 5% | No |
 | Safe cleanup execution + verification | ⚠️ Pending | 0% | Requires admin access + backups |
 
@@ -49,6 +49,7 @@
 - Fixed the first production Cloud Run PDF render failure on 2026-05-02. The failed WordPress job `catalog_20260502_155151_3dcb` was caused by Chromium running as root without sandbox launch flags; image `catalog-agent:sandbox-fix-20260502-1818` is now deployed, and verification job `catalog_20260502_161854_retry` completed with 14 artworks at `https://drive.google.com/file/d/1eR-wTNJn5mMxGzgz5CCV6xahb5mIPHwa/view?usp=drivesdk`.
 - Added production monitoring for the Cloud Run catalog path on 2026-05-02. Image `catalog-agent:monitoring-20260502-163238` is deployed to the worker; monitor job `lucia-mybrocorp-catalog-monitor` runs every 10 minutes, direct and Scheduler-triggered monitor executions completed with `[catalog-monitor] ok spreadsheets=1 jobs=2`, and Cloud Monitoring alert policy `projects/mybroworld-catalog-260501/alertPolicies/6576773883271781072` is attached to the project email channel.
 - Added repository CI/CD automation on 2026-05-02: GitHub Actions CI, Cloud Run catalog-agent deployment workflow, WordPress owned-code deployment workflow, Dependabot config, secret scanning, WordPress deployment manifests, and SHA-tagged Cloud Run deploy/verify helpers with rollback to the previous image on verification failure.
+- Configured and validated catalog-agent CI/CD externally on 2026-05-02: GitHub Environments `production-catalog-agent` and `production-wordpress` exist with required reviewer `saski`, `main` requires the `Repository checks` status check for normal merges, Workload Identity Federation is configured for `saski/mybroworld`, and manual workflow run `25258963235` deployed Cloud Run image `catalog-agent:298b50c6fa901d3a279492bd9aa1ba86f7770acc` with verification execution `lucia-mybrocorp-catalog-agent-xxkkn` authenticated as `mybrocorp@gmail.com`.
 - Imported the legacy `2025`, `2024`, and `2023` tabs from `Obra TODO - Lucia Astuy` into `Lucia Astuy - CATALOGO_BASE` on 2026-05-02 using the consolidated `2026` header contract. The imported tabs are ordered `2026`, `2025`, `2024`, `2023`; verification counted 89 rows/89 images for 2025, 46 rows/46 images for 2024, and 35 rows/31 images for 2023.
 
 ---
@@ -70,18 +71,18 @@
 - Inventory sync is unblocked locally: local WooCommerce contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are no longer exposed by the local Store API after explicit unmanaged cleanup.
 - Production WooCommerce now contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are hidden from the public Store API.
 - The WordPress catalog PDF console is live in production. Runtime config and secrets remain outside git. New jobs now target the scheduled and monitored Cloud Run `lucia-mybrocorp` worker; the remaining handoff gate is customer validation from the mybro WordPress account using `thoughts/shared/docs/customer-testing-and-handoff.md`.
-- CI/CD workflows are committed in the repository but still need GitHub Environment configuration before remote production deploys should be trusted: `production-catalog-agent` with Google Workload Identity Federation secrets, `production-wordpress` with DonDominio FTP secrets, and explicit auto-deploy enable variables if push-triggered deploys should run automatically.
+- CI/CD workflows are committed and the catalog-agent path is remotely validated through GitHub Actions. WordPress credentials are configured in the `production-wordpress` GitHub Environment, but WordPress deployment is intentionally held until the pre-deploy remote owned-code archive and rollback restore helper are automated. Explicit auto-deploy enable variables remain unset.
 
 ---
 
 ## 📋 Next Steps
 
 1. Run `fic-validate-plan thoughts/shared/plans/2026-05-01-woocommerce-catalog-photo-gap-plan.md` to close the WooCommerce catalog photo-gap workstream.
-2. Configure GitHub Environments and secrets for CI/CD using `thoughts/shared/docs/deployments.md`, then run the CI workflow and one manual catalog-agent deployment workflow. Enable push-triggered deploys only after that by setting `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true`.
+2. Implement the WordPress pre-deploy remote owned-code archive and rollback restore helper, then run one reviewed manual `Deploy WordPress Owned Code` workflow.
 3. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
 4. Complete Phase 6 of `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md`: queue one catalog from the customer's mybro WordPress account, verify Cloud Run completes it, verify Drive read/write from the customer session, and persist a review state.
 5. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
-6. After `_cat` files exist, enable `catalogImageFolderId` in the `catalog-agent-config` Secret Manager value and run one Cloud Run test job to verify strict image matching.
+6. Run one real queued `lucia-mybrocorp` catalog PDF render from WordPress after the SHA-tagged GitHub Actions deploy and confirm `result_file_url` is written back to `catalog_jobs`.
 7. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
 8. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
 9. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
@@ -96,7 +97,7 @@
 - The imported historical tabs still need manual blocker review before catalog generation: 2025 has 30 blocker rows, 2024 has 3 blocker rows, and 2023 has 12 blocker rows. The 2023 import has four rows without deterministic image matches: `LA-2023-011`, `LA-2023-021`, `LA-2023-022`, and `LA-2023-034`.
 - The original Google Drive template link was not reliably readable without authentication in this session.
 - Customer-operated catalog generation is not yet fully verified; Cloud Run, Scheduler, and monitoring are live, production WordPress now targets `lucia-mybrocorp`, and a direct Cloud Run PDF job completed, but the final proof still requires a catalog queued/reviewed from the customer's mybro WordPress account.
-- CI/CD remote execution is not fully verified until GitHub Environment reviewers, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT`, `WP_FTP_USER`, `WP_FTP_PASSWORD`, and the optional auto-deploy enable variables are configured and one workflow run completes.
+- CI/CD is not fully complete until WordPress rollback automation is implemented and one reviewed manual WordPress owned-code deployment passes smoke checks. Push-triggered production deploys remain disabled until `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` are intentionally set.
 - Remote admin execution is not performed yet in this environment; exact plugin versions/status still need re-capture from `wp-admin/plugins.php`.
 - The actual “remove no longer needed” set will be confirmed only after Phase 2 deactivation + smoke tests.
 

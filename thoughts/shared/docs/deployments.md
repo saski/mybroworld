@@ -18,6 +18,13 @@ Automatic deployment on push is disabled until these GitHub Environment or repos
 
 Manual `workflow_dispatch` deployments remain available without these variables, but still use the configured GitHub Environment.
 
+Configured state on 2026-05-02:
+
+- `production-catalog-agent` exists and requires approval from `saski`.
+- `production-wordpress` exists and requires approval from `saski`.
+- `main` has branch protection requiring the `Repository checks` status check for normal merges; admins can bypass for emergency direct pushes.
+- Push-triggered production deploys remain disabled because `ENABLE_CATALOG_AGENT_AUTO_DEPLOY` and `ENABLE_WORDPRESS_AUTO_DEPLOY` are not set.
+
 ## Required GitHub Secrets
 
 ### `production-catalog-agent`
@@ -33,8 +40,21 @@ The deploy service account needs the minimum Google Cloud permissions to:
 - execute Cloud Run Jobs for verification
 - read Cloud Logging entries for verification
 - act as the Cloud Run runtime service account when updating jobs
+- act as the Cloud Build execution service account used by this project
+- use Service Usage and the Cloud Build staging bucket required by `gcloud builds submit`
 
 Do not use a downloaded Google service account JSON key.
+
+Configured state on 2026-05-02:
+
+- Workload Identity Pool: `github-actions`
+- OIDC provider: `mybroworld-github`
+- Trusted repository condition: `assertion.repository == 'saski/mybroworld'`
+- GitHub provider secret: `projects/289786381719/locations/global/workloadIdentityPools/github-actions/providers/mybroworld-github`
+- Deploy service account: `github-catalog-deployer@mybroworld-catalog-260501.iam.gserviceaccount.com`
+- Runtime service account remains `catalog-agent-runner@mybroworld-catalog-260501.iam.gserviceaccount.com`
+- The deployer has Cloud Build, Cloud Run Developer, Logging Viewer, Artifact Registry Reader, Service Usage Consumer, and Storage access needed for the default Cloud Build staging path.
+- The deployer can act as `catalog-agent-runner@...` for Cloud Run Job updates and `289786381719-compute@developer.gserviceaccount.com` for Cloud Build execution.
 
 ### `production-wordpress`
 
@@ -49,6 +69,12 @@ Optional environment variables:
 - `WP_REMOTE_PATH`, defaults to `/public`
 - `WP_REMOTE_THEME_DIR`, defaults to `/public/wp-content/themes/luciastuy`
 - `WP_REMOTE_MU_PLUGIN_DIR`, defaults to `/public/wp-content/mu-plugins`
+
+Configured state on 2026-05-02:
+
+- `WP_FTP_USER` and `WP_FTP_PASSWORD` exist as `production-wordpress` environment secrets.
+- `WP_FTP_HOST`, `WP_REMOTE_PATH`, `WP_REMOTE_THEME_DIR`, and `WP_REMOTE_MU_PLUGIN_DIR` exist as `production-wordpress` environment variables.
+- Manual WordPress deployment is still held until the pre-deploy archive and rollback helper are automated.
 
 ## Workflows
 
@@ -88,6 +114,15 @@ The workflow:
 8. Rolls back to the previous image if verification fails.
 
 The workflow does not deploy `latest`.
+
+Last verified manual deployment:
+
+- Workflow run: `https://github.com/saski/mybroworld/actions/runs/25258963235`
+- Git SHA: `298b50c6fa901d3a279492bd9aa1ba86f7770acc`
+- Cloud Build: `31dec80d-e034-4ebc-8478-a16c71c071ac`
+- Cloud Run Job image: `europe-west1-docker.pkg.dev/mybroworld-catalog-260501/mybroworld/catalog-agent:298b50c6fa901d3a279492bd9aa1ba86f7770acc`
+- Verification execution: `lucia-mybrocorp-catalog-agent-xxkkn`, `EXECUTION_SUCCEEDED`
+- Identity log: `[catalog-agent] authenticated as mybrocorp@gmail.com`
 
 ### WordPress Owned-Code Deployment
 

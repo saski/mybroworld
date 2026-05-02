@@ -16,7 +16,8 @@ The recommended automation model is hybrid:
 - The repository has no `.github/workflows/` automation.
 - `main` is already pushed to GitHub through `origin` using the `git@github.com-saski:` SSH host alias.
 - The production Cloud Run catalog worker is deployed as job `lucia-mybrocorp-catalog-agent` in `europe-west1`.
-- The active production worker image was moved from the prior git-SHA tag to hotfix image `catalog-agent:sandbox-fix-20260502-1818` after the first real Cloud Run PDF render failed. CI/CD must bring production back to immutable git-SHA tags after that fix is committed and promoted.
+- The active production worker image was moved from the prior git-SHA tag to hotfix image `catalog-agent:sandbox-fix-20260502-1818` after the first real Cloud Run PDF render failed.
+- CI/CD brought the production worker back to an immutable git-SHA tag on 2026-05-02: `catalog-agent:298b50c6fa901d3a279492bd9aa1ba86f7770acc`.
 - Cloud Scheduler runs `lucia-mybrocorp-catalog-agent-every-5m`.
 - Cloud Run worker secrets are stored in Secret Manager and the worker authenticates to Google APIs as `mybrocorp@gmail.com`.
 - Cloud Run runs the current catalog container as UID 0. Chromium/Puppeteer must launch with `--no-sandbox` and `--disable-setuid-sandbox` in that runtime.
@@ -156,7 +157,7 @@ Automated success criteria:
 
 ### Phase 2: Automate Cloud Run Catalog Worker Deployment
 
-Progress: implemented in repository automation; GitHub Environment secrets, Google Workload Identity Federation, and `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` still need to be configured in GitHub/Google Cloud before push-triggered deployment can run remotely. Manual workflow dispatch remains available after secrets are configured.
+Progress: manually validated through GitHub Actions on 2026-05-02. GitHub Environment `production-catalog-agent`, required reviewer, Workload Identity Federation, deploy service account, branch protection, and environment secrets are configured. Manual workflow run `https://github.com/saski/mybroworld/actions/runs/25258963235` deployed `catalog-agent:298b50c6fa901d3a279492bd9aa1ba86f7770acc`; Cloud Run verification execution `lucia-mybrocorp-catalog-agent-xxkkn` completed successfully and logged `authenticated as mybrocorp@gmail.com`. Push-triggered deployment remains disabled until `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` is intentionally set.
 
 Purpose: deploy catalog generator and worker code changes to the production Cloud Run Job safely.
 
@@ -208,7 +209,7 @@ Automated success criteria:
 
 ### Phase 3: Automate WordPress Owned-Code Deployment
 
-Progress: implemented in repository automation; GitHub Environment secrets, required reviewers, and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` still need to be configured before push-triggered deployment can run remotely. Manual workflow dispatch remains available after secrets are configured.
+Progress: implemented in repository automation and externally configured for credentials. GitHub Environment `production-wordpress`, required reviewer, `WP_FTP_USER`, `WP_FTP_PASSWORD`, `WP_FTP_HOST`, `WP_REMOTE_PATH`, `WP_REMOTE_THEME_DIR`, and `WP_REMOTE_MU_PLUGIN_DIR` are configured. Manual production deploy is intentionally held until the pre-deploy remote owned-code archive and rollback helper are automated. Push-triggered deployment remains disabled until `ENABLE_WORDPRESS_AUTO_DEPLOY=true` is intentionally set.
 
 Purpose: deploy WordPress custom code safely without deploying WordPress core, vendor plugins, uploads, or DB content.
 
@@ -413,9 +414,11 @@ Do not enable unattended production deployment until these gates are true:
 1. Implement Phase 1 CI.
 2. Implement Phase 2 Cloud Run CD with production approval.
 3. Implement Phase 3 WordPress CD with production approval.
-4. Complete the customer account handoff validation.
-5. Implement Phase 4 source readiness monitoring.
-6. Run Phase 5 dry-runs for at least several source changes before considering Phase 6 auto-apply.
+4. Automate the WordPress pre-deploy remote owned-code archive and rollback restore helper.
+5. Complete the customer account handoff validation.
+6. Run one real queued `lucia-mybrocorp` catalog PDF render after the SHA-tagged GitHub Actions deploy.
+7. Implement Phase 4 source readiness monitoring.
+8. Run Phase 5 dry-runs for at least several source changes before considering Phase 6 auto-apply.
 
 ## Completion Criteria
 
