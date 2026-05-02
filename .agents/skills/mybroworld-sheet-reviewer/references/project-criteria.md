@@ -7,17 +7,28 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 ### Deterministic fills
 
 - Extract `image_id_manual` from a stable Drive file URL in `image_main`.
+- Fill `preview` with an in-cell image formula derived from `image_id_manual` on every populated canonical year-tab row. The formula should stay blank when `image_id_manual` is blank.
+- Example: in an `es_ES` spreadsheet where `image_id_manual` is column `R`, row 24 uses `=IF($R24="";"";IMAGE("https://lh3.googleusercontent.com/d/"&$R24;1))`.
 - Normalize `dimensions_clean` from `dimensions_raw` when the raw cell already contains the full dimensional data.
 - Fill `location_clean` from notes only when the mapping is explicit in the notes and already evidenced by comparable rows.
 - Keep `location_clean` for the current location only. When the row needs to preserve previous stops as well, add and fill a dedicated `location_history` field instead of storing multiple values in `location_clean`.
 - Fill `series_name` only when the series is explicit from a repeated title stem already evidenced across multiple rows.
 - Example: `Perrete en tablillas 01` through `Perrete en tablillas 05` should use `series_name = Perrete en tablillas`.
+- Example: repeated stems such as `Flor de La Mancha #1` through `Flor de La Mancha #9`, `Mapa del tesoro #1` through `Mapa del tesoro #6`, `Apenas existe #01` through `Apenas existe #24`, and `Silent block Tale #1` through `Silent block Tale #6` should fill `series_name` with the shared stem.
+- Split English medium/support text only when the grammar is as explicit as the Spanish `sobre` pattern and a consistent normalized equivalent is evidenced by the sheet.
+- Example: `Mixed media collage on wood.` in the `Silent block Tale` rows can normalize to `medium_clean = Collage de técnicas mixtas` and `support_clean = madera` because the same series already contains `Collage de técnicas mixtas sobre madera`.
+- Treat explicit destroyed or recycled wording as an archived status when `status_normalized` is blank.
+- Example: a row titled `Heart of Gold (DESTRUIDO/RECICLADO)` with notes ending in `Destruido-reciclado` should use `status_normalized = archived`.
 - Example: if a row says `Residencia Escala House 07.01/20.02 / El Grifo / Vendido a Juan Roller`, keep `location_clean = Juan Roller` and store `location_history = Residencia Escala House 07.01/20.02 -> El Grifo -> Juan Roller`.
 
 ### Ambiguity handling
 
 - When both `dimensions_raw` and `dimensions_clean` are blank, treat the issue as unresolved and flag the cells for review rather than guessing from nearby rows.
 - Multi-price raw values are not automatically safe to normalize into one canonical price unless the row or the sheet makes the intended value explicit.
+- Header notes define field purpose and allowed value shapes, but they do not by themselves supply row-level decisions. Do not fill a blank field only because its header note lists allowed values.
+- Example: `include_in_catalog` expects `TRUE` or `FALSE`, but a blank historical row remains an editorial decision unless the source explicitly says whether that artwork should be considered for the catalog.
+- If notes mention `Colección personal` and the workbook has not settled whether that should normalize to `personal_collection` or the existing historical `not_for_sale` pattern, leave blank statuses unresolved instead of silently choosing one.
+- Location-route parsing must not split dates such as `22/07/2024`, `05/2024`, or `02/01/26 - 20/02/26` as if each slash were a location separator.
 
 ### Review behavior
 
@@ -60,6 +71,8 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 
 - When a sheet needs persistent end-user guidance about what each field expects, document the header cells with notes rather than discussion comments.
 - Example: add a Spanish note on each column header describing the purpose of the field and the expected value format.
+- Treat header notes as the live sheet field contract. If a canonical column lacks a note, add one before relying on external memory to interpret the field.
+- Example: `location_history` should have a header note explaining that it stores a chronological route separated with ` -> ` and should normally end in the current `location_clean`.
 - When the catalog needs to distinguish standalone artworks from artworks in a series, add a dedicated optional field such as `series_name` instead of encoding the series only inside the title.
 - Example: keep `title_clean = Perrete en tablillas 03` and store the shared grouping separately as `series_name = Perrete en tablillas`.
 
