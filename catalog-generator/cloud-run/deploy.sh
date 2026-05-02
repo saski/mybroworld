@@ -44,7 +44,7 @@ PROJECT_ID=$PROJECT_ID
 REGION=$REGION
 JOB_NAME=$JOB_NAME
 IMAGE=$IMAGE
-gcloud builds submit catalog-generator --config catalog-generator/cloud-run/cloudbuild.yaml --substitutions _IMAGE=$IMAGE --project=$PROJECT_ID
+gcloud builds submit catalog-generator --config catalog-generator/cloud-run/cloudbuild.yaml --substitutions _IMAGE=$IMAGE --project=$PROJECT_ID --suppress-logs
 gcloud run jobs describe $JOB_NAME --region $REGION --project=$PROJECT_ID --format=value(spec.template.spec.template.spec.containers[0].image) > $PREVIOUS_IMAGE_FILE
 gcloud run jobs update $JOB_NAME --image $IMAGE --region $REGION --project=$PROJECT_ID
 catalog-generator/cloud-run/verify-job.sh --project $PROJECT_ID --region $REGION --job $JOB_NAME
@@ -55,7 +55,8 @@ fi
 gcloud builds submit catalog-generator \
   --config catalog-generator/cloud-run/cloudbuild.yaml \
   --substitutions "_IMAGE=$IMAGE" \
-  --project "$PROJECT_ID"
+  --project "$PROJECT_ID" \
+  --suppress-logs
 
 gcloud run jobs describe "$JOB_NAME" \
   --region "$REGION" \
