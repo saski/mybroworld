@@ -30,6 +30,11 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - Do not assume the canonical catalog data lives in one fixed tab name. Multi-year workbooks may expose one canonical tab per year, such as `2026`, `2025`, or `2024`, with the same header contract.
 - For integrations or review passes, identify in-scope tabs by canonical headers and explicit year selection, not by hardcoded names like `Sheet1`.
 - Example: a catalog-generation action should accept the current tab, a selected set of yearly tabs, or explicit `gid` values instead of hardcoding `Sheet1` or `2026`.
+- When importing legacy year tabs into the consolidated catalog workbook, inspect whether the source tab actually has canonical headers before using row 1 as headers. If the source year tab is positional legacy data, row 1 is artwork data and must be imported.
+- Example: the original `2023`, `2024`, and `2025` tabs in `Obra TODO - Lucia Astuy` are positional artwork rows, not canonical-header tables; import their non-empty artwork rows into year tabs that use the consolidated `2026` header contract.
+- For legacy image imports, use the corresponding Drive year folder and deterministic evidence from filename/title or a row-number prefix. Missing or ambiguous matches should remain blank and be marked in `catalog_blocker`.
+- Example: if a 2023 artwork title has no deterministic image match in the `2023` Drive folder, leave `image_main` and `image_id_manual` blank and mark `Missing deterministic image match.` instead of choosing a nearby filename.
+- When importing historical rows, do not infer `include_in_catalog` from the legacy availability flag or normalized status. Leave the editorial inclusion gate unset unless the source explicitly provides that decision.
 - Treat range-backed enum fields such as `status_normalized` as shared contract fields. When a new canonical value is approved, update the hidden validation list, header note, and matching conditional-format rules together.
 - Example: when `reserved` is added to `status_normalized`, extend `validation_lists`, update the `status_normalized` header note, and add the corresponding status color rule in column `I`.
 - In normalized output columns, remove manual fill colors that do not correspond to a documented review state or conditional-format rule.
