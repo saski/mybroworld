@@ -44,7 +44,8 @@ PROJECT_ID=$PROJECT_ID
 REGION=$REGION
 JOB_NAME=$JOB_NAME
 IMAGE=$IMAGE
-gcloud builds submit catalog-generator --config catalog-generator/cloud-run/cloudbuild.yaml --substitutions _IMAGE=$IMAGE --project=$PROJECT_ID --suppress-logs
+gcloud builds submit catalog-generator --config catalog-generator/cloud-run/cloudbuild.yaml --substitutions _IMAGE=$IMAGE --project=$PROJECT_ID --async --suppress-logs --format=value(id)
+gcloud builds describe BUILD_ID --project=$PROJECT_ID --format=value(status)
 gcloud run jobs describe $JOB_NAME --region $REGION --project=$PROJECT_ID --format=value(spec.template.spec.template.spec.containers[0].image) > $PREVIOUS_IMAGE_FILE
 gcloud run jobs update $JOB_NAME --image $IMAGE --region $REGION --project=$PROJECT_ID
 catalog-generator/cloud-run/verify-job.sh --project $PROJECT_ID --region $REGION --job $JOB_NAME
@@ -52,11 +53,40 @@ MSG
   exit 0
 fi
 
-gcloud builds submit catalog-generator \
+build_id=$(gcloud builds submit catalog-generator \
   --config catalog-generator/cloud-run/cloudbuild.yaml \
   --substitutions "_IMAGE=$IMAGE" \
   --project "$PROJECT_ID" \
-  --suppress-logs
+  --async \
+  --suppress-logs \
+  --format='value(id)')
+
+if [ -z "$build_id" ]; then
+  echo "Cloud Build did not return a build id" >&2
+  exit 1
+fi
+
+echo "Cloud Build build_id=$build_id"
+
+while :; do
+  build_status=$(gcloud builds describe "$build_id" \
+    --project "$PROJECT_ID" \
+    --format='value(status)')
+
+  case "$build_status" in
+    SUCCESS)
+      break
+      ;;
+    FAILURE|INTERNAL_ERROR|TIMEOUT|CANCELLED|EXPIRED)
+      echo "Cloud Build $build_id finished with status $build_status" >&2
+      exit 1
+      ;;
+    *)
+      echo "Cloud Build $build_id status=$build_status"
+      sleep 5
+      ;;
+  esac
+done
 
 gcloud run jobs describe "$JOB_NAME" \
   --region "$REGION" \
