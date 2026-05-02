@@ -90,10 +90,14 @@ Do not treat the WordPress catalog console as customer-portable until this produ
 9. The completed `catalog_jobs` row records the customer WordPress identity and the review state remains visible after a page reload.
 
 Current status as of 2026-05-02: the Cloud Run worker, Secret Manager material,
-and Cloud Scheduler trigger are deployed. Manual and scheduled executions
-authenticate as `mybrocorp@gmail.com` and ignore the queue when no
-`lucia-mybrocorp` jobs are pending. The remaining gate is one customer-account
-WordPress job that produces a Drive PDF and persisted review state.
+Cloud Scheduler trigger, and production monitor are deployed. Manual and
+scheduled worker executions authenticate as `mybrocorp@gmail.com`; verification
+job `catalog_20260502_161854_retry` completed through Cloud Run, produced a
+14-artwork PDF, and wrote the Drive result URL back to `catalog_jobs`. The
+monitor job `lucia-mybrocorp-catalog-monitor` runs every 10 minutes and has a
+Cloud Monitoring email alert policy. The remaining gate is one customer-account
+WordPress job that records the customer WordPress identity and persists review
+state.
 
 Cloud Run implementation notes:
 
@@ -101,6 +105,10 @@ Cloud Run implementation notes:
 - Use `npm run catalog-agent:cloud-run-once` as the Cloud Run Job command.
 - The entrypoint reads Secret Manager-provided JSON from `CATALOG_AGENT_CONFIG_JSON`, `CATALOG_AGENT_OAUTH_CLIENT_JSON`, and `CATALOG_AGENT_OAUTH_TOKEN_JSON`, or from the corresponding `*_PATH` variables if secrets are mounted as files.
 - The entrypoint writes those secrets into `CATALOG_AGENT_RUNTIME_ROOT` before loading the normal agent config, so OAuth refresh can update `oauthTokenPath` in a writable location.
+- Chromium runs as root in the current Cloud Run container, so Puppeteer launch options add `--no-sandbox` and `--disable-setuid-sandbox` when UID is 0.
+- Failed agent jobs write nested error causes into `catalog_jobs.log_excerpt`; check that field or Cloud Logging before retrying a generic `pdf_render_failed` job.
+- The one-shot Cloud Run worker exits non-zero when it claims a job that ends in `failed`.
+- The separate monitor command, `npm run catalog-agent:monitor:cloud-run`, scans `catalog_jobs` for recent failed rows, stale queued rows, stale in-progress heartbeats, and completed rows missing a Drive URL.
 - Deployment and scheduler commands live in [catalog-generator/cloud-run/README.md](../../../catalog-generator/cloud-run/README.md).
 
 ## Job Contract Highlights

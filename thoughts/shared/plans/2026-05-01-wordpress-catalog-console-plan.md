@@ -318,7 +318,7 @@ Deployment notes:
 
 ### Phase 6: Customer-Operable Cloud Run Handoff
 
-Progress: Cloud Run worker image, secrets, job, scheduler, and production WordPress profile switch are in place. The remaining handoff gate is a customer-account WordPress validation job that produces a PDF and review state through the scheduled `lucia-mybrocorp` worker.
+Progress: Cloud Run worker image, secrets, job, scheduler, production WordPress profile switch, direct `lucia-mybrocorp` Cloud Run PDF verification, and production monitoring are complete. The remaining handoff gate is a customer-account WordPress validation job that records the customer identity and persists review state through the scheduled `lucia-mybrocorp` worker.
 
 Make the production workflow portable so the customer can operate it from `mybrocorp@gmail.com` and the mybro WordPress account without depending on the current operator Mac or Nacho's OAuth token. The Google Cloud project and billing account remain Nacho-managed: project `mybroworld-catalog-260501`, billing covered by `nacho.saski@gmail.com`.
 
@@ -342,7 +342,7 @@ Required actions:
 7. [x] Create a dedicated Cloud Run service account with least-privilege Google Cloud IAM, primarily Secret Manager secret access for the worker secrets and enough permissions to run/log the job.
 8. [x] Create the `lucia-mybrocorp` Cloud Run Job in `mybroworld-catalog-260501`.
 9. [x] Create a Cloud Scheduler trigger that runs the job on a short interval, initially every 5 minutes unless validation shows a tighter interval is necessary.
-10. [ ] Run the Cloud Run Job manually and verify it authenticates as `mybrocorp@gmail.com`, fails fast for any other configured identity, claims only `lucia-mybrocorp` jobs, ignores `nacho-saski` jobs, uploads the PDF to Drive, and writes completion metadata back to `catalog_jobs`.
+10. [x] Run the Cloud Run Job manually and verify it authenticates as `mybrocorp@gmail.com`, fails fast for any other configured identity, claims only `lucia-mybrocorp` jobs, ignores `nacho-saski` jobs, uploads the PDF to Drive, and writes completion metadata back to `catalog_jobs`.
 11. [ ] Verify the configured Drive output folder is writable by `mybrocorp@gmail.com` and that completed PDFs are readable from the customer's browser session.
 12. [ ] Log into production WordPress as the customer's mybro account and verify the `Catalog PDFs` page is visible.
 13. [ ] Queue one production catalog from that mybro WordPress account and complete it through the Cloud Run `lucia-mybrocorp` worker with the local `nacho-saski` LaunchAgent stopped or irrelevant.
@@ -373,6 +373,14 @@ Implementation notes:
 - 2026-05-02: Manual Scheduler run created execution `lucia-mybrocorp-catalog-agent-vd6kg`, which completed successfully and authenticated as `mybrocorp@gmail.com`.
 - 2026-05-02: First automatic scheduled run created execution `lucia-mybrocorp-catalog-agent-prtpr`, completed successfully in 41.96s, authenticated as `mybrocorp@gmail.com`, and ignored the queue because no `lucia-mybrocorp` jobs were pending.
 - 2026-05-02: Updated production `wp-config.php` outside git so `LUCIA_CATALOG_DEFAULT_PROFILE` is now `lucia-mybrocorp`; verified the remote file line after upload and confirmed the public site and admin login redirect still respond.
+- 2026-05-02: Production WordPress job `catalog_20260502_155151_3dcb` failed during PDF rendering because Chromium refused to launch as root without `--no-sandbox` in Cloud Run.
+- 2026-05-02: Added root-aware Chromium launch flags and nested cause logging for failed catalog-agent jobs; `npm --prefix catalog-generator test` passed with 41 tests.
+- 2026-05-02: Cloud Build `46affd56-27fe-4656-bbaf-f195d8225b4d` pushed `europe-west1-docker.pkg.dev/mybroworld-catalog-260501/mybroworld/catalog-agent:sandbox-fix-20260502-1818`, and Cloud Run Job `lucia-mybrocorp-catalog-agent` was updated to use that image.
+- 2026-05-02: Direct verification job `catalog_20260502_161854_retry` completed through manual Cloud Run execution `lucia-mybrocorp-catalog-agent-zz8m5`, wrote `result_artwork_count: 14`, and uploaded Drive PDF `https://drive.google.com/file/d/1eR-wTNJn5mMxGzgz5CCV6xahb5mIPHwa/view?usp=drivesdk`.
+- 2026-05-02: Added production monitoring. The one-shot worker now exits non-zero when a claimed job fails; `npm run catalog-agent:monitor:cloud-run` scans `catalog_jobs` for failed, stale, and incomplete jobs.
+- 2026-05-02: Cloud Build `692b3cf1-69a2-4f9a-8686-9dad46dc9af0` pushed `europe-west1-docker.pkg.dev/mybroworld-catalog-260501/mybroworld/catalog-agent:monitoring-20260502-163238`, and Cloud Run Job `lucia-mybrocorp-catalog-agent` was updated to use that image.
+- 2026-05-02: Created Cloud Run Job `lucia-mybrocorp-catalog-monitor`, Cloud Scheduler job `lucia-mybrocorp-catalog-monitor-every-10m`, log metric `catalog_monitor_alerts`, notification channel `projects/mybroworld-catalog-260501/notificationChannels/12072695100356729995`, and alert policy `projects/mybroworld-catalog-260501/alertPolicies/6576773883271781072`.
+- 2026-05-02: Direct monitor execution `lucia-mybrocorp-catalog-monitor-tkwkr` and Scheduler-triggered execution `lucia-mybrocorp-catalog-monitor-fncxz` both completed successfully with `[catalog-monitor] ok spreadsheets=1 jobs=2`.
 
 Completion criteria:
 
@@ -390,7 +398,8 @@ Completion criteria:
 - If the customer needs public page access instead of wp-admin access, add a shortcode later using the same backend and capability/token model.
 - If the OAuth refresh token for `mybrocorp@gmail.com` is revoked or expires, the Cloud Run worker should fail clearly before claiming jobs and the reauthorization runbook should be documented.
 - If scheduled Cloud Run executions overlap, keep the existing claim-token guard and configure the schedule/concurrency so a slow PDF job does not create noisy contested runs.
+- If the monitor alerts, first inspect `catalog_jobs.log_excerpt` and Cloud Logging for `lucia-mybrocorp-catalog-monitor`; do not ask the customer to retry until the failed, stale, or incomplete row has an understood cause.
 
 ## Next Implementation Step
 
-Start Phase 6 with one failing test or dry-run check around the Cloud Run worker packaging entrypoint, specifically proving that a secret-mounted config and OAuth token can be materialized into a writable runtime path before `catalog-agent:once` starts. Then add the container packaging and Cloud Run deployment notes one baby step at a time.
+Run the remaining Phase 6 customer validation from the customer's mybro WordPress account, then verify the Drive link, customer identity, and persisted review state.

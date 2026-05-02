@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { generateCatalog } from '../../src/catalog-generator.mjs';
 import { DEFAULT_ARTIST_NAME } from '../../src/catalog-action-contract.mjs';
 import { loadAgentConfig } from './config.mjs';
-import { normalizeAgentError, CatalogAgentError } from './errors.mjs';
+import { formatAgentErrorForLog, normalizeAgentError, CatalogAgentError } from './errors.mjs';
 import { GoogleApiClient } from './google-api.mjs';
 import { findOldestQueuedJob, mergeCatalogSheetsToCsv } from './job-queue.mjs';
 import { loadOAuthSession } from './oauth-session.mjs';
@@ -211,6 +211,9 @@ async function processClaimedJob({
     };
   } catch (error) {
     const normalizedError = normalizeAgentError(error, 'job_processing_failed');
+    const errorLog = formatAgentErrorForLog(normalizedError);
+    logger.error(`[catalog-agent] job ${job.job_id} failed code=${normalizedError.code} message=${normalizedError.message}`);
+    logger.error(errorLog);
 
     await safeUpdateJobFields({
       googleClient,
@@ -223,7 +226,7 @@ async function processClaimedJob({
         error_code: normalizedError.code,
         error_message: normalizedError.message,
         heartbeat_at: nowIso(),
-        log_excerpt: truncateText(normalizedError.stack || normalizedError.message),
+        log_excerpt: truncateText(errorLog),
         status: 'failed',
       },
     });

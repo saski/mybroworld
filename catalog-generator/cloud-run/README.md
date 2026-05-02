@@ -10,7 +10,8 @@ stay unchanged; Cloud Run only replaces the current macOS LaunchAgent worker.
 - Billing/admin: `nacho.saski@gmail.com`
 - Worker profile: `lucia-mybrocorp`
 - Google API identity: `mybrocorp@gmail.com`
-- Command: `npm run catalog-agent:cloud-run-once`
+- Worker command: `npm run catalog-agent:cloud-run-once`
+- Monitor command: `npm run catalog-agent:monitor:cloud-run`
 
 The Cloud Run entrypoint materializes Secret Manager-provided environment values
 or mounted files into `CATALOG_AGENT_RUNTIME_ROOT` before starting the one-pass
@@ -140,6 +141,61 @@ gcloud scheduler jobs create http lucia-mybrocorp-catalog-agent-every-5m \
 
 The production deployment currently uses the dedicated Scheduler service account
 `catalog-agent-scheduler@mybroworld-catalog-260501.iam.gserviceaccount.com`.
+
+## Monitor
+
+The production monitor is a separate Cloud Run Job:
+
+- Job: `lucia-mybrocorp-catalog-monitor`
+- Schedule: `lucia-mybrocorp-catalog-monitor-every-10m`
+- Cadence: every 10 minutes, Europe/Madrid time zone
+- Alert policy: `projects/mybroworld-catalog-260501/alertPolicies/6576773883271781072`
+- Log metric: `catalog_monitor_alerts`
+- Notification channel: `projects/mybroworld-catalog-260501/notificationChannels/12072695100356729995`
+
+The monitor reads the same Secret Manager runtime config as the worker, checks
+`catalog_jobs` for the configured execution profile, and exits non-zero when it
+finds:
+
+- a recent `failed` job
+- a stale `queued` job
+- a stale in-progress heartbeat
+- a recent `completed` job without a Drive result URL
+
+Deploy or update it with the same image as the worker:
+
+```bash
+MONITOR_JOB_NAME=lucia-mybrocorp-catalog-monitor
+
+gcloud run jobs deploy "$MONITOR_JOB_NAME" \
+  --image "$IMAGE" \
+  --region "$REGION" \
+  --service-account "$WORKER_SA" \
+  --memory 512Mi \
+  --cpu 1 \
+  --tasks 1 \
+  --max-retries 0 \
+  --task-timeout 5m \
+  --command npm \
+  --args run,catalog-agent:monitor:cloud-run \
+  --set-secrets CATALOG_AGENT_CONFIG_JSON=catalog-agent-config:latest,CATALOG_AGENT_OAUTH_CLIENT_JSON=catalog-agent-oauth-client:latest,CATALOG_AGENT_OAUTH_TOKEN_JSON=catalog-agent-oauth-token:latest \
+  --set-env-vars CATALOG_MONITOR_IGNORE_BEFORE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+```
+
+`CATALOG_MONITOR_IGNORE_BEFORE` suppresses known historical failed jobs created
+before the monitor rollout. Remove or move it only when old queue rows have been
+cleaned up or acknowledged.
+
+Run and inspect it manually before relying on the schedule:
+
+```bash
+gcloud run jobs execute "$MONITOR_JOB_NAME" --region "$REGION" --wait
+```
+
+The current log-based alert policy is stored in
+`catalog-generator/cloud-run/catalog-monitor-alert-policy.json`. It alerts on
+error logs from `lucia-mybrocorp-catalog-monitor`, including functional catalog
+alerts and monitor runtime failures.
 
 ## Validation Gate
 

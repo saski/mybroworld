@@ -1,0 +1,36 @@
+{
+  "displayName": "Lucia catalog monitor alerts",
+  "documentation": {
+    "content": "The catalog monitor reported a failed, stale, or incomplete catalog job, or the monitor itself failed. Check the Cloud Run Job logs for lucia-mybrocorp-catalog-monitor and the catalog_jobs sheet.",
+    "mimeType": "text/markdown"
+  },
+  "combiner": "OR",
+  "enabled": true,
+  "notificationChannels": [
+    "projects/mybroworld-catalog-260501/notificationChannels/12072695100356729995"
+  ],
+  "conditions": [
+    {
+      "displayName": "Catalog monitor emitted an alert log",
+      "conditionThreshold": {
+        "filter": "metric.type=\"logging.googleapis.com/user/catalog_monitor_alerts\" AND resource.type=\"cloud_run_job\"",
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 0,
+        "duration": "0s",
+        "aggregations": [
+          {
+            "alignmentPeriod": "600s",
+            "perSeriesAligner": "ALIGN_DELTA",
+            "crossSeriesReducer": "REDUCE_SUM"
+          }
+        ],
+        "trigger": {
+          "count": 1
+        }
+      }
+    }
+  ],
+  "alertStrategy": {
+    "autoClose": "1800s"
+  }
+}

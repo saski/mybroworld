@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { runAgentLoop } from './agent.mjs';
 import { materializeCloudRunAgentRuntime } from './cloud-run-runtime.mjs';
+import { summarizeCloudRunOnceResult } from './cloud-run-once-status.mjs';
 import { normalizeAgentError } from './errors.mjs';
 
 try {
@@ -11,10 +12,10 @@ try {
     once: true,
   });
 
-  if (!result) {
-    console.log('[catalog-agent] no queued jobs matched the configured profile');
-  } else {
-    console.log(`[catalog-agent] ${result.status} ${result.jobId}`);
+  const summary = summarizeCloudRunOnceResult(result);
+  console[summary.logLevel](summary.message);
+  if (summary.exitCode !== 0) {
+    process.exit(summary.exitCode);
   }
 } catch (error) {
   const normalizedError = normalizeAgentError(error, 'catalog_agent_failed');

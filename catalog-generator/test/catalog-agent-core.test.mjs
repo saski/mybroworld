@@ -6,6 +6,11 @@ import path from 'node:path';
 
 import { writeCatalogImageManifest } from '../catalog-agent/src/agent.mjs';
 import {
+  formatAgentErrorForLog,
+  normalizeAgentError,
+} from '../catalog-agent/src/errors.mjs';
+import { summarizeCatalogJobHealth } from '../catalog-agent/src/job-monitor.mjs';
+import {
   findOldestQueuedJob,
   mergeCatalogSheetsToCsv,
 } from '../catalog-agent/src/job-queue.mjs';
@@ -70,6 +75,95 @@ test('findOldestQueuedJob only returns queued jobs for the configured profile', 
   });
 
   assert.equal(job.job_id, 'catalog_1');
+});
+
+test('formatAgentErrorForLog includes nested render failure causes', () => {
+  const renderError = new Error('Running as root without --no-sandbox is not supported.');
+  const wrappedError = new Error('Unable to render PDF output: /tmp/catalog.pdf', {
+    cause: renderError,
+  });
+  wrappedError.code = 'pdf_render_failed';
+
+  const logExcerpt = formatAgentErrorForLog(
+    normalizeAgentError(wrappedError, 'job_processing_failed'),
+  );
+
+  assert.match(logExcerpt, /Unable to render PDF output/);
+  assert.match(logExcerpt, /Caused by: Error: Running as root without --no-sandbox/);
+});
+
+test('summarizeCatalogJobHealth flags failed, stale, and incomplete catalog jobs', () => {
+  const summary = summarizeCatalogJobHealth({
+    jobs: [
+      {
+        completed_at: '2026-05-02T16:55:00.000Z',
+        error_code: 'pdf_render_failed',
+        error_message: 'Unable to render PDF output.',
+        job_id: 'catalog_failed',
+        status: 'failed',
+      },
+      {
+        created_at: '2026-05-02T16:00:00.000Z',
+        job_id: 'catalog_queued',
+        status: 'queued',
+      },
+      {
+        heartbeat_at: '2026-05-02T16:20:00.000Z',
+        job_id: 'catalog_rendering',
+        status: 'rendering',
+      },
+      {
+        completed_at: '2026-05-02T16:58:00.000Z',
+        job_id: 'catalog_completed_no_url',
+        result_file_url: '',
+        status: 'completed',
+      },
+    ],
+    now: new Date('2026-05-02T17:00:00.000Z'),
+  });
+
+  assert.equal(summary.status, 'alert');
+  assert.deepEqual(summary.alerts.map((alert) => alert.code), [
+    'catalog_job_failed',
+    'catalog_job_queued_stale',
+    'catalog_job_heartbeat_stale',
+    'catalog_job_completed_without_url',
+  ]);
+});
+
+test('summarizeCatalogJobHealth ignores jobs for other execution profiles', () => {
+  const summary = summarizeCatalogJobHealth({
+    executionProfile: 'lucia-mybrocorp',
+    jobs: [
+      {
+        completed_at: '2026-05-02T16:55:00.000Z',
+        execution_profile: 'nacho-saski',
+        job_id: 'catalog_failed_other_profile',
+        status: 'failed',
+      },
+    ],
+    now: new Date('2026-05-02T17:00:00.000Z'),
+  });
+
+  assert.equal(summary.status, 'ok');
+  assert.equal(summary.checkedJobCount, 0);
+});
+
+test('summarizeCatalogJobHealth ignores acknowledged failed jobs before the monitor start time', () => {
+  const summary = summarizeCatalogJobHealth({
+    ignoreBefore: '2026-05-02T17:00:00.000Z',
+    jobs: [
+      {
+        completed_at: '2026-05-02T16:55:00.000Z',
+        error_code: 'pdf_render_failed',
+        job_id: 'catalog_known_failure',
+        status: 'failed',
+      },
+    ],
+    now: new Date('2026-05-02T17:05:00.000Z'),
+  });
+
+  assert.equal(summary.status, 'ok');
 });
 
 test('writeCatalogImageManifest materializes configured Drive image candidates for the generator', async () => {

@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
+import { summarizeCloudRunOnceResult } from '../catalog-agent/src/cloud-run-once-status.mjs';
 import { materializeCloudRunAgentRuntime } from '../catalog-agent/src/cloud-run-runtime.mjs';
 
 test('materializeCloudRunAgentRuntime copies secrets into a writable agent config', async () => {
@@ -54,4 +55,16 @@ test('materializeCloudRunAgentRuntime copies secrets into a writable agent confi
   await fs.writeFile(result.oauthTokenPath, JSON.stringify({ refresh_token: 'updated-refresh-token' }));
   const refreshedToken = JSON.parse(await fs.readFile(result.oauthTokenPath, 'utf8'));
   assert.equal(refreshedToken.refresh_token, 'updated-refresh-token');
+});
+
+test('summarizeCloudRunOnceResult exits nonzero when a claimed catalog job failed', () => {
+  const summary = summarizeCloudRunOnceResult({
+    error: new Error('Unable to render PDF output: /tmp/catalog.pdf'),
+    jobId: 'catalog_20260502_155151_3dcb',
+    status: 'failed',
+  });
+
+  assert.equal(summary.exitCode, 1);
+  assert.equal(summary.logLevel, 'error');
+  assert.match(summary.message, /failed catalog_20260502_155151_3dcb/);
 });

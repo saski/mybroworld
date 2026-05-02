@@ -17,6 +17,7 @@ const DEFAULT_OUTPUT_PATH = 'output/catalogo.pdf';
 const PDF_RENDER_TIMEOUT_MS = 120_000;
 const PDF_IMAGE_LOAD_TIMEOUT_MS = 60_000;
 const MACOS_GOOGLE_CHROME_EXECUTABLE_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const ROOT_CHROMIUM_SANDBOX_ARGS = ['--no-sandbox', '--disable-setuid-sandbox'];
 const SPANISH_MONTHS = [
   'Enero',
   'Febrero',
@@ -55,13 +56,18 @@ export async function resolvePuppeteerLaunchOptions({
   env = process.env,
   executablePath = '',
   fileExists = pathExists,
+  getUid = () => process.getuid?.(),
 } = {}) {
   const configuredExecutablePath = String(
     executablePath || env.PUPPETEER_EXECUTABLE_PATH || '',
   ).trim();
+  const rootSandboxOptions = getUid() === 0
+    ? { args: ROOT_CHROMIUM_SANDBOX_ARGS }
+    : {};
 
   if (configuredExecutablePath) {
     return {
+      ...rootSandboxOptions,
       executablePath: configuredExecutablePath,
       headless: true,
     };
@@ -69,12 +75,14 @@ export async function resolvePuppeteerLaunchOptions({
 
   if (await fileExists(MACOS_GOOGLE_CHROME_EXECUTABLE_PATH)) {
     return {
+      ...rootSandboxOptions,
       executablePath: MACOS_GOOGLE_CHROME_EXECUTABLE_PATH,
       headless: true,
     };
   }
 
   return {
+    ...rootSandboxOptions,
     headless: true,
   };
 }

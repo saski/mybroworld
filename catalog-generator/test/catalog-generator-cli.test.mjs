@@ -276,6 +276,18 @@ test('resolvePuppeteerLaunchOptions falls back to the macOS Chrome executable wh
   ]);
 });
 
+test('resolvePuppeteerLaunchOptions disables the Chromium sandbox when running as root', async () => {
+  const launchOptions = await resolvePuppeteerLaunchOptions({
+    env: {
+      PUPPETEER_EXECUTABLE_PATH: '/usr/bin/chromium',
+    },
+    getUid: () => 0,
+  });
+
+  assert.equal(launchOptions.executablePath, '/usr/bin/chromium');
+  assert.deepEqual(launchOptions.args, ['--no-sandbox', '--disable-setuid-sandbox']);
+});
+
 test('waitForCatalogImageElements uses a bounded page-context image wait', async () => {
   const calls = [];
 

@@ -25,3 +25,25 @@ export function normalizeAgentError(error, fallbackCode = 'catalog_agent_failed'
     message: String(error),
   });
 }
+
+function formatSingleError(error) {
+  if (error instanceof Error) {
+    return error.stack || `${error.name}: ${error.message}`;
+  }
+
+  return String(error);
+}
+
+export function formatAgentErrorForLog(error) {
+  const parts = [];
+  const seenErrors = new Set();
+  let currentError = error;
+
+  while (currentError && !seenErrors.has(currentError)) {
+    seenErrors.add(currentError);
+    parts.push(formatSingleError(currentError));
+    currentError = currentError instanceof Error ? currentError.cause : null;
+  }
+
+  return parts.join('\nCaused by: ');
+}
