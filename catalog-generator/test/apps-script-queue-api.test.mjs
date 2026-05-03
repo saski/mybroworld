@@ -82,15 +82,7 @@ test('Apps Script API rejects requests with a bad token', async () => {
 });
 
 test('Apps Script queue triggers the production Cloud Run job on demand', async () => {
-  const { callApi, fetchCalls } = await buildHarness({
-    scriptProperties: {
-      CATALOG_CLOUD_RUN_JOB_NAME: 'lucia-mybrocorp-catalog-agent',
-      CATALOG_CLOUD_RUN_PROJECT_ID: 'mybroworld-catalog-260501',
-      CATALOG_CLOUD_RUN_REGION: 'europe-west1',
-      CATALOG_CLOUD_RUN_TRIGGER_ENABLED: 'true',
-      CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS: 'lucia-mybrocorp',
-    },
-  });
+  const { callApi, fetchCalls } = await buildHarness();
 
   const queued = callApi(request('queue_catalog_job', {
     activeSheetId: 102593401,
@@ -115,13 +107,6 @@ test('Apps Script queue marks the job failed when the Cloud Run trigger is rejec
     fetchResponse: {
       responseCode: 403,
       text: 'Permission denied',
-    },
-    scriptProperties: {
-      CATALOG_CLOUD_RUN_JOB_NAME: 'lucia-mybrocorp-catalog-agent',
-      CATALOG_CLOUD_RUN_PROJECT_ID: 'mybroworld-catalog-260501',
-      CATALOG_CLOUD_RUN_REGION: 'europe-west1',
-      CATALOG_CLOUD_RUN_TRIGGER_ENABLED: 'true',
-      CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS: 'lucia-mybrocorp',
     },
   });
 

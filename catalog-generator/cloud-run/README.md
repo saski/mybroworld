@@ -145,8 +145,10 @@ That check requires the Cloud Run execution logs to include
 ## On-Demand Trigger
 
 The production Apps Script Web App starts the worker immediately after it writes
-a `queued` row to `catalog_jobs`. Configure these Apps Script properties in the
-bound project:
+a `queued` row to `catalog_jobs`. The checked-in defaults target production:
+`lucia-mybrocorp` jobs run `lucia-mybrocorp-catalog-agent` in
+`mybroworld-catalog-260501/europe-west1`. These Apps Script properties can
+override or disable that behavior in a copied script:
 
 | Property | Value |
 |---|---|
@@ -156,21 +158,25 @@ bound project:
 | `CATALOG_CLOUD_RUN_REGION` | `europe-west1` |
 | `CATALOG_CLOUD_RUN_JOB_NAME` | `lucia-mybrocorp-catalog-agent` |
 
+The source also includes `configureProductionCatalogCloudRunTrigger()`, which
+sets exactly those non-secret properties explicitly in the production project.
+
 The Apps Script manifest must include:
 
 - `https://www.googleapis.com/auth/script.external_request`
 - `https://www.googleapis.com/auth/cloud-platform`
 
 Grant the account that executes the Apps Script Web App permission to run the
-Cloud Run Job. If the Web App executes as the script owner, grant that owner. If
-the production Web App is moved to execute as `mybrocorp@gmail.com`, grant that
-account instead.
+Cloud Run Job. The current production script is operated from
+`nacho.saski@gmail.com`, so that Google account is the invoker. If the production
+Web App is later moved to execute as `mybrocorp@gmail.com`, grant that account
+instead.
 
 ```bash
 gcloud run jobs add-iam-policy-binding "$JOB_NAME" \
   --region "$REGION" \
   --project "$PROJECT_ID" \
-  --member "user:mybrocorp@gmail.com" \
+  --member "user:nacho.saski@gmail.com" \
   --role roles/run.invoker
 ```
 

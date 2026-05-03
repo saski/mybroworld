@@ -7,6 +7,11 @@ const CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS_PROPERTY = 'CATALOG_CLOUD_RUN_TRIGG
 const CATALOG_CLOUD_RUN_PROJECT_ID_PROPERTY = 'CATALOG_CLOUD_RUN_PROJECT_ID';
 const CATALOG_CLOUD_RUN_REGION_PROPERTY = 'CATALOG_CLOUD_RUN_REGION';
 const CATALOG_CLOUD_RUN_JOB_NAME_PROPERTY = 'CATALOG_CLOUD_RUN_JOB_NAME';
+const CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_ENABLED = 'true';
+const CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_PROFILE_KEYS = 'lucia-mybrocorp';
+const CATALOG_CLOUD_RUN_DEFAULT_PROJECT_ID = 'mybroworld-catalog-260501';
+const CATALOG_CLOUD_RUN_DEFAULT_REGION = 'europe-west1';
+const CATALOG_CLOUD_RUN_DEFAULT_JOB_NAME = 'lucia-mybrocorp-catalog-agent';
 const CATALOG_REQUIRED_HEADERS = [
   'artwork_id',
   'title_clean',
@@ -168,6 +173,26 @@ function setupCatalogInfrastructure() {
   SpreadsheetApp.getActive().toast('Catalog infrastructure is ready.', CATALOG_MENU_TITLE, 5);
 }
 
+function configureProductionCatalogCloudRunTrigger() {
+  PropertiesService.getScriptProperties().setProperties({
+    [CATALOG_CLOUD_RUN_TRIGGER_ENABLED_PROPERTY]: CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_ENABLED,
+    [CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS_PROPERTY]: CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_PROFILE_KEYS,
+    [CATALOG_CLOUD_RUN_PROJECT_ID_PROPERTY]: CATALOG_CLOUD_RUN_DEFAULT_PROJECT_ID,
+    [CATALOG_CLOUD_RUN_REGION_PROPERTY]: CATALOG_CLOUD_RUN_DEFAULT_REGION,
+    [CATALOG_CLOUD_RUN_JOB_NAME_PROPERTY]: CATALOG_CLOUD_RUN_DEFAULT_JOB_NAME,
+  });
+
+  SpreadsheetApp.getActive().toast('Cloud Run catalog trigger is configured.', CATALOG_MENU_TITLE, 5);
+
+  return {
+    jobName: CATALOG_CLOUD_RUN_DEFAULT_JOB_NAME,
+    ok: true,
+    profileKeys: [CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_PROFILE_KEYS],
+    projectId: CATALOG_CLOUD_RUN_DEFAULT_PROJECT_ID,
+    region: CATALOG_CLOUD_RUN_DEFAULT_REGION,
+  };
+}
+
 function getCatalogSidebarModel(prefill) {
   return buildCatalogSidebarModel_(prefill || {});
 }
@@ -297,8 +322,16 @@ function triggerCatalogWorkerOnDemand_(jobRecord) {
 
 function getCatalogCloudRunTriggerConfig_(jobRecord) {
   const properties = PropertiesService.getScriptProperties();
-  const enabled = isEnabledCatalogFlag_(properties.getProperty(CATALOG_CLOUD_RUN_TRIGGER_ENABLED_PROPERTY));
-  const profileKeys = normalizeCatalogCsv_(properties.getProperty(CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS_PROPERTY));
+  const enabled = isEnabledCatalogFlag_(catalogScriptPropertyOrDefault_(
+    properties,
+    CATALOG_CLOUD_RUN_TRIGGER_ENABLED_PROPERTY,
+    CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_ENABLED,
+  ));
+  const profileKeys = normalizeCatalogCsv_(catalogScriptPropertyOrDefault_(
+    properties,
+    CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS_PROPERTY,
+    CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_PROFILE_KEYS,
+  ));
   const jobProfileKey = normalizeCatalogText_(jobRecord.execution_profile);
 
   if (!enabled || (profileKeys.length > 0 && profileKeys.indexOf(jobProfileKey) === -1)) {
@@ -307,9 +340,21 @@ function getCatalogCloudRunTriggerConfig_(jobRecord) {
     };
   }
 
-  const projectId = normalizeCatalogText_(properties.getProperty(CATALOG_CLOUD_RUN_PROJECT_ID_PROPERTY));
-  const region = normalizeCatalogText_(properties.getProperty(CATALOG_CLOUD_RUN_REGION_PROPERTY));
-  const jobName = normalizeCatalogText_(properties.getProperty(CATALOG_CLOUD_RUN_JOB_NAME_PROPERTY));
+  const projectId = catalogScriptPropertyOrDefault_(
+    properties,
+    CATALOG_CLOUD_RUN_PROJECT_ID_PROPERTY,
+    CATALOG_CLOUD_RUN_DEFAULT_PROJECT_ID,
+  );
+  const region = catalogScriptPropertyOrDefault_(
+    properties,
+    CATALOG_CLOUD_RUN_REGION_PROPERTY,
+    CATALOG_CLOUD_RUN_DEFAULT_REGION,
+  );
+  const jobName = catalogScriptPropertyOrDefault_(
+    properties,
+    CATALOG_CLOUD_RUN_JOB_NAME_PROPERTY,
+    CATALOG_CLOUD_RUN_DEFAULT_JOB_NAME,
+  );
 
   if (!projectId || !region || !jobName) {
     throw new Error('Cloud Run catalog worker trigger is enabled but project, region, or job name is missing.');
@@ -782,6 +827,10 @@ function normalizeCatalogCsv_(value) {
       return normalizeCatalogText_(item);
     })
     .filter(Boolean);
+}
+
+function catalogScriptPropertyOrDefault_(properties, propertyName, defaultValue) {
+  return normalizeCatalogText_(properties.getProperty(propertyName)) || defaultValue;
 }
 
 function isEnabledCatalogFlag_(value) {
