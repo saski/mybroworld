@@ -7,7 +7,7 @@ Use this guide when the customer needs to test the live online shop and the Word
 - The production WordPress shop is live at `https://www.luciastuy.com/`.
 - The canonical artwork products have been created in production WooCommerce with images.
 - The catalog PDF console is deployed in production WordPress.
-- New production catalog jobs now target the scheduled Cloud Run `lucia-mybrocorp` worker authorized as `mybrocorp@gmail.com`.
+- New production catalog jobs now target the on-demand Cloud Run `lucia-mybrocorp` worker authorized as `mybrocorp@gmail.com`.
 - Customer-operated catalog generation is complete only after that worker completes a job queued from the customer's mybro WordPress account and the customer can open/review the resulting Drive PDF.
 
 ## Accounts Needed
@@ -27,6 +27,8 @@ Ask the customer to test from a normal browser session, preferably in a private 
 4. Open three artwork product pages.
 5. For each product page, confirm:
    - the artwork image loads
+   - the primary image shows the actual artwork and is not visibly cropped in a misleading way
+   - the thumbnail and product-detail image look sharp enough for a buyer to inspect the work
    - the title is correct
    - the price is correct when present
    - the availability label matches the expected status
@@ -81,7 +83,7 @@ Do not mark the handoff complete until all checks below are true:
 2. The Cloud Run worker secrets are stored in Secret Manager and are not committed to git.
 3. The Cloud Run `lucia-mybrocorp` job is authorized as `mybrocorp@gmail.com`.
 4. The worker rejects any other configured Google identity before claiming jobs.
-5. Cloud Scheduler runs the worker job on the agreed interval.
+5. Apps Script starts the worker job immediately when the customer clicks `Generate PDF`.
 6. The worker claims `lucia-mybrocorp` jobs and ignores `nacho-saski` jobs.
 7. The local `nacho-saski` LaunchAgent is stopped or irrelevant during the validation run.
 8. The Drive output folder is writable by `mybrocorp@gmail.com`.
@@ -103,15 +105,17 @@ Do not mark the handoff complete until all checks below are true:
    - Store worker config, OAuth client JSON, and `mybrocorp@gmail.com` OAuth token material in Secret Manager.
    - Ensure the container copies read-only secrets into a writable runtime path before OAuth refresh.
 
-3. Worker scheduling and validation
-   - Status: infrastructure complete as of 2026-05-02; PDF completion still needs a queued customer job.
+3. Worker on-demand trigger and validation
+   - Status: code complete as of 2026-05-03; production deployment and PDF completion still need a queued customer job.
    - Create the Cloud Run Job for `lucia-mybrocorp`.
-   - Create the Cloud Scheduler trigger.
+   - Configure Apps Script trigger properties for the Cloud Run Job.
+   - Grant `roles/run.invoker` on the job to the account that executes the Apps Script Web App.
+   - Pause the legacy worker polling scheduler after the Apps Script trigger is deployed and validated.
    - Configure `profileKey = lucia-mybrocorp`.
    - Configure `googleAccountEmail = mybrocorp@gmail.com`.
    - Add the production spreadsheet id to `watchSpreadsheetIds`.
    - Authorize the worker with `mybrocorp@gmail.com`.
-   - Run the job manually once before enabling the schedule.
+   - Run the job manually once before relying on the on-demand trigger.
 
 4. Customer catalog validation
    - Status: pending.

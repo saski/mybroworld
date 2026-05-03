@@ -22,10 +22,11 @@ function compatibleHeaders() {
   ];
 }
 
-async function buildHarness() {
+async function buildHarness(overrides = {}) {
   return loadAppsScriptCatalogApi({
     activeSheetId: 102593401,
     apiToken: 'test-token',
+    ...overrides,
     sheets: [
       {
         headers: compatibleHeaders(),
@@ -36,6 +37,7 @@ async function buildHarness() {
       {
         headers: CATALOG_PROFILE_HEADERS,
         rows: [
+          ['lucia-mybrocorp', 'Lucia / mybrocorp', true, 'mybrocorp@gmail.com', 'lucia', 'drive-folder-prod', 'Production'],
           ['nacho-saski', 'Nacho / saski', true, 'nacho.saski@gmail.com', 'nacho', 'drive-folder-1', 'Development and testing'],
           ['no-folder', 'No folder', true, 'operator@example.com', 'operator', '', 'Missing default folder'],
         ],
@@ -77,6 +79,67 @@ test('Apps Script API rejects requests with a bad token', async () => {
 
   assert.equal(response.ok, false);
   assert.match(response.error.message, /Unauthorized catalog API request/);
+});
+
+test('Apps Script queue triggers the production Cloud Run job on demand', async () => {
+  const { callApi, fetchCalls } = await buildHarness({
+    scriptProperties: {
+      CATALOG_CLOUD_RUN_JOB_NAME: 'lucia-mybrocorp-catalog-agent',
+      CATALOG_CLOUD_RUN_PROJECT_ID: 'mybroworld-catalog-260501',
+      CATALOG_CLOUD_RUN_REGION: 'europe-west1',
+      CATALOG_CLOUD_RUN_TRIGGER_ENABLED: 'true',
+      CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS: 'lucia-mybrocorp',
+    },
+  });
+
+  const queued = callApi(request('queue_catalog_job', {
+    activeSheetId: 102593401,
+    catalogTitle: 'Catalog 2026',
+    executionProfileKey: 'lucia-mybrocorp',
+    scopeMode: 'current_tab',
+  }));
+
+  assert.equal(queued.ok, true);
+  assert.equal(fetchCalls.length, 1);
+  assert.equal(
+    fetchCalls[0].url,
+    'https://run.googleapis.com/v2/projects/mybroworld-catalog-260501/locations/europe-west1/jobs/lucia-mybrocorp-catalog-agent:run',
+  );
+  assert.equal(fetchCalls[0].options.method, 'post');
+  assert.equal(fetchCalls[0].options.headers.Authorization, 'Bearer test-oauth-token');
+  assert.equal(fetchCalls[0].options.payload, '{}');
+});
+
+test('Apps Script queue marks the job failed when the Cloud Run trigger is rejected', async () => {
+  const { callApi } = await buildHarness({
+    fetchResponse: {
+      responseCode: 403,
+      text: 'Permission denied',
+    },
+    scriptProperties: {
+      CATALOG_CLOUD_RUN_JOB_NAME: 'lucia-mybrocorp-catalog-agent',
+      CATALOG_CLOUD_RUN_PROJECT_ID: 'mybroworld-catalog-260501',
+      CATALOG_CLOUD_RUN_REGION: 'europe-west1',
+      CATALOG_CLOUD_RUN_TRIGGER_ENABLED: 'true',
+      CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS: 'lucia-mybrocorp',
+    },
+  });
+
+  const queued = callApi(request('queue_catalog_job', {
+    activeSheetId: 102593401,
+    catalogTitle: 'Catalog 2026',
+    executionProfileKey: 'lucia-mybrocorp',
+    scopeMode: 'current_tab',
+  }));
+
+  assert.equal(queued.ok, false);
+  assert.match(queued.error.message, /Cloud Run catalog worker trigger failed/);
+
+  const recent = callApi(request('list_recent_catalog_jobs', { limit: 1 }));
+  assert.equal(recent.ok, true);
+  assert.equal(recent.result[0].status, 'failed');
+  assert.equal(recent.result[0].error_code, 'worker_trigger_failed');
+  assert.match(recent.result[0].error_message, /Permission denied/);
 });
 
 test('Apps Script queue blocks profiles without an output folder', async () => {

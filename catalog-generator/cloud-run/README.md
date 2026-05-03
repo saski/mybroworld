@@ -3,6 +3,9 @@
 This guide packages the existing queue worker as a Cloud Run Job for the
 `lucia-mybrocorp` production profile. The WordPress console and Apps Script queue
 stay unchanged; Cloud Run only replaces the current macOS LaunchAgent worker.
+The worker is started on demand when an operator queues a catalog from
+WordPress or the bound spreadsheet UI. It is not intended to poll on a fixed
+schedule.
 
 ## Runtime Boundary
 
@@ -10,6 +13,7 @@ stay unchanged; Cloud Run only replaces the current macOS LaunchAgent worker.
 - Billing/admin: `nacho.saski@gmail.com`
 - Worker profile: `lucia-mybrocorp`
 - Google API identity: `mybrocorp@gmail.com`
+- Worker trigger: Apps Script calls the Cloud Run Admin API `jobs.run` method
 - Worker command: `npm run catalog-agent:cloud-run-once`
 - Monitor command: `npm run catalog-agent:monitor:cloud-run`
 
@@ -123,7 +127,7 @@ gcloud run jobs deploy "$JOB_NAME" \
 Replace `latest` with pinned secret version numbers for controlled production
 rollouts after the first successful manual run.
 
-Run one manual execution before enabling the schedule:
+Run one manual execution before relying on the Apps Script trigger:
 
 ```bash
 gcloud run jobs execute "$JOB_NAME" --region "$REGION" --wait
@@ -138,33 +142,49 @@ catalog-generator/cloud-run/verify-job.sh --project "$PROJECT_ID" --region "$REG
 That check requires the Cloud Run execution logs to include
 `authenticated as mybrocorp@gmail.com`.
 
-## Schedule
+## On-Demand Trigger
 
-Create the Cloud Scheduler trigger only after the manual run proves that the job
-authenticates as `mybrocorp@gmail.com` and ignores non-`lucia-mybrocorp` jobs.
+The production Apps Script Web App starts the worker immediately after it writes
+a `queued` row to `catalog_jobs`. Configure these Apps Script properties in the
+bound project:
+
+| Property | Value |
+|---|---|
+| `CATALOG_CLOUD_RUN_TRIGGER_ENABLED` | `true` |
+| `CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS` | `lucia-mybrocorp` |
+| `CATALOG_CLOUD_RUN_PROJECT_ID` | `mybroworld-catalog-260501` |
+| `CATALOG_CLOUD_RUN_REGION` | `europe-west1` |
+| `CATALOG_CLOUD_RUN_JOB_NAME` | `lucia-mybrocorp-catalog-agent` |
+
+The Apps Script manifest must include:
+
+- `https://www.googleapis.com/auth/script.external_request`
+- `https://www.googleapis.com/auth/cloud-platform`
+
+Grant the account that executes the Apps Script Web App permission to run the
+Cloud Run Job. If the Web App executes as the script owner, grant that owner. If
+the production Web App is moved to execute as `mybrocorp@gmail.com`, grant that
+account instead.
 
 ```bash
-SCHEDULER_SA="catalog-agent-scheduler@$PROJECT_ID.iam.gserviceaccount.com"
-
-gcloud iam service-accounts create catalog-agent-scheduler \
-  --display-name="Catalog Agent Scheduler"
-
 gcloud run jobs add-iam-policy-binding "$JOB_NAME" \
   --region "$REGION" \
-  --member "serviceAccount:$SCHEDULER_SA" \
+  --project "$PROJECT_ID" \
+  --member "user:mybrocorp@gmail.com" \
   --role roles/run.invoker
-
-gcloud scheduler jobs create http lucia-mybrocorp-catalog-agent-every-5m \
-  --location "$REGION" \
-  --schedule "*/5 * * * *" \
-  --time-zone "Europe/Madrid" \
-  --uri "https://run.googleapis.com/v2/projects/$PROJECT_ID/locations/$REGION/jobs/$JOB_NAME:run" \
-  --http-method POST \
-  --oauth-service-account-email "$SCHEDULER_SA"
 ```
 
-The production deployment currently uses the dedicated Scheduler service account
-`catalog-agent-scheduler@mybroworld-catalog-260501.iam.gserviceaccount.com`.
+The old polling scheduler should stay paused once the Apps Script trigger is
+deployed and validated:
+
+```bash
+gcloud scheduler jobs pause lucia-mybrocorp-catalog-agent-every-5m \
+  --location "$REGION" \
+  --project "$PROJECT_ID"
+```
+
+Delete that scheduler only after one customer-queued WordPress catalog completes
+through the Apps Script trigger and no stale queued jobs remain.
 
 ## Monitor
 
@@ -230,4 +250,5 @@ WordPress account completes through this Cloud Run job while the local
 References:
 
 - Cloud Run Job secrets: https://cloud.google.com/run/docs/configuring/jobs/secrets
-- Scheduled Cloud Run Jobs: https://cloud.google.com/run/docs/execute/jobs-on-schedule
+- Execute Cloud Run Jobs: https://cloud.google.com/run/docs/execute/jobs
+- Cloud Run Jobs `run` API: https://docs.cloud.google.com/run/docs/reference/rest/v2/projects.locations.jobs/run

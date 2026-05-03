@@ -22,6 +22,18 @@ Use these rules for Lucia Astuy WooCommerce product images so the shop feels lik
 - The image must not depend on a live Google Drive URL in the rendered storefront.
 - The image must not require a gallery, optimization, or AI WordPress plugin.
 
+Run this read-only audit before customer validation when product image readiness is in scope:
+
+```bash
+WOO_BASE_URL=https://www.luciastuy.com scripts/woo-image-quality-audit.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv
+```
+
+Use stricter thresholds only when source dimensions are available in the Store API response, for example:
+
+```bash
+WOO_BASE_URL=https://www.luciastuy.com scripts/woo-image-quality-audit.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --min-images 2 --min-width 1600 --min-height 1200
+```
+
 ## Secondary Image Rules
 
 - Secondary images may show detail crops, framing context, book spreads, or installation context.

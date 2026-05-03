@@ -30,7 +30,7 @@ done
 
 if command -v node >/dev/null 2>&1; then
   echo "Running WordPress smoke helper tests..."
-  node --test scripts/wp-smoke-test.test.mjs scripts/wp-inventory-parity.test.mjs scripts/woo-catalog-sync.test.mjs scripts/woo-storefront-assert.test.mjs scripts/woo-storefront-ux-assert.test.mjs
+  node --test scripts/wp-smoke-test.test.mjs scripts/wp-inventory-parity.test.mjs scripts/woo-catalog-sync.test.mjs scripts/woo-storefront-assert.test.mjs scripts/woo-storefront-ux-assert.test.mjs scripts/woo-image-quality-audit.test.mjs
 else
   echo "Node.js is required to run WordPress smoke helper tests." >&2
   exit 1

@@ -4,7 +4,7 @@
 
 Build a WordPress-based catalog console so the customer can generate and review PDF catalogs without using the terminal or manually operating the Google Sheet catalog sidebar.
 
-The recommended architecture keeps WordPress as the operator UI and keeps the existing Google Sheet queue as the operational queue. The rendering backend should move from the current local catalog agent to a scheduled Cloud Run Job in the existing Google Cloud project `mybroworld-catalog-260501`, which is administered and billed by `nacho.saski@gmail.com`. WordPress should queue and monitor jobs; it should not run Node, Puppeteer, or long PDF generation work on the production hosting account.
+The recommended architecture keeps WordPress as the operator UI and keeps the existing Google Sheet queue as the operational queue. The rendering backend should move from the current local catalog agent to an on-demand Cloud Run Job in the existing Google Cloud project `mybroworld-catalog-260501`, which is administered and billed by `nacho.saski@gmail.com`. WordPress should queue and monitor jobs; it should not run Node, Puppeteer, or long PDF generation work on the production hosting account.
 
 Project tenet: avoid commercial paid WordPress plugins, including freemium plugins. The catalog console should be built with owned MU plugin code, WordPress core APIs, WooCommerce core only if needed, and the smallest unavoidable third-party dependency surface. Open-source plugins or add-ons may be considered only when they meet a clear quality bar and keep the implementation leaner and simpler than owned code.
 
@@ -69,8 +69,8 @@ Tradeoffs:
 
 Production portability extension:
 
-- The existing local `catalog-agent` should be containerized and run as a Cloud Run Job on a schedule.
-- Cloud Scheduler should invoke one-pass worker executions, equivalent to `npm run catalog-agent:once`, instead of relying on a macOS LaunchAgent.
+- The existing local `catalog-agent` should be containerized and run as a Cloud Run Job.
+- Apps Script should invoke one-pass worker executions through the Cloud Run Admin API `jobs.run` method immediately after queueing a production `lucia-mybrocorp` job, instead of relying on a macOS LaunchAgent or worker polling scheduler.
 - Secret Manager should hold the Cloud Run worker config, OAuth client JSON, and `mybrocorp@gmail.com` OAuth token material outside git.
 - The Cloud Run service account should only need enough Google Cloud IAM access to read those secrets and run the job; Sheets and Drive access should continue to come from the configured `mybrocorp@gmail.com` authorization unless the implementation is explicitly migrated to a service account later.
 
@@ -318,7 +318,7 @@ Deployment notes:
 
 ### Phase 6: Customer-Operable Cloud Run Handoff
 
-Progress: Cloud Run worker image, secrets, job, scheduler, production WordPress profile switch, direct `lucia-mybrocorp` Cloud Run PDF verification, and production monitoring are complete. The remaining handoff gate is a customer-account WordPress validation job that records the customer identity and persists review state through the scheduled `lucia-mybrocorp` worker.
+Progress: Cloud Run worker image, secrets, job, production WordPress profile switch, direct `lucia-mybrocorp` Cloud Run PDF verification, production monitoring, and Apps Script source support for on-demand worker startup are complete. The remaining handoff gates are deploying the updated Apps Script Web App, setting trigger properties, granting Cloud Run invoke access to the Web App executing account, pausing the legacy worker polling scheduler, and running a customer-account WordPress validation job that records the customer identity and persists review state through the `lucia-mybrocorp` worker.
 
 Make the production workflow portable so the customer can operate it from `mybrocorp@gmail.com` and the mybro WordPress account without depending on the current operator Mac or Nacho's OAuth token. The Google Cloud project and billing account remain Nacho-managed: project `mybroworld-catalog-260501`, billing covered by `nacho.saski@gmail.com`.
 
@@ -341,12 +341,14 @@ Required actions:
 6. [x] Ensure the container entrypoint materializes read-only secrets into a writable runtime path when needed, because the current OAuth refresh flow writes updated token data to `oauthTokenPath`.
 7. [x] Create a dedicated Cloud Run service account with least-privilege Google Cloud IAM, primarily Secret Manager secret access for the worker secrets and enough permissions to run/log the job.
 8. [x] Create the `lucia-mybrocorp` Cloud Run Job in `mybroworld-catalog-260501`.
-9. [x] Create a Cloud Scheduler trigger that runs the job on a short interval, initially every 5 minutes unless validation shows a tighter interval is necessary.
-10. [x] Run the Cloud Run Job manually and verify it authenticates as `mybrocorp@gmail.com`, fails fast for any other configured identity, claims only `lucia-mybrocorp` jobs, ignores `nacho-saski` jobs, uploads the PDF to Drive, and writes completion metadata back to `catalog_jobs`.
-11. [ ] Verify the configured Drive output folder is writable by `mybrocorp@gmail.com` and that completed PDFs are readable from the customer's browser session.
-12. [ ] Log into production WordPress as the customer's mybro account and verify the `Catalog PDFs` page is visible.
-13. [ ] Queue one production catalog from that mybro WordPress account and complete it through the Cloud Run `lucia-mybrocorp` worker with the local `nacho-saski` LaunchAgent stopped or irrelevant.
-14. [ ] Confirm the completed row records the customer WordPress identity, shows the Drive PDF link, and persists `approved` or `needs_changes` after reload.
+9. [x] Implement Apps Script support for starting the Cloud Run Job on demand after a `lucia-mybrocorp` job is queued.
+10. [ ] Deploy the updated Apps Script Web App, set the `CATALOG_CLOUD_RUN_*` trigger properties, and grant `roles/run.invoker` on the Cloud Run Job to the Web App executing account.
+11. [ ] Pause the legacy `lucia-mybrocorp-catalog-agent-every-5m` worker polling scheduler after the Apps Script trigger is validated.
+12. [x] Run the Cloud Run Job manually and verify it authenticates as `mybrocorp@gmail.com`, fails fast for any other configured identity, claims only `lucia-mybrocorp` jobs, ignores `nacho-saski` jobs, uploads the PDF to Drive, and writes completion metadata back to `catalog_jobs`.
+13. [ ] Verify the configured Drive output folder is writable by `mybrocorp@gmail.com` and that completed PDFs are readable from the customer's browser session.
+14. [ ] Log into production WordPress as the customer's mybro account and verify the `Catalog PDFs` page is visible.
+15. [ ] Queue one production catalog from that mybro WordPress account and complete it through the Apps Script-triggered Cloud Run `lucia-mybrocorp` worker with the local `nacho-saski` LaunchAgent stopped or irrelevant.
+16. [ ] Confirm the completed row records the customer WordPress identity, shows the Drive PDF link, and persists `approved` or `needs_changes` after reload.
 
 Implementation notes:
 
@@ -381,6 +383,7 @@ Implementation notes:
 - 2026-05-02: Cloud Build `692b3cf1-69a2-4f9a-8686-9dad46dc9af0` pushed `europe-west1-docker.pkg.dev/mybroworld-catalog-260501/mybroworld/catalog-agent:monitoring-20260502-163238`, and Cloud Run Job `lucia-mybrocorp-catalog-agent` was updated to use that image.
 - 2026-05-02: Created Cloud Run Job `lucia-mybrocorp-catalog-monitor`, Cloud Scheduler job `lucia-mybrocorp-catalog-monitor-every-10m`, log metric `catalog_monitor_alerts`, notification channel `projects/mybroworld-catalog-260501/notificationChannels/12072695100356729995`, and alert policy `projects/mybroworld-catalog-260501/alertPolicies/6576773883271781072`.
 - 2026-05-02: Direct monitor execution `lucia-mybrocorp-catalog-monitor-tkwkr` and Scheduler-triggered execution `lucia-mybrocorp-catalog-monitor-fncxz` both completed successfully with `[catalog-monitor] ok spreadsheets=1 jobs=2`.
+- 2026-05-03: Added Apps Script on-demand worker startup. When `CATALOG_CLOUD_RUN_TRIGGER_ENABLED=true` and the queued profile matches `CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS`, `queue_catalog_job` calls `https://run.googleapis.com/v2/projects/{project}/locations/{region}/jobs/{job}:run` with the Apps Script OAuth token.
 
 Completion criteria:
 
@@ -391,15 +394,15 @@ Completion criteria:
 
 ## Risks And Mitigations
 
-- If the Cloud Run worker is failing or Cloud Scheduler is paused, WordPress should show the last heartbeat and explain that the job is waiting for the catalog worker.
+- If the Cloud Run worker trigger fails, WordPress should show the Apps Script error from `queue_catalog_job`; check the Apps Script trigger properties, OAuth scopes, and Cloud Run IAM before asking the customer to retry.
 - If the Apps Script Web App token is wrong, WordPress should fail before creating a job and show a precise configuration error.
 - If the Drive result is not embeddable, WordPress should show a direct link instead of depending on iframe preview.
 - If production hosting blocks outbound HTTP to Apps Script, switch only the transport layer: let browser AJAX call Apps Script directly with a short-lived nonce issued by WordPress, or move to Option B.
 - If the customer needs public page access instead of wp-admin access, add a shortcode later using the same backend and capability/token model.
 - If the OAuth refresh token for `mybrocorp@gmail.com` is revoked or expires, the Cloud Run worker should fail clearly before claiming jobs and the reauthorization runbook should be documented.
-- If scheduled Cloud Run executions overlap, keep the existing claim-token guard and configure the schedule/concurrency so a slow PDF job does not create noisy contested runs.
+- If multiple Cloud Run executions overlap, keep the existing claim-token guard so a slow PDF job does not create noisy contested runs.
 - If the monitor alerts, first inspect `catalog_jobs.log_excerpt` and Cloud Logging for `lucia-mybrocorp-catalog-monitor`; do not ask the customer to retry until the failed, stale, or incomplete row has an understood cause.
 
 ## Next Implementation Step
 
-Run the remaining Phase 6 customer validation from the customer's mybro WordPress account, then verify the Drive link, customer identity, and persisted review state.
+Deploy the updated Apps Script Web App, configure the Cloud Run trigger properties and IAM grant, pause the legacy worker polling scheduler after validation, then run the remaining Phase 6 customer validation from the customer's mybro WordPress account and verify the Drive link, customer identity, and persisted review state.

@@ -7,7 +7,7 @@ This guide documents the first local rollout of the Google Sheets catalog action
 The implementation is split into two installable parts:
 
 1. A bound Google Apps Script project stored in [catalog-generator/apps-script](../../../catalog-generator/apps-script)
-2. A `catalog-agent` process stored in [catalog-generator/catalog-agent](../../../catalog-generator/catalog-agent), running locally for development and as a scheduled Cloud Run Job for production portability
+2. A `catalog-agent` process stored in [catalog-generator/catalog-agent](../../../catalog-generator/catalog-agent), running locally for development and as an on-demand Cloud Run Job for production portability
 
 The sheet writes jobs into `catalog_jobs`. The agent claims only jobs whose `execution_profile` matches its own config.
 
@@ -82,22 +82,24 @@ Do not treat the WordPress catalog console as customer-portable until this produ
 1. Google Cloud project `mybroworld-catalog-260501` remains the production runtime project, administered and billed by `nacho.saski@gmail.com`.
 2. A `lucia-mybrocorp` agent config exists in Secret Manager for the Cloud Run worker.
 3. The Cloud Run worker is authorized as `mybrocorp@gmail.com` and fails fast if any other Google identity is configured.
-4. The Cloud Run Job watches the production spreadsheet id and is triggered by Cloud Scheduler.
+4. The Apps Script Web App starts the Cloud Run Job through the Cloud Run Admin API immediately after a `lucia-mybrocorp` job is queued.
 5. The agent claims only `lucia-mybrocorp` jobs and ignores `nacho-saski` jobs.
 6. The configured Drive output folder is writable by `mybrocorp@gmail.com`, and the resulting PDF is readable from the customer's browser session.
 7. The local `nacho-saski` LaunchAgent is stopped or irrelevant during the validation run.
 8. The customer logs into production WordPress with the mybro account, opens `Catalog PDFs`, queues a catalog, sees the completed Drive link, and saves `approved` or `needs_changes`.
 9. The completed `catalog_jobs` row records the customer WordPress identity and the review state remains visible after a page reload.
 
-Current status as of 2026-05-02: the Cloud Run worker, Secret Manager material,
-Cloud Scheduler trigger, and production monitor are deployed. Manual and
-scheduled worker executions authenticate as `mybrocorp@gmail.com`; verification
-job `catalog_20260502_161854_retry` completed through Cloud Run, produced a
-14-artwork PDF, and wrote the Drive result URL back to `catalog_jobs`. The
-monitor job `lucia-mybrocorp-catalog-monitor` runs every 10 minutes and has a
-Cloud Monitoring email alert policy. The remaining gate is one customer-account
-WordPress job that records the customer WordPress identity and persists review
-state.
+Current status as of 2026-05-03: the Cloud Run worker, Secret Manager material,
+and production monitor are deployed. Manual worker executions authenticate as
+`mybrocorp@gmail.com`; verification job `catalog_20260502_161854_retry`
+completed through Cloud Run, produced a 14-artwork PDF, and wrote the Drive
+result URL back to `catalog_jobs`. Apps Script now supports starting the worker
+on demand when a `lucia-mybrocorp` catalog is queued. The legacy worker polling
+scheduler should remain paused once the Apps Script trigger is deployed and
+validated. The monitor job `lucia-mybrocorp-catalog-monitor` runs separately and
+has a Cloud Monitoring email alert policy. The remaining gate is one
+customer-account WordPress job that records the customer WordPress identity and
+persists review state.
 
 Cloud Run implementation notes:
 
@@ -109,7 +111,7 @@ Cloud Run implementation notes:
 - Failed agent jobs write nested error causes into `catalog_jobs.log_excerpt`; check that field or Cloud Logging before retrying a generic `pdf_render_failed` job.
 - The one-shot Cloud Run worker exits non-zero when it claims a job that ends in `failed`.
 - The separate monitor command, `npm run catalog-agent:monitor:cloud-run`, scans `catalog_jobs` for recent failed rows, stale queued rows, stale in-progress heartbeats, and completed rows missing a Drive URL.
-- Deployment and scheduler commands live in [catalog-generator/cloud-run/README.md](../../../catalog-generator/cloud-run/README.md).
+- Deployment and on-demand trigger commands live in [catalog-generator/cloud-run/README.md](../../../catalog-generator/cloud-run/README.md).
 
 ## Job Contract Highlights
 
@@ -149,6 +151,14 @@ Before deployment, set the script property:
 
 - `CATALOG_API_TOKEN`
 
+For production on-demand Cloud Run execution, also set:
+
+- `CATALOG_CLOUD_RUN_TRIGGER_ENABLED=true`
+- `CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS=lucia-mybrocorp`
+- `CATALOG_CLOUD_RUN_PROJECT_ID=mybroworld-catalog-260501`
+- `CATALOG_CLOUD_RUN_REGION=europe-west1`
+- `CATALOG_CLOUD_RUN_JOB_NAME=lucia-mybrocorp-catalog-agent`
+
 Supported JSON actions:
 
 - `queue_catalog_job`
@@ -183,7 +193,7 @@ Run the following acceptance checks after both profiles are installed:
 5. Open the sidebar on an incompatible tab and verify it lists the exact missing required headers instead of queueing a broken job.
 6. Remove both the explicit folder input and the profile default folder, then confirm the sidebar blocks queueing.
 7. Deploy the Apps Script Web App, send a token-authenticated `queue_catalog_job` request from a controlled local client, and verify the row appears in `catalog_jobs`.
-8. Poll the queued job through `get_catalog_job`, then run the local agent once and verify the completed response includes `result_file_url`.
+8. Poll the queued job through `get_catalog_job`, then verify the on-demand Cloud Run execution completes and the completed response includes `result_file_url`.
 9. Record an approval with `record_catalog_review` and verify the job row includes `review_status`, `reviewed_at`, and `reviewed_by`.
 
 ## Common Operational Issues
@@ -205,3 +215,6 @@ Run the following acceptance checks after both profiles are installed:
 
 - `Unauthorized catalog API request.`
   The WordPress-side token does not match the Apps Script `CATALOG_API_TOKEN` property.
+
+- `Cloud Run catalog worker trigger failed with HTTP ...`
+  The Apps Script Web App queued the job but could not start the Cloud Run Job. Verify the Apps Script trigger properties, OAuth scopes, and `roles/run.invoker` access for the account that executes the Web App.

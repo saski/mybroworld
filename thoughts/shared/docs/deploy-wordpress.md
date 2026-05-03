@@ -17,6 +17,25 @@ It does not deploy:
 - Production DB changes should be performed through WordPress admin or a reviewed migration procedure.
 - Never overwrite unknown remote files blindly.
 - FTP deployment uploads owned files in place and does not delete remote files by default.
+- Uploading the owned `luciastuy` theme does not activate it. Theme activation is a separate production state change.
+
+## Owned Theme Activation Gate
+
+Before activating `luciastuy` in production:
+
+- capture a fresh production database backup identifier
+- capture or confirm a fresh `wp-content` backup that includes themes, plugins, and `mu-plugins`
+- confirm the deployed `luciastuy` files exist under `/public/wp-content/themes/luciastuy`
+- confirm the current rollback theme is `glacier`
+- run production storefront and Store API checks before activation
+- get explicit approval for front-page and shop-path visual impact
+
+Preferred activation paths:
+
+1. WordPress admin: activate `luciastuy` from `Appearance > Themes`.
+2. WP-CLI on the host, if available: `wp theme activate luciastuy`.
+
+Avoid direct database option updates unless admin and WP-CLI activation are unavailable and a specific rollback plan has been approved. Rollback is to reactivate `glacier`, then rerun the same storefront smoke checks.
 
 ## Deployment Inputs
 Known production defaults:

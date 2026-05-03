@@ -2,6 +2,11 @@ const CATALOG_MENU_TITLE = 'Catalogs';
 const CATALOG_SIDEBAR_TITLE = 'Generate Catalog PDF';
 const CATALOG_DEFAULT_ARTIST = 'Lucía Astuy';
 const CATALOG_API_TOKEN_PROPERTY = 'CATALOG_API_TOKEN';
+const CATALOG_CLOUD_RUN_TRIGGER_ENABLED_PROPERTY = 'CATALOG_CLOUD_RUN_TRIGGER_ENABLED';
+const CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS_PROPERTY = 'CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS';
+const CATALOG_CLOUD_RUN_PROJECT_ID_PROPERTY = 'CATALOG_CLOUD_RUN_PROJECT_ID';
+const CATALOG_CLOUD_RUN_REGION_PROPERTY = 'CATALOG_CLOUD_RUN_REGION';
+const CATALOG_CLOUD_RUN_JOB_NAME_PROPERTY = 'CATALOG_CLOUD_RUN_JOB_NAME';
 const CATALOG_REQUIRED_HEADERS = [
   'artwork_id',
   'title_clean',
@@ -248,11 +253,88 @@ function createCatalogJob_(formData, options) {
   };
 
   appendCatalogRow_(jobsSheet, CATALOG_JOB_HEADERS, jobRecord);
+  const jobRowNumber = jobsSheet.getLastRow();
   if (settings.rememberProfile) {
     PropertiesService.getUserProperties().setProperty('default_execution_profile', executionProfile.profileKey);
   }
 
+  try {
+    triggerCatalogWorkerOnDemand_(jobRecord);
+  } catch (error) {
+    markCatalogJobWorkerTriggerFailed_(jobsSheet, jobRowNumber, error);
+    throw error;
+  }
+
   return jobRecord;
+}
+
+function triggerCatalogWorkerOnDemand_(jobRecord) {
+  const config = getCatalogCloudRunTriggerConfig_(jobRecord);
+  if (!config.enabled) {
+    return;
+  }
+
+  const response = UrlFetchApp.fetch(config.url, {
+    contentType: 'application/json',
+    headers: {
+      Authorization: 'Bearer ' + ScriptApp.getOAuthToken(),
+    },
+    method: 'post',
+    muteHttpExceptions: true,
+    payload: '{}',
+  });
+  const responseCode = response.getResponseCode();
+
+  if (responseCode < 200 || responseCode >= 300) {
+    throw new Error(
+      'Cloud Run catalog worker trigger failed with HTTP ' +
+      responseCode +
+      ': ' +
+      truncateCatalogLogText_(response.getContentText()),
+    );
+  }
+}
+
+function getCatalogCloudRunTriggerConfig_(jobRecord) {
+  const properties = PropertiesService.getScriptProperties();
+  const enabled = isEnabledCatalogFlag_(properties.getProperty(CATALOG_CLOUD_RUN_TRIGGER_ENABLED_PROPERTY));
+  const profileKeys = normalizeCatalogCsv_(properties.getProperty(CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS_PROPERTY));
+  const jobProfileKey = normalizeCatalogText_(jobRecord.execution_profile);
+
+  if (!enabled || (profileKeys.length > 0 && profileKeys.indexOf(jobProfileKey) === -1)) {
+    return {
+      enabled: false,
+    };
+  }
+
+  const projectId = normalizeCatalogText_(properties.getProperty(CATALOG_CLOUD_RUN_PROJECT_ID_PROPERTY));
+  const region = normalizeCatalogText_(properties.getProperty(CATALOG_CLOUD_RUN_REGION_PROPERTY));
+  const jobName = normalizeCatalogText_(properties.getProperty(CATALOG_CLOUD_RUN_JOB_NAME_PROPERTY));
+
+  if (!projectId || !region || !jobName) {
+    throw new Error('Cloud Run catalog worker trigger is enabled but project, region, or job name is missing.');
+  }
+
+  return {
+    enabled: true,
+    url: 'https://run.googleapis.com/v2/projects/' +
+      projectId +
+      '/locations/' +
+      region +
+      '/jobs/' +
+      jobName +
+      ':run',
+  };
+}
+
+function markCatalogJobWorkerTriggerFailed_(jobsSheet, rowNumber, error) {
+  const message = truncateCatalogLogText_(error && error.message ? error.message : String(error));
+  updateCatalogJobFields_(jobsSheet, rowNumber, {
+    error_code: 'worker_trigger_failed',
+    error_message: message,
+    log_excerpt: message,
+    status: 'failed',
+  });
 }
 
 function openCatalogJobsFromSidebar() {
@@ -693,8 +775,22 @@ function normalizeSheetIds_(sheetIds) {
     });
 }
 
+function normalizeCatalogCsv_(value) {
+  return normalizeCatalogText_(value)
+    .split(',')
+    .map(function (item) {
+      return normalizeCatalogText_(item);
+    })
+    .filter(Boolean);
+}
+
 function isEnabledCatalogFlag_(value) {
   return value === true || normalizeCatalogText_(value).toLowerCase() === 'true';
+}
+
+function truncateCatalogLogText_(value) {
+  const text = normalizeCatalogText_(value);
+  return text.length > 500 ? text.slice(0, 500) + '...' : text;
 }
 
 function buildCatalogJobId_(createdAtIso) {

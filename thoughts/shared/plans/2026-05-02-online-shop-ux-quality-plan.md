@@ -15,11 +15,11 @@ OpenAI Images is not a UX dependency. It can only be considered later as an offl
 - [x] Phase 1 reference UX notes.
 - [x] Phase 1 plugin inventory/removal preparation notes.
 - [x] Phase 1 desktop/mobile screenshot capture and baseline notes.
-- [ ] Phase 1 manual desktop/mobile screenshot review and reference-pattern confirmation.
+- [x] Phase 1 manual desktop/mobile screenshot review and reference-pattern confirmation.
 - [x] Phase 2 first responsive owned product card system.
 - [x] Phase 3 first product detail without sidebar or widget coupling.
-- [ ] Phase 4 real image quality with owned media rules.
-- [ ] Phase 5 local theme switch and plugin deactivation readiness.
+- [x] Phase 4 real image quality with owned media rules.
+- [x] Phase 5 local theme switch and plugin deactivation readiness.
 - [ ] Phase 6 optional offline OpenAI Images secondary-media spike.
 - [ ] Phase 7 production rollout and staged plugin uncoupling.
 
@@ -270,6 +270,14 @@ Phase 1 baseline notes captured on 2026-05-02:
 - First visual issues for Phase 2/3: remove the Glacier hero rhythm, bring product grids into view earlier, normalize card frames, align action placement, reduce uppercase/tracking pressure, and remove product-detail sidebar competition.
 - Reference classification: product-card and product-detail calmness should be `Artlogic trust`; collection/story accents can be `AOTM editorial`; search/sort/filter should use `Objkt utility`; builder/plugin-driven visual fixes are `reject`.
 
+Phase 1 manual review closed on 2026-05-03:
+
+- Reviewed owned-theme desktop/mobile screenshots in `/private/tmp/mybroworld-ux/`.
+- Shop desktop/mobile: product frames are stable, product cards align, long Spanish titles wrap without button overlap, and the first mobile viewport reaches product discovery instead of a legacy hero.
+- Product desktop/mobile: the artwork-first hierarchy is clear, the summary is no longer competing with a sidebar, and product detail feels closer to a calm gallery page.
+- Remaining visual risk is source-media quality for specific works, not a reason to add gallery, AI image, or builder plugins.
+- Confirmed reference pattern: `Artlogic trust` for cards/product detail, limited `Objkt utility` for ordering/actions, and no runtime-plugin pattern accepted.
+
 ## Phase 2: Owned Product Card System
 
 Goal: make shop grids and related-product cards consistent in the owned theme without adding or relying on visual plugins.
@@ -418,6 +426,16 @@ Manual success criteria:
 - Any product that still looks weak has a recorded source-image issue, not an unexplained template issue.
 - No image-quality improvement requires adding a WordPress image/gallery/AI plugin.
 
+Phase 4 implementation notes captured on 2026-05-03:
+
+- Added `scripts/woo-image-quality-audit.mjs` and `scripts/woo-image-quality-audit.test.mjs`.
+- Wired the image-quality audit test into `scripts/wp-test-owned-code.sh`.
+- The audit is read-only and reports missing managed products, missing images, image count below the agreed minimum, too-small images when dimensions are exposed, unsupported image MIME/extensions, live external image sources, and missing image alt text.
+- Added the audit command to `thoughts/shared/docs/ecommerce-product-image-guidelines.md`.
+- Added image sharpness and misleading-crop checks to `thoughts/shared/docs/customer-testing-and-handoff.md`.
+- Local audit passed: `woo_image_quality_audit products=20 expected=20 risks=0`.
+- Production audit passed: `woo_image_quality_audit products=20 expected=20 risks=0`.
+
 ## Phase 5: Local Theme Switch And Plugin Deactivation Readiness
 
 Goal: prove the owned shop path can run without Glacier/builder UX dependencies before any production plugin deactivation.
@@ -465,6 +483,16 @@ Manual success criteria:
 - The first production plugin-deactivation candidate has a written rollback path and exact checks.
 - No plugin is marked safe to remove only because the UX looks better; every removal follows the simplification loop.
 - The owned theme shows the accepted Artlogic/AOTM/Objkt blend without relying on Elementor, Slider Revolution, or Glacier.
+
+Phase 5 implementation notes captured on 2026-05-03:
+
+- `WP_EXPECTED_THEME=luciastuy scripts/wp-local-validate.sh` passed.
+- `WP_BASE_URL=http://localhost:8080 scripts/woo-storefront-ux-assert.mjs --paths /shop/,/product/fanzimad-2026-yuju/` passed.
+- `rg -n "elementor|revslider|js_composer|visual-portfolio|acf_pro|glacier" wordpress/wp-content/themes/luciastuy wordpress/wp-content/mu-plugins` returned no matches.
+- Added a Slider Revolution readiness cycle to `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
+- Updated `thoughts/shared/docs/wordpress-plugin-inventory.md` with the local owned-theme readiness note.
+- Updated `thoughts/shared/docs/deploy-wordpress.md` with the owned-theme activation gate.
+- No production plugin was deactivated. Slider Revolution remains blocked until `luciastuy` is active in production or front-page impact is explicitly approved.
 
 ## Phase 6: Optional Offline OpenAI Images Secondary-Media Spike
 

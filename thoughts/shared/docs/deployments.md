@@ -115,6 +115,11 @@ The workflow:
 
 The workflow does not deploy `latest`.
 
+Normal customer PDF generation does not rely on a worker polling schedule. After
+the Apps Script source is deployed, `queue_catalog_job` starts
+`lucia-mybrocorp-catalog-agent` through the Cloud Run Admin API `jobs.run`
+method when a `lucia-mybrocorp` job is queued.
+
 Last verified manual deployment:
 
 - Workflow run: `https://github.com/saski/mybroworld/actions/runs/25258963235`
@@ -123,6 +128,22 @@ Last verified manual deployment:
 - Cloud Run Job image: `europe-west1-docker.pkg.dev/mybroworld-catalog-260501/mybroworld/catalog-agent:298b50c6fa901d3a279492bd9aa1ba86f7770acc`
 - Verification execution: `lucia-mybrocorp-catalog-agent-xxkkn`, `EXECUTION_SUCCEEDED`
 - Identity log: `[catalog-agent] authenticated as mybrocorp@gmail.com`
+
+### Apps Script On-Demand Trigger
+
+The Apps Script Web App is the production queue boundary for WordPress. Deploy
+the updated source from `catalog-generator/apps-script` to the bound spreadsheet
+project, then configure these script properties:
+
+- `CATALOG_CLOUD_RUN_TRIGGER_ENABLED=true`
+- `CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS=lucia-mybrocorp`
+- `CATALOG_CLOUD_RUN_PROJECT_ID=mybroworld-catalog-260501`
+- `CATALOG_CLOUD_RUN_REGION=europe-west1`
+- `CATALOG_CLOUD_RUN_JOB_NAME=lucia-mybrocorp-catalog-agent`
+
+Grant `roles/run.invoker` on the Cloud Run Job to the account that executes the
+Web App. Pause the legacy `lucia-mybrocorp-catalog-agent-every-5m` scheduler
+after one controlled WordPress queue request starts Cloud Run successfully.
 
 ### WordPress Owned-Code Deployment
 

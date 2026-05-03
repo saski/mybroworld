@@ -187,10 +187,17 @@ function parseTextOutput(output) {
 export async function loadAppsScriptCatalogApi({
   activeSheetId,
   apiToken,
+  fetchResponse = { responseCode: 200, text: '{}' },
+  scriptProperties = {},
   sheets,
 }) {
   const spreadsheet = new FakeSpreadsheet({ activeSheetId, sheets });
   let uuidCounter = 0;
+  const fetchCalls = [];
+  const propertyValues = {
+    CATALOG_API_TOKEN: apiToken,
+    ...scriptProperties,
+  };
   const context = {
     ContentService: createContentService(),
     Date,
@@ -202,7 +209,7 @@ export async function loadAppsScriptCatalogApi({
       getScriptProperties() {
         return {
           getProperty(name) {
-            return name === 'CATALOG_API_TOKEN' ? apiToken : '';
+            return propertyValues[name] || '';
           },
         };
       },
@@ -230,6 +237,24 @@ export async function loadAppsScriptCatalogApi({
       },
     },
     String,
+    ScriptApp: {
+      getOAuthToken() {
+        return 'test-oauth-token';
+      },
+    },
+    UrlFetchApp: {
+      fetch(url, options = {}) {
+        fetchCalls.push({ options, url });
+        return {
+          getContentText() {
+            return fetchResponse.text;
+          },
+          getResponseCode() {
+            return fetchResponse.responseCode;
+          },
+        };
+      },
+    },
     Utilities: {
       getUuid() {
         uuidCounter += 1;
@@ -250,6 +275,7 @@ globalThis.__catalogTestApi = {
     callApi(event) {
       return parseTextOutput(context.__catalogTestApi.handleCatalogApiRequest_(event));
     },
+    fetchCalls,
     spreadsheet,
   };
 }
