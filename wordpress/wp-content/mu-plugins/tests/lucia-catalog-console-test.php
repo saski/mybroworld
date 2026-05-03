@@ -42,6 +42,11 @@ function wp_json_encode(mixed $data, int $options = 0): string
     return json_encode($data, $options) ?: '';
 }
 
+function wp_timezone(): DateTimeZone
+{
+    return new DateTimeZone('Europe/Madrid');
+}
+
 function wp_remote_post(string $url, array $args): array
 {
     $GLOBALS['lucia_catalog_console_http_calls'][] = [
@@ -207,6 +212,23 @@ assertSameValue(
     false,
     str_contains($html, 'test-token-secret'),
     'Admin page must not expose the Apps Script API token.',
+);
+assertSameValue(
+    '2026-05-03 12:21',
+    lucia_catalog_console_format_local_datetime('2026-05-03T10:21:10.000Z'),
+    'Catalog job creation timestamps should render in the WordPress local timezone.',
+);
+assertSameValue(
+    [
+        'job_id' => 'catalog_test',
+        'created_at' => '2026-05-03T10:21:10.000Z',
+        'created_at_local' => '2026-05-03 12:21',
+    ],
+    lucia_catalog_console_with_local_created_at([
+        'job_id' => 'catalog_test',
+        'created_at' => '2026-05-03T10:21:10.000Z',
+    ]),
+    'Catalog jobs should expose a local creation timestamp for the admin table.',
 );
 
 $GLOBALS['lucia_catalog_console_http_calls'] = [];

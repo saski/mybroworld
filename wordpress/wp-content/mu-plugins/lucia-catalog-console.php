@@ -366,6 +366,55 @@ function lucia_catalog_console_send_error(string $message, int $statusCode = 400
     echo json_encode(['data' => ['message' => $message], 'success' => false]);
 }
 
+function lucia_catalog_console_timezone(): DateTimeZone
+{
+    if (function_exists('wp_timezone')) {
+        $timezone = wp_timezone();
+        if ($timezone instanceof DateTimeZone) {
+            return $timezone;
+        }
+    }
+
+    return new DateTimeZone(date_default_timezone_get());
+}
+
+function lucia_catalog_console_format_local_datetime(mixed $value): string
+{
+    $timestamp = lucia_catalog_console_sanitize_text($value);
+    if ($timestamp === '') {
+        return '';
+    }
+
+    try {
+        $datetime = new DateTimeImmutable($timestamp);
+    } catch (Throwable) {
+        return $timestamp;
+    }
+
+    return $datetime
+        ->setTimezone(lucia_catalog_console_timezone())
+        ->format('Y-m-d H:i');
+}
+
+function lucia_catalog_console_with_local_created_at(array $job): array
+{
+    $job['created_at_local'] = lucia_catalog_console_format_local_datetime($job['created_at'] ?? '');
+
+    return $job;
+}
+
+function lucia_catalog_console_jobs_with_local_created_at(mixed $jobs): mixed
+{
+    if (! is_array($jobs)) {
+        return $jobs;
+    }
+
+    return array_map(
+        fn (mixed $job): mixed => is_array($job) ? lucia_catalog_console_with_local_created_at($job) : $job,
+        $jobs,
+    );
+}
+
 function lucia_catalog_console_verify_ajax_request(array $config): bool
 {
     if (! lucia_catalog_console_user_can_manage($config)) {
@@ -394,11 +443,12 @@ function lucia_catalog_console_handle_queue(): void
     $input['created_by_user_key'] = $input['created_by_user_key'] ?? $currentUser['user_login'];
 
     try {
-        lucia_catalog_console_send_success(lucia_catalog_console_call_api(
+        $job = lucia_catalog_console_call_api(
             'queue_catalog_job',
             lucia_catalog_console_build_queue_payload($input, $config),
             $config,
-        ));
+        );
+        lucia_catalog_console_send_success(is_array($job) ? lucia_catalog_console_with_local_created_at($job) : $job);
     } catch (Throwable $error) {
         lucia_catalog_console_send_error($error->getMessage());
     }
@@ -418,9 +468,10 @@ function lucia_catalog_console_handle_get_job(): void
     }
 
     try {
-        lucia_catalog_console_send_success(lucia_catalog_console_call_api('get_catalog_job', [
+        $job = lucia_catalog_console_call_api('get_catalog_job', [
             'jobId' => $jobId,
-        ], $config));
+        ], $config);
+        lucia_catalog_console_send_success(is_array($job) ? lucia_catalog_console_with_local_created_at($job) : $job);
     } catch (Throwable $error) {
         lucia_catalog_console_send_error($error->getMessage());
     }
@@ -436,9 +487,10 @@ function lucia_catalog_console_handle_recent_jobs(): void
     $limit = lucia_catalog_console_positive_int($_POST['limit'] ?? 10);
 
     try {
-        lucia_catalog_console_send_success(lucia_catalog_console_call_api('list_recent_catalog_jobs', [
+        $jobs = lucia_catalog_console_call_api('list_recent_catalog_jobs', [
             'limit' => max(1, min($limit > 0 ? $limit : 10, 50)),
-        ], $config));
+        ], $config);
+        lucia_catalog_console_send_success(lucia_catalog_console_jobs_with_local_created_at($jobs));
     } catch (Throwable $error) {
         lucia_catalog_console_send_error($error->getMessage());
     }
@@ -672,7 +724,7 @@ function lucia_catalog_console_render_admin_page(): void
         }
 
         jobsBody.innerHTML = jobs.map((job) => `<tr data-job-id="${escapeText(job.job_id)}">
-            <td>${escapeText(job.created_at || "")}</td>
+            <td>${escapeText(job.created_at_local || job.created_at || "")}</td>
             <td>${escapeText(job.catalog_title || "")}</td>
             <td>${escapeText(statusLabel(job))}</td>
             <td>${resultCell(job)}</td>
