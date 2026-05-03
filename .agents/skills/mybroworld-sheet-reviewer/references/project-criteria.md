@@ -58,6 +58,8 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - For PDF catalog image selection, the customer will manually identify the catalog image by keeping one existing Drive file per artwork whose filename ends in `_cat`. Missing or duplicate `_cat` images are blockers; do not auto-create, copy, or infer the `_cat` file.
 - Do not enable strict production `_cat` image-folder selection until the shared folder contains one `_cat` file for every included, catalog-ready artwork.
 - The PDF catalog should sort newest works first and display only title, year, dimensions, technique, and PVP price for each artwork.
+- For PDF catalog output-folder changes, resolve the provided Drive folder metadata before assuming the link is a parent folder. If the linked folder already has the requested destination name, use that folder as the target instead of creating a same-named child.
+- Before marking a PDF catalog output route ready, verify all write sources: WordPress runtime config, `catalog_profiles.default_drive_folder_id`, worker identity permissions, and one completed job whose Drive file parent is the expected folder.
 
 ### Manual review behavior
 
