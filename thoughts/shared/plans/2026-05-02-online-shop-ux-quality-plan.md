@@ -573,6 +573,21 @@ Manual success criteria:
 - Follow TDD during implementation: add one failing test before each behavior change.
 - Do not change user or unrelated work currently present in the git tree.
 
+## Rollout Log
+
+### 2026-05-03 Trunk-Based Owned-Code Deployment
+
+- Merged `codex-online-shop-ux-uncoupling` into `main` with a fast-forward merge at commit `805d112`.
+- Pushed `main` to `origin/main`.
+- Generated a deployment manifest at `/private/tmp/mybroworld-wordpress-deploy-manifest.txt`.
+- Deployed repo-owned WordPress code to production via FTP:
+  - `wordpress/wp-content/themes/luciastuy` to `/public/wp-content/themes/luciastuy`
+  - `wordpress/wp-content/mu-plugins` to `/public/wp-content/mu-plugins`
+- Production smoke checks passed for `/`, `/shop/`, `/cart/`, `/checkout/`, and `/product/fanzimad-2026-yuju/`.
+- Production Store API assertion passed: `products=20 expected=20 missing=0 missing_images=0 unexpected=0`.
+- Production UX assertion passed for shop/product structure, but dependency markers still include `glacier`, `elementor`, `revslider`, `js_composer`, and `visual-portfolio`.
+- Current production active theme remains `glacier`; the owned `luciastuy` theme code is deployed but not publicly active. Activating it is a separate production state change and should not be bundled with FTP owned-code deployment unless rollback and customer-facing homepage impact are explicitly approved.
+
 ## Proposed Next Step
 
 Run:
