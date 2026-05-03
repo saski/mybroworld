@@ -194,6 +194,7 @@ export async function loadAppsScriptCatalogApi({
   const spreadsheet = new FakeSpreadsheet({ activeSheetId, sheets });
   let uuidCounter = 0;
   const fetchCalls = [];
+  const fetchRequests = [];
   const propertyValues = {
     CATALOG_API_TOKEN: apiToken,
     ...scriptProperties,
@@ -254,6 +255,13 @@ export async function loadAppsScriptCatalogApi({
           },
         };
       },
+      getRequest(url, options = {}) {
+        fetchRequests.push({ options, url });
+        return {
+          method: (options.method || 'get').toLowerCase(),
+          url,
+        };
+      },
     },
     Utilities: {
       getUuid() {
@@ -267,15 +275,20 @@ export async function loadAppsScriptCatalogApi({
   const source = await fs.readFile(path.join(generatorRoot, 'apps-script', 'Code.gs'), 'utf8');
   vm.runInContext(`${source}
 globalThis.__catalogTestApi = {
+  authorizeCatalogWebAppScopes: authorizeCatalogWebAppScopes,
   handleCatalogApiRequest_: handleCatalogApiRequest_,
 };
 `, context);
 
   return {
+    authorizeWebAppScopes() {
+      return context.__catalogTestApi.authorizeCatalogWebAppScopes();
+    },
     callApi(event) {
       return parseTextOutput(context.__catalogTestApi.handleCatalogApiRequest_(event));
     },
     fetchCalls,
+    fetchRequests,
     spreadsheet,
   };
 }

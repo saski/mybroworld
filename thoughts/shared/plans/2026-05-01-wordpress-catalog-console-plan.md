@@ -318,7 +318,7 @@ Deployment notes:
 
 ### Phase 6: Customer-Operable Cloud Run Handoff
 
-Progress: Cloud Run worker image, secrets, job, production WordPress profile switch, direct `lucia-mybrocorp` Cloud Run PDF verification, production monitoring, and Apps Script source support for on-demand worker startup are complete. The remaining handoff gates are deploying the updated Apps Script Web App, setting trigger properties, granting Cloud Run invoke access to the Web App executing account, pausing the legacy worker polling scheduler, and running a customer-account WordPress validation job that records the customer identity and persists review state through the `lucia-mybrocorp` worker.
+Progress: Cloud Run worker image, secrets, job, production WordPress profile switch, direct `lucia-mybrocorp` Cloud Run PDF verification, production monitoring, Apps Script source support for on-demand worker startup, Apps Script Web App version 6 deployment, Cloud Run invoke access, and direct Apps Script-triggered Cloud Run completion are complete. The remaining handoff gates are running a customer-account WordPress validation job that records the customer identity and persists review state through the `lucia-mybrocorp` worker, then pausing the legacy worker polling scheduler.
 
 Make the production workflow portable so the customer can operate it from `mybrocorp@gmail.com` and the mybro WordPress account without depending on the current operator Mac or Nacho's OAuth token. The Google Cloud project and billing account remain Nacho-managed: project `mybroworld-catalog-260501`, billing covered by `nacho.saski@gmail.com`.
 
@@ -342,7 +342,7 @@ Required actions:
 7. [x] Create a dedicated Cloud Run service account with least-privilege Google Cloud IAM, primarily Secret Manager secret access for the worker secrets and enough permissions to run/log the job.
 8. [x] Create the `lucia-mybrocorp` Cloud Run Job in `mybroworld-catalog-260501`.
 9. [x] Implement Apps Script support for starting the Cloud Run Job on demand after a `lucia-mybrocorp` job is queued.
-10. [ ] Deploy the updated Apps Script Web App, set the `CATALOG_CLOUD_RUN_*` trigger properties, and grant `roles/run.invoker` on the Cloud Run Job to the Web App executing account.
+10. [x] Deploy the updated Apps Script Web App, verify the production `CATALOG_CLOUD_RUN_*` defaults, and grant `roles/run.invoker` on the Cloud Run Job to the Web App executing account.
 11. [ ] Pause the legacy `lucia-mybrocorp-catalog-agent-every-5m` worker polling scheduler after the Apps Script trigger is validated.
 12. [x] Run the Cloud Run Job manually and verify it authenticates as `mybrocorp@gmail.com`, fails fast for any other configured identity, claims only `lucia-mybrocorp` jobs, ignores `nacho-saski` jobs, uploads the PDF to Drive, and writes completion metadata back to `catalog_jobs`.
 13. [ ] Verify the configured Drive output folder is writable by `mybrocorp@gmail.com` and that completed PDFs are readable from the customer's browser session.
@@ -384,6 +384,7 @@ Implementation notes:
 - 2026-05-02: Created Cloud Run Job `lucia-mybrocorp-catalog-monitor`, Cloud Scheduler job `lucia-mybrocorp-catalog-monitor-every-10m`, log metric `catalog_monitor_alerts`, notification channel `projects/mybroworld-catalog-260501/notificationChannels/12072695100356729995`, and alert policy `projects/mybroworld-catalog-260501/alertPolicies/6576773883271781072`.
 - 2026-05-02: Direct monitor execution `lucia-mybrocorp-catalog-monitor-tkwkr` and Scheduler-triggered execution `lucia-mybrocorp-catalog-monitor-fncxz` both completed successfully with `[catalog-monitor] ok spreadsheets=1 jobs=2`.
 - 2026-05-03: Added Apps Script on-demand worker startup. When `CATALOG_CLOUD_RUN_TRIGGER_ENABLED=true` and the queued profile matches `CATALOG_CLOUD_RUN_TRIGGER_PROFILE_KEYS`, `queue_catalog_job` calls `https://run.googleapis.com/v2/projects/{project}/locations/{region}/jobs/{job}:run` with the Apps Script OAuth token.
+- 2026-05-03: Linked the Apps Script project to standard Google Cloud project number `289786381719` (`mybroworld-catalog-260501`), deployed Web App/API executable version 6 with server-side WordPress access, completed the owner-only scope bootstrap, and verified direct token-authenticated job `catalog_20260503_100246_1dd2` started Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, authenticated as `mybrocorp@gmail.com`, completed with 14 artworks, and wrote the Drive result URL back to `catalog_jobs`.
 
 Completion criteria:
 
@@ -405,4 +406,4 @@ Completion criteria:
 
 ## Next Implementation Step
 
-Deploy the updated Apps Script Web App, configure the Cloud Run trigger properties and IAM grant, pause the legacy worker polling scheduler after validation, then run the remaining Phase 6 customer validation from the customer's mybro WordPress account and verify the Drive link, customer identity, and persisted review state.
+Run the remaining Phase 6 customer validation from the customer's mybro WordPress account, verify the Drive link, customer identity, and persisted review state, then pause the legacy worker polling scheduler after that validation passes.

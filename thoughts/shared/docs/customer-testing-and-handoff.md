@@ -106,7 +106,7 @@ Do not mark the handoff complete until all checks below are true:
    - Ensure the container copies read-only secrets into a writable runtime path before OAuth refresh.
 
 3. Worker on-demand trigger and validation
-   - Status: code complete as of 2026-05-03; production deployment and PDF completion still need a queued customer job.
+   - Status: production Apps Script trigger validated by direct token-authenticated job as of 2026-05-03; WordPress UI customer-account validation is still pending.
    - Create the Cloud Run Job for `lucia-mybrocorp`.
    - Configure Apps Script trigger properties for the Cloud Run Job.
    - Grant `roles/run.invoker` on the job to the account that executes the Apps Script Web App.
@@ -116,6 +116,7 @@ Do not mark the handoff complete until all checks below are true:
    - Add the production spreadsheet id to `watchSpreadsheetIds`.
    - Authorize the worker with `mybrocorp@gmail.com`.
    - Run the job manually once before relying on the on-demand trigger.
+   - Production evidence: Apps Script Web App deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` version 6 queued `catalog_20260503_100246_1dd2`, started Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, and completed a 14-artwork PDF as `mybrocorp@gmail.com`.
 
 4. Customer catalog validation
    - Status: pending.

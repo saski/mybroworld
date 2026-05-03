@@ -193,6 +193,18 @@ function configureProductionCatalogCloudRunTrigger() {
   };
 }
 
+function authorizeCatalogWebAppScopes() {
+  const request = UrlFetchApp.getRequest('https://run.googleapis.com/');
+  const oauthToken = ScriptApp.getOAuthToken();
+
+  return {
+    method: request.method || 'get',
+    oauthTokenAvailable: oauthToken !== '',
+    ok: true,
+    url: request.url,
+  };
+}
+
 function getCatalogSidebarModel(prefill) {
   return buildCatalogSidebarModel_(prefill || {});
 }

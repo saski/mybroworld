@@ -163,8 +163,15 @@ sets exactly those non-secret properties explicitly in the production project.
 
 The Apps Script manifest must include:
 
+- Web App access: `webapp.access = ANYONE_ANONYMOUS`
+- Web App execution identity: `webapp.executeAs = USER_DEPLOYING`
+- API executable access for owner-only scope bootstrap: `executionApi.access = MYSELF`
 - `https://www.googleapis.com/auth/script.external_request`
 - `https://www.googleapis.com/auth/cloud-platform`
+
+The Apps Script project must also be linked to the standard Google Cloud project
+`mybroworld-catalog-260501` so the script owner OAuth grant, Apps Script API, and
+Cloud Run Admin API calls all share the same Google Cloud project.
 
 Grant the account that executes the Apps Script Web App permission to run the
 Cloud Run Job. The current production script is operated from
@@ -191,6 +198,13 @@ gcloud scheduler jobs pause lucia-mybrocorp-catalog-agent-every-5m \
 
 Delete that scheduler only after one customer-queued WordPress catalog completes
 through the Apps Script trigger and no stale queued jobs remain.
+
+Production evidence as of 2026-05-03: Apps Script Web App deployment
+`AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ`
+runs version 6. Direct token-authenticated job `catalog_20260503_100246_1dd2`
+created Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, which
+authenticated as `mybrocorp@gmail.com`, completed successfully, and wrote a
+14-artwork Drive PDF result back to `catalog_jobs`.
 
 ## Monitor
 

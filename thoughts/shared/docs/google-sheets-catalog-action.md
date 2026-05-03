@@ -94,12 +94,19 @@ and production monitor are deployed. Manual worker executions authenticate as
 `mybrocorp@gmail.com`; verification job `catalog_20260502_161854_retry`
 completed through Cloud Run, produced a 14-artwork PDF, and wrote the Drive
 result URL back to `catalog_jobs`. Apps Script now supports starting the worker
-on demand when a `lucia-mybrocorp` catalog is queued. The legacy worker polling
-scheduler should remain paused once the Apps Script trigger is deployed and
-validated. The monitor job `lucia-mybrocorp-catalog-monitor` runs separately and
-has a Cloud Monitoring email alert policy. The remaining gate is one
-customer-account WordPress job that records the customer WordPress identity and
-persists review state.
+on demand when a `lucia-mybrocorp` catalog is queued. The production Apps Script
+project is linked to standard Cloud project `mybroworld-catalog-260501`; Web App
+deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ`
+runs version 6 with server-side WordPress access and an owner-only API executable
+scope bootstrap. Direct token-authenticated job `catalog_20260503_100246_1dd2`
+started Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, authenticated
+as `mybrocorp@gmail.com`, completed with 14 artworks, and wrote the Drive result
+URL back to `catalog_jobs`. The legacy worker polling scheduler should remain
+active until one customer-account WordPress UI validation passes; after that it
+should be paused. The monitor job `lucia-mybrocorp-catalog-monitor` runs
+separately and has a Cloud Monitoring email alert policy. The remaining gate is
+one customer-account WordPress job that records the customer WordPress identity
+and persists review state.
 
 Cloud Run implementation notes:
 

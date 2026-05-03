@@ -127,6 +127,17 @@ test('Apps Script queue marks the job failed when the Cloud Run trigger is rejec
   assert.match(recent.result[0].error_message, /Permission denied/);
 });
 
+test('Apps Script exposes a scope bootstrap check for the WordPress Web App deployment', async () => {
+  const { authorizeWebAppScopes, fetchRequests } = await buildHarness();
+
+  const result = authorizeWebAppScopes();
+
+  assert.equal(result.ok, true);
+  assert.equal(result.oauthTokenAvailable, true);
+  assert.equal(fetchRequests.length, 1);
+  assert.equal(fetchRequests[0].url, 'https://run.googleapis.com/');
+});
+
 test('Apps Script queue blocks profiles without an output folder', async () => {
   const { callApi } = await buildHarness();
 
