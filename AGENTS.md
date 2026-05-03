@@ -5,7 +5,7 @@
 - Treat new explicit user instructions, clarified decisions, and resolved edge cases in sheet-review work as candidate project criteria. If the rule is reusable beyond the current row or one-off task, update the reviewer skill before finishing the task.
 - Persist reusable decisions, methodologies, and operator guidance in repository artifacts before finishing the task, following `.agents/docs/chat-memory-protocol.md`.
 - At the end of each important iteration, state which skills were used during that iteration. If no skills were used, state that explicitly.
-- When an `RTK.md` reference is requested but the expected contextual file is missing, fall back to the repository-root `RTK.md` if it exists. If the root `RTK.md` is also absent, load `/Users/ignacio.viejo/saski/augmentedcode-configuration/.agents/rules/RTK.md`; only note RTK as missing if that shared fallback is also unavailable.
+- Load RTK guidance from `/Users/ignacio.viejo/saski/augmentedcode-configuration/.agents/rules/RTK.md`. This repository intentionally does not carry a root `RTK.md`, so do not announce a missing root RTK fallback unless the shared RTK file is also unavailable.
 - For WordPress/WooCommerce development, avoid commercial paid plugins, including freemium plugins. Prefer lean owned code, WordPress core, WooCommerce core, and the smallest unavoidable third-party dependency surface. Open-source plugins or add-ons may be considered only when they meet a clear quality bar and preserve the lean simplicity principle.
 - Use trunk-based development for safe work: keep branches short-lived, merge verified small changes into `main`, and deploy from `main` when production checks pass.
 - Keep technical artifacts in English.
