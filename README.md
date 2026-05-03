@@ -19,7 +19,7 @@ flowchart LR
   worker["Cloud Run catalog worker<br/>lucia-mybrocorp"]
   secrets["Secret Manager<br/>mybrocorp OAuth and config"]
   assets["Google Drive<br/>_cat images and brand assets"]
-  output["Google Drive<br/>generated PDFs"]
+  output["Google Drive<br/>OBRA/Catalogos PDFs"]
   monitor["Cloud Run monitor<br/>every 10 min"]
   logs["Cloud Logging<br/>alerts and runtime logs"]
 
@@ -69,7 +69,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | Customer operation | WordPress, WooCommerce | Run the shop and request catalog PDFs | Live; customer-account validation still pending |
 | Queue and source data | Apps Script, Google Sheets | Store catalog source rows, queued jobs, status, and review state | Live |
-| PDF runtime | Apps Script, Cloud Run, Secret Manager, Google Drive | Render catalogs in Google Cloud as `mybrocorp@gmail.com` only when an operator requests a PDF | Live and manually deploy-validated; on-demand trigger implemented |
+| PDF runtime | Apps Script, Cloud Run, Secret Manager, Google Drive | Render catalogs in Google Cloud as `mybrocorp@gmail.com` only when an operator requests a PDF | Live and manually deploy-validated; PDFs write to `OBRA/Catalogos` |
 | Monitoring | Cloud Run monitor, Cloud Logging | Detect failed, stale, or incomplete jobs | Live |
 | Catalog-agent delivery | GitHub Actions, Cloud Build, Artifact Registry | Validate, build, deploy, verify, and roll back the catalog worker | Configured and manually validated; auto-deploy disabled |
 | WordPress delivery | GitHub Actions, DonDominio FTP | Deploy owned theme and MU plugin changes | Configured; held until rollback automation is finished |

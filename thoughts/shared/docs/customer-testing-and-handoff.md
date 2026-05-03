@@ -8,13 +8,14 @@ Use this guide when the customer needs to test the live online shop and the Word
 - The canonical artwork products have been created in production WooCommerce with images.
 - The catalog PDF console is deployed in production WordPress.
 - New production catalog jobs now target the on-demand Cloud Run `lucia-mybrocorp` worker authorized as `mybrocorp@gmail.com`.
+- Generated PDFs are written to the Drive folder `OBRA/Catalogos` (`183-IMb93mqASyyKEMz3lTVG1S8GLrK_2`).
 - Customer-operated catalog generation is complete only after that worker completes a job queued from the customer's mybro WordPress account and the customer can open/review the resulting Drive PDF.
 
 ## Accounts Needed
 
 - WordPress: the customer's mybro account on `https://www.luciastuy.com/wp-admin/`.
 - Google: `mybrocorp@gmail.com`.
-- Drive: access to the configured catalog output folder.
+- Drive: access to `OBRA/Catalogos` (`183-IMb93mqASyyKEMz3lTVG1S8GLrK_2`).
 - Optional for diagnosis: access to the source spreadsheet that contains `catalog_jobs` and `catalog_profiles`.
 
 ## Online Shop Test
@@ -86,7 +87,7 @@ Do not mark the handoff complete until all checks below are true:
 5. Apps Script starts the worker job immediately when the customer clicks `Generate PDF`.
 6. The worker claims `lucia-mybrocorp` jobs and ignores `nacho-saski` jobs.
 7. The local `nacho-saski` LaunchAgent is stopped or irrelevant during the validation run.
-8. The Drive output folder is writable by `mybrocorp@gmail.com`.
+8. The Drive output folder `OBRA/Catalogos` is writable by `mybrocorp@gmail.com`.
 9. The customer can open the completed Drive PDF from her own browser session.
 10. The completed `catalog_jobs` row records the customer WordPress identity.
 
@@ -117,6 +118,7 @@ Do not mark the handoff complete until all checks below are true:
    - Authorize the worker with `mybrocorp@gmail.com`.
    - Run the job manually once before relying on the on-demand trigger.
    - Production evidence: Apps Script Web App deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` version 6 queued `catalog_20260503_100246_1dd2`, started Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, and completed a 14-artwork PDF as `mybrocorp@gmail.com`.
+   - Output-folder evidence: direct validation job `catalog_20260503_102110_2c0d` completed with 14 artworks and wrote PDF `15NBUz7i1VJaqQZiakMltH-pEHTW6XZXF` into Drive folder `183-IMb93mqASyyKEMz3lTVG1S8GLrK_2`.
 
 4. Customer catalog validation
    - Status: pending.

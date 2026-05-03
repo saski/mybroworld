@@ -73,6 +73,12 @@ Populate these environment variables before running the scripts if they are not 
 Use `WP_REMOTE_USER` only when `WP_DEPLOY_TRANSPORT=rsync`.
 For FTP deployments, use `ftp.dondominio.com` as `WP_FTP_HOST`. The DonDominio FTP TLS certificate is issued for `*.dondominio.com`, not `ftp.luciastuy.com`.
 
+Production catalog output folder:
+
+- `LUCIA_CATALOG_DEFAULT_DRIVE_FOLDER_ID=183-IMb93mqASyyKEMz3lTVG1S8GLrK_2`
+- Drive path: `OBRA/Catalogos`
+- Verified on 2026-05-03 by direct job `catalog_20260503_102110_2c0d`; the resulting PDF parent was the configured folder.
+
 ## Deployment Commands
 - Audit pull of the current production theme: `scripts/wp-pull-theme.sh`
 - Dry-run preview: `scripts/wp-push-theme.sh --dry-run`

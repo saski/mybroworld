@@ -27,6 +27,7 @@ The same Apps Script project can also be deployed as a token-protected Web App f
 7. Fill or verify the initial `catalog_profiles` rows:
    - `lucia-mybrocorp`
    - `nacho-saski`
+   - Production `lucia-mybrocorp.default_drive_folder_id`: `183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` (`OBRA/Catalogos`)
 8. Hide both helper sheets again after verifying the configuration.
 9. Optionally add a drawing or image button on a yearly tab and assign it to `openCatalogSidebarForActiveTab`.
 
@@ -107,6 +108,15 @@ should be paused. The monitor job `lucia-mybrocorp-catalog-monitor` runs
 separately and has a Cloud Monitoring email alert policy. The remaining gate is
 one customer-account WordPress job that records the customer WordPress identity
 and persists review state.
+
+Production output-folder status as of 2026-05-03: the Drive folder
+`183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` is the catalog output folder. It is named
+`Catalogos`, its parent is the shared artwork folder
+`1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`, and `mybrocorp@gmail.com` has writer
+access. The `lucia-mybrocorp` worker token created and deleted a write probe
+there, `catalog_profiles!F2` points to that folder, and validation job
+`catalog_20260503_102110_2c0d` wrote PDF
+`15NBUz7i1VJaqQZiakMltH-pEHTW6XZXF` there.
 
 Cloud Run implementation notes:
 

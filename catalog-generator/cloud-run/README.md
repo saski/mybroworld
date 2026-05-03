@@ -206,6 +206,13 @@ created Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, which
 authenticated as `mybrocorp@gmail.com`, completed successfully, and wrote a
 14-artwork Drive PDF result back to `catalog_jobs`.
 
+Output-folder evidence as of 2026-05-03: the production Drive output folder is
+`183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` (`OBRA/Catalogos`). The worker OAuth identity
+`mybrocorp@gmail.com` has write access, `catalog_profiles!F2` and production
+WordPress `LUCIA_CATALOG_DEFAULT_DRIVE_FOLDER_ID` both point to that folder, and
+validation job `catalog_20260503_102110_2c0d` wrote PDF
+`15NBUz7i1VJaqQZiakMltH-pEHTW6XZXF` there.
+
 ## Monitor
 
 The production monitor is a separate Cloud Run Job:
