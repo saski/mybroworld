@@ -213,8 +213,21 @@ gcloud scheduler jobs pause lucia-mybrocorp-catalog-agent-every-5m \
   --project "$PROJECT_ID"
 ```
 
-Delete that scheduler only after one customer-queued WordPress catalog completes
-through the Apps Script trigger and no stale queued jobs remain.
+**Production state (2026-05-04):** both `lucia-mybrocorp-catalog-agent-every-5m` and
+`lucia-mybrocorp-catalog-monitor-every-10m` are **paused** in `europe-west1`. The
+catalog worker Cloud Run job is expected to run when Apps Script calls
+`jobs.run` after `queue_catalog_job`, when an operator uses **Execute** in the
+console, or when deploy verification runs in CI—not on a cron tick. Resume the
+monitor scheduler if you want the ten-minute catalog health sweep again:
+
+```bash
+gcloud scheduler jobs resume lucia-mybrocorp-catalog-monitor-every-10m \
+  --location "$REGION" \
+  --project "$PROJECT_ID"
+```
+
+Delete the agent scheduler job only if you are sure you will never return to
+polling; pausing is usually enough.
 
 Production evidence as of 2026-05-03: Apps Script Web App deployment
 `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ`

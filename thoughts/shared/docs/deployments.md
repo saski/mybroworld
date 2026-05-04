@@ -146,8 +146,10 @@ project, then configure these script properties:
 - `CATALOG_CLOUD_RUN_JOB_NAME=lucia-mybrocorp-catalog-agent`
 
 Grant `roles/run.invoker` on the Cloud Run Job to the account that executes the
-Web App. Pause the legacy `lucia-mybrocorp-catalog-agent-every-5m` scheduler
-after one controlled WordPress queue request starts Cloud Run successfully.
+Web App. **As of 2026-05-04** the legacy schedulers `lucia-mybrocorp-catalog-agent-every-5m`
+and `lucia-mybrocorp-catalog-monitor-every-10m` are **paused** in `europe-west1`
+(worker on-demand via Apps Script / manual / CI). Resume the monitor job only
+if you need the periodic health sweep again.
 
 ### WordPress Owned-Code Deployment
 
