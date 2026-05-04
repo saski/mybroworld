@@ -1,6 +1,6 @@
 # mybroworld - Project Status
 
-**Last Updated**: 2026-05-03
+**Last Updated**: 2026-05-04
 **Overall Status**: 🟡 **Multiple active workstreams** - Catalog editorial uplift now implements the approved client feedback and official assets, with strict `_cat` image selection prepared but waiting on customer-renamed files; the WordPress catalog PDF console is production-deployed, Apps Script now starts Cloud Run on demand in production, and production still needs customer-account WordPress validation before pausing the legacy worker scheduler; production plugin cleanup remains paused on remote backup/admin execution.
 
 ---
@@ -64,7 +64,7 @@
   - client-approved reduced metadata layout is implemented locally and in the Cloud Run worker
   - official Gotham and PNG logo assets are embedded into the portable PDF render
   - strict `_cat` resolution is implemented but remains disabled until the shared image folder contains customer-selected `_cat` files
-  - derived catalog period from `date_label`
+  - cover caption no longer shows a derived `date_label` month/year period; `date_label` remains the newest-first ordering input
   - latest outputs available under `catalog-generator/output/`
   - client feedback implementation plan now lives at `thoughts/shared/plans/2026-05-01-catalog-client-feedback-implementation-plan.md`
 - Phased plan creation and safety criteria definition.

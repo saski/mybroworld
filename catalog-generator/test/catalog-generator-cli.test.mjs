@@ -76,7 +76,7 @@ test('runGenerateCli honors catalog title and artist flags with stable completio
   assert.match(logs.join('\n'), /artworks=1/);
 });
 
-test('runGenerateCli renders the editorial shell with approved cover, centered artwork metadata, and centered closing mark', async () => {
+test('runGenerateCli renders the editorial shell without a derived cover period label', async () => {
   const { logger } = createLogger();
   const renderedJobs = [];
 
@@ -112,7 +112,7 @@ test('runGenerateCli renders the editorial shell with approved cover, centered a
 
   assert.match(renderedJobs[0], /class="cover-photo"/);
   assert.match(renderedJobs[0], /Catálogo 2026/);
-  assert.match(renderedJobs[0], /Marzo 2026/);
+  assert.doesNotMatch(renderedJobs[0], /Marzo 2026/);
   assert.match(renderedJobs[0], /class="artwork-header"/);
   assert.match(renderedJobs[0], /class="artwork-meta-block"/);
   assert.match(renderedJobs[0], /class="closing-brand-stack"/);

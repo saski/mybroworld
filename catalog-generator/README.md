@@ -26,7 +26,7 @@ GOOGLE_SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/.../export?format=c
 - `--output` sets the PDF destination path.
 - `--limit` renders only the first N eligible artworks.
 - `--catalog-image-manifest` points to a Drive file manifest JSON. When provided, every included artwork must have exactly one matching filename ending in `_cat`.
-- When the CSV includes `date_label` values such as `03/26`, the cover caption uses the latest included month as an editorial period label, for example `Marzo 2026`.
+- The cover caption shows only the configured catalog title. `date_label` is used for artwork ordering, not for a cover month/year label.
 
 ## Expected CSV Fields
 

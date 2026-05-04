@@ -20,6 +20,7 @@ Implement the client feedback received on 2026-05-01 for the PDF catalog while k
 - Remove all other artwork-page copy from the PDF catalog unless the customer reintroduces it.
 - Move the metadata block directly under the image, with whitespace similar to the side margin around the image.
 - The current cover image is approved.
+- Follow-up decision on 2026-05-04: do not print a derived month/year period on the cover; the cover caption shows the catalog title only.
 - Closing page contact details:
   - `hola@luciastuy.com`
   - `635.166.253`

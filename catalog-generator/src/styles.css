@@ -77,19 +77,6 @@ img {
   line-height: 1;
 }
 
-.cover-separator {
-  font-size: 14pt;
-  line-height: 1;
-  opacity: 0.94;
-}
-
-.cover-caption-secondary {
-  font-size: 14pt;
-  font-weight: 450;
-  letter-spacing: 0;
-  line-height: 1;
-}
-
 .catalog-wordmark {
   width: 18mm;
   height: auto;

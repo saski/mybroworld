@@ -32,8 +32,8 @@ The original Drive links were not directly readable without authentication in th
 - The catalog now uses a luminous white editorial background instead of black pages.
 - The cover now follows the original PDF more closely, with:
   - white wordmark at the bottom-right
-  - section-led caption at the bottom-left, for example `Obra disponible | Marzo 2026`
-- The latest catalog period is derived from the latest included `date_label` value, for example `03/26 -> Marzo 2026`.
+  - catalog-title caption at the bottom-left
+- Follow-up decision on 2026-05-04: the cover must not show a derived month/year period. `date_label` remains available for newest-first artwork ordering only.
 - Artwork pages now use:
   - small editorial kicker at the top-left, for example `Catálogo | Obra disponible`
   - muted wordmark at the top-right
@@ -63,7 +63,7 @@ The original Drive links were not directly readable without authentication in th
 
 - Layout and page structure: [catalog-generator/src/template.js](/Users/nacho/saski/mybroworld/catalog-generator/src/template.js)
 - Editorial styling: [catalog-generator/src/styles.css](/Users/nacho/saski/mybroworld/catalog-generator/src/styles.css)
-- Catalog period derivation from `date_label`: [catalog-generator/src/catalog-generator.mjs](/Users/nacho/saski/mybroworld/catalog-generator/src/catalog-generator.mjs)
+- Catalog ordering from `date_label`: [catalog-generator/src/catalog-generator.mjs](/Users/nacho/saski/mybroworld/catalog-generator/src/catalog-generator.mjs)
 - Regression coverage for the visual shell: [catalog-generator/test/catalog-generator-cli.test.mjs](/Users/nacho/saski/mybroworld/catalog-generator/test/catalog-generator-cli.test.mjs)
 - Operator-facing notes: [catalog-generator/README.md](/Users/nacho/saski/mybroworld/catalog-generator/README.md)
 

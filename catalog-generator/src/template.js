@@ -68,14 +68,10 @@ function renderWordmark({ artistName, className = '', tone = 'light' }) {
   return `<div class="${classes} catalog-wordmark-text">${escapeHtml(artistName)}</div>`;
 }
 
-function renderCoverCaption({ catalogPeriodLabel, catalogTitle }) {
-  const secondaryLabel = catalogPeriodLabel || catalogTitle;
-
+function renderCoverCaption({ catalogTitle }) {
   return `
     <div class="cover-caption">
       <span class="cover-caption-status">${escapeHtml(catalogTitle)}</span>
-      <span class="cover-separator">|</span>
-      <span class="cover-caption-secondary">${escapeHtml(secondaryLabel)}</span>
     </div>
   `;
 }
@@ -121,7 +117,7 @@ function renderArtworkPage(artwork, { artistName }) {
   `;
 }
 
-export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogPeriodLabel }) {
+export function renderCatalogHtml(artworks, { artistName, catalogTitle }) {
   const pages = artworks
     .map((artwork) => renderArtworkPage(artwork, { artistName }))
     .join('\n');
@@ -143,7 +139,7 @@ export function renderCatalogHtml(artworks, { artistName, catalogTitle, catalogP
       <section class="page cover-page">
         ${coverPhotoMarkup}
         <div class="cover-footer">
-          ${renderCoverCaption({ catalogPeriodLabel, catalogTitle })}
+          ${renderCoverCaption({ catalogTitle })}
           ${renderWordmark({ artistName, className: 'cover-wordmark', tone: 'light' })}
         </div>
       </section>

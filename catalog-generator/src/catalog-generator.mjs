@@ -18,20 +18,6 @@ const PDF_RENDER_TIMEOUT_MS = 120_000;
 const PDF_IMAGE_LOAD_TIMEOUT_MS = 60_000;
 const MACOS_GOOGLE_CHROME_EXECUTABLE_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const ROOT_CHROMIUM_SANDBOX_ARGS = ['--no-sandbox', '--disable-setuid-sandbox'];
-const SPANISH_MONTHS = [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre',
-];
 
 class CatalogCliError extends Error {
   constructor({ code, exitCode, message, cause }) {
@@ -205,19 +191,6 @@ function parseCatalogDateLabel(value) {
     sortKey: year * 100 + month,
     year,
   };
-}
-
-function buildCatalogPeriodLabel(artworks) {
-  const latestPeriod = artworks
-    .map((artwork) => parseCatalogDateLabel(artwork.dateLabel))
-    .filter(Boolean)
-    .sort((left, right) => right.sortKey - left.sortKey)[0];
-
-  if (!latestPeriod) {
-    return '';
-  }
-
-  return `${SPANISH_MONTHS[latestPeriod.month - 1]} ${latestPeriod.year}`;
 }
 
 function buildArtworkRecencyKey(row) {
@@ -480,10 +453,8 @@ export async function generateCatalog(options, dependencies = {}) {
   });
 
   const artworks = buildCatalogArtworks(records, { catalogImageManifest, limit });
-  const catalogPeriodLabel = buildCatalogPeriodLabel(artworks);
   const html = renderCatalogHtml(artworks, {
     artistName,
-    catalogPeriodLabel,
     catalogTitle,
   });
 
