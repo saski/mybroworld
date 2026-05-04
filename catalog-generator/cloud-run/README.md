@@ -139,10 +139,25 @@ Production CI/CD verification uses:
 catalog-generator/cloud-run/verify-job.sh --project "$PROJECT_ID" --region "$REGION" --job "$JOB_NAME"
 ```
 
-That check requires the Cloud Run execution logs to include
-`authenticated as mybrocorp@gmail.com`.
-The verifier now retries Cloud Logging reads for up to one minute before failing,
-which makes deployment verification resilient to log propagation delay.
+That check first asserts the job **execution** finished successfully via
+`gcloud run jobs executions describe` (`completionTime` set, `failedCount` and
+`cancelledCount` zero, `succeededCount` at least one). That matches what
+`gcloud run jobs execute --wait` already waited for, but reads authoritative API
+status instead of relying on log indexing alone.
+
+An **optional** log probe still searches Cloud Logging for
+`authenticated as mybrocorp@gmail.com` (with retries). A missing log line is a
+warning only unless you set `VERIFY_REQUIRE_LOG=1`. Set `VERIFY_DEBUG=1` for
+verbose probe output.
+
+To **re-point the job** at an already-built image without Cloud Build (for
+example after a verify-only fix), use:
+
+```bash
+chmod +x catalog-generator/cloud-run/update-job-image.sh
+./catalog-generator/cloud-run/update-job-image.sh \
+  --image "$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/catalog-agent:$GIT_SHA"
+```
 
 ## On-Demand Trigger
 

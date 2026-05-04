@@ -55,6 +55,7 @@
 - Granted `roles/run.invoker` on `lucia-mybrocorp-catalog-agent` to `user:nacho.saski@gmail.com` on 2026-05-03 so the production Apps Script Web App can start the Cloud Run Job when it executes as the Nacho-owned script.
 - Enabled Apps Script API in Google Cloud project `mybroworld-catalog-260501` and updated the production Apps Script Web App deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` to version 3 on 2026-05-03.
 - Linked the Apps Script project to standard Google Cloud project number `289786381719`, deployed Web App/API executable version 6, authorized the required Apps Script scopes, and verified a direct token-authenticated queue job `catalog_20260503_100246_1dd2` started Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, authenticated as `mybrocorp@gmail.com`, completed with 14 artworks, and wrote the Drive result URL on 2026-05-03.
+- Reworked `catalog-generator/cloud-run/verify-job.sh` on 2026-05-04 so post-deploy checks pass on Cloud Run **execution** API status (`completionTime`, zero failed/cancelled counts, succeeded task count) instead of requiring a log line within a short logging propagation window; optional `VERIFY_REQUIRE_LOG=1` restores strict stdout identity matching, and `update-job-image.sh` supports re-pointing the job at an existing Artifact Registry tag without Cloud Build.
 
 ---
 

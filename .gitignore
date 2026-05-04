@@ -16,3 +16,7 @@ catalog-generator/assets/fonts/*
 !catalog-generator/assets/fonts/Gotham-Bold.otf
 !catalog-generator/assets/fonts/Gotham-Book.otf
 !catalog-generator/assets/fonts/Gotham-Medium.otf
+
+# Cloud Run deploy helpers write these locally (CI may upload as artifacts)
+catalog-generator/cloud-run/previous-image.txt
+catalog-generator/cloud-run/deployment-summary.txt
