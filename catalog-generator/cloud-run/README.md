@@ -141,7 +141,7 @@ catalog-generator/cloud-run/verify-job.sh --project "$PROJECT_ID" --region "$REG
 
 That check requires the Cloud Run execution logs to include
 `authenticated as mybrocorp@gmail.com`.
-The verifier now retries Cloud Logging reads up to a few times before failing,
+The verifier now retries Cloud Logging reads for up to one minute before failing,
 which makes deployment verification resilient to log propagation delay.
 
 ## On-Demand Trigger

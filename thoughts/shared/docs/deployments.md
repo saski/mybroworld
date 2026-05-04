@@ -111,7 +111,7 @@ The workflow:
 5. Updates `lucia-mybrocorp-catalog-agent`.
 6. Executes the job once.
 7. Verifies Cloud Run logs include `authenticated as mybrocorp@gmail.com`.
-   The verification script retries the log read for a short interval before declaring
+   The verification script retries the log read for up to one minute before declaring
 a failure.
 8. Rolls back to the previous image if verification fails.
 

@@ -5,7 +5,7 @@ PROJECT_ID="${PROJECT_ID:-mybroworld-catalog-260501}"
 REGION="${REGION:-europe-west1}"
 JOB_NAME="${JOB_NAME:-lucia-mybrocorp-catalog-agent}"
 EXPECT_ACCOUNT="${EXPECT_ACCOUNT:-mybrocorp@gmail.com}"
-VERIFY_ATTEMPTS="${VERIFY_ATTEMPTS:-6}"
+VERIFY_ATTEMPTS="${VERIFY_ATTEMPTS:-12}"
 VERIFY_SLEEP_SECONDS="${VERIFY_SLEEP_SECONDS:-5}"
 DRY_RUN=0
 
@@ -62,10 +62,11 @@ LOG_FILTER="resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"$JOB_
 attempt=1
 FOUND_LOG=0
 while [ "$attempt" -le "$VERIFY_ATTEMPTS" ]; do
+  echo "Checking logs for execution $EXECUTION_NAME (attempt $attempt/$VERIFY_ATTEMPTS)..." >&2
   LOG_OUTPUT=$(gcloud logging read "$LOG_FILTER" \
     --project "$PROJECT_ID" \
     --format='value(textPayload)' \
-    --limit=100 \
+    --limit=1000 \
     --order=desc 2>/dev/null || true)
 
   if printf '%s\n' "$LOG_OUTPUT" | grep -F "authenticated as $EXPECT_ACCOUNT" >/dev/null 2>&1; then
