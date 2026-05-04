@@ -32,7 +32,7 @@ Define the canonical artwork fields shared by the WooCommerce custom layer and t
 
 These decisions come from client feedback on 2026-05-01 and override earlier open catalog questions.
 
-- PDF catalog editorial inclusion is controlled by `include_in_catalog` (column L in the live sheet), not by `status_normalized` or availability wording. A work can be available and excluded, or unavailable and included, when column L says so.
+- PDF catalog editorial inclusion is controlled by `include_in_catalog`, not by `status_normalized` or availability wording. A work can be available and excluded, or unavailable and included, when `include_in_catalog` says so. On the canonical year tabs in `Lucía Astuy - CATALOGO_BASE` (`2026`–`2023`), the operator layout is **`preview` then `include_in_catalog`** in the first two columns; integrations must use the header name, not a fixed column letter.
 - `catalog_ready` remains a technical QA gate for rows that are incomplete or unsafe to render, but it is not the editorial selection field.
 - The customer will manually choose the catalog image for each artwork by keeping one image whose filename ends in `_cat`. Do not generate, copy, or infer `_cat` images automatically unless the customer later approves that workflow.
 - If catalog image resolution is automated later, use the existing `_cat` file only. Missing or multiple `_cat` matches for one artwork should be reported as blockers instead of guessed.

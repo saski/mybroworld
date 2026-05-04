@@ -113,5 +113,6 @@
 
 ## 📝 Notes
 
+- Canonical workbook `Lucía Astuy - CATALOGO_BASE` (`15wvN5g8pQmnjF13v3lLzrIbuFysJ7GaTUAb_ps9oqJw`): live CSV export validated 2026-05-04 on year tabs `2026` (`gid=102593401`), `2025` (`gid=1903401424`), `2024` (`gid=1498885674`), `2023` (`gid=55693518`). Each tab’s row 1 starts with `preview`, `include_in_catalog`, then `availability_flag_raw` … `location_history`, with `image_main` / `image_id_manual` still at columns 17–18; required catalog headers are present with none missing.
 - Catalog continuation handoff: `thoughts/shared/plans/2026-04-26-catalog-editorial-uplift-handoff.md`.
 - Implementation plan lives at `thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md`.

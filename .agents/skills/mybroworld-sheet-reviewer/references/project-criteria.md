@@ -4,6 +4,10 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 
 ## Current Criteria
 
+### Sheet layout (canonical year tabs, `Lucía Astuy - CATALOGO_BASE`)
+
+- Client editing preference: on each year tab (`2026` `gid=102593401`, `2025` `gid=1903401424`, `2024` `gid=1498885674`, `2023` `gid=55693518`), place `include_in_catalog` in column **B**, immediately after `preview` in **A**. Live CSV export validated this order on 2026-05-04. Integrations remain header-based; do not rely on a fixed column letter for `include_in_catalog`.
+
 ### Deterministic fills
 
 - Extract `image_id_manual` from a stable Drive file URL in `image_main`.

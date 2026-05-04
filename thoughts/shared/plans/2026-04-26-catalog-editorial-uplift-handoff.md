@@ -45,7 +45,7 @@ The original Drive links were not directly readable without authentication in th
 ## Client Feedback Accepted On 2026-05-01
 
 - Catalog image selection: the customer will manually mark one catalog image per artwork by making its filename end in `_cat`. Do not build automatic generation or copy creation for `_cat` images.
-- Catalog inclusion: use `include_in_catalog` (column L in the live sheet) as the editorial inclusion gate. Do not infer inclusion from availability/status alone.
+- Catalog inclusion: use `include_in_catalog` as the editorial inclusion gate (on each year tab it sits in column **B** immediately after `preview`). Do not infer inclusion from availability/status alone.
 - Catalog ordering: newest works first.
 - Artwork page fields: show only artwork title, production year, dimensions, technique, and PVP price.
 - Artwork page layout: place the metadata block immediately after the image, separated by whitespace comparable to the side margin around the image.

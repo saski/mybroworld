@@ -8,8 +8,8 @@ Implement the client feedback received on 2026-05-01 for the PDF catalog while k
 
 - The customer will manually choose the catalog image by naming one existing image per artwork with a filename ending in `_cat`.
 - Do not generate, copy, or infer `_cat` files automatically.
-- PDF catalog inclusion is controlled by `include_in_catalog` in column L of the live sheet.
-- Availability/status is not the catalog inclusion source. A work may be available and excluded, or unavailable and included, when column L says so.
+- PDF catalog inclusion is controlled by `include_in_catalog` (header on each canonical year tab; column **B** immediately after `preview` in **A**, validated live 2026-05-04).
+- Availability/status is not the catalog inclusion source. A work may be available and excluded, or unavailable and included, when `include_in_catalog` says so.
 - Catalog ordering is newest first.
 - Each artwork page shows only:
   - artwork title

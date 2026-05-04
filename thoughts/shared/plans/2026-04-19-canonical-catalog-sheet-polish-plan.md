@@ -340,6 +340,28 @@ Automated success criteria:
   - `submission_history`
 - Verified CSV export header still contains the full canonical header set needed by the catalog generator.
 
+### Sheet1 layout follow-up (2026-05-04)
+
+- Client request: place `include_in_catalog` (previously column **L**) immediately after `preview`, in the second column.
+- Target leading header order after the move:
+  - `preview`
+  - `include_in_catalog`
+  - `availability_flag_raw`
+  - `title_raw`
+  - `date_label`
+  - `dimensions_raw`
+  - `medium_raw`
+  - `price_raw`
+  - `notes_raw`
+  - `status_normalized`
+  - `location_clean`
+  - `location_history`
+  - then `catalog_ready`, `catalog_blocker`, and the remaining canonical columns unchanged to the right.
+- Operator steps in Google Sheets: select the entire **L** column (`include_in_catalog`), cut, select column **B**, insert cut cells (or move column) so thumbnails stay in **A** and inclusion sits in **B**. Re-run CSV `head -n 1` export to confirm the header order.
+- After moving columns, spot-check **Datos > Validación de datos** on `include_in_catalog` and on the columns that shifted (`availability_flag_raw` through `location_history`): ranges applied in Phase 4 referenced fixed column letters and may need widening or re-pointing.
+- Column letters for `image_id_manual` and other fields **after** column 12 are unchanged by this move, so `preview` row formulas that already reference `image_id_manual` by absolute column (for example `$R2` in the current layout) should keep working.
+- **Validated 2026-05-04** (public CSV export): tabs `2026` (`gid=102593401`), `2025` (`gid=1903401424`), `2024` (`gid=1498885674`), `2023` (`gid=55693518`) all share the same leading header sequence through `submission_history`; required catalog headers are present; `image_main` / `image_id_manual` remain at positions 17–18. `catalog-generator` `npm test` (49 tests) passed locally after validation.
+
 ### Phase 3 Notes
 
 - Tested the preview formula on sample rows first before rolling it down the full populated range.
