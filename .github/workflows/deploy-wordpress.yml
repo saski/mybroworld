@@ -96,7 +96,7 @@ jobs:
           backup_id="wordpress-owned-code-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           WP_BACKUP_TIMESTAMP="$backup_id" \
           WP_BACKUP_WP_CONTENT_SUBDIRS="mu-plugins themes/luciastuy" \
-          scripts/wp-backup.sh --skip-db
+          sh scripts/wp-backup.sh --skip-db
           printf 'WP_ROLLBACK_BACKUP_DIR=backups/%s\n' "$backup_id" >> "$GITHUB_ENV"
           cp "backups/$backup_id/backup-manifest.md" wp-rollback-backup-manifest.md
 
