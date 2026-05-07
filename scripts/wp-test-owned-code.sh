@@ -38,7 +38,9 @@ fi
 
 echo "Running WordPress deploy script tests..."
 scripts/wp-deploy-manifest.test.sh
+sh scripts/wp-backup-wp-content.test.sh
 sh scripts/wp-push-theme.test.sh
+sh scripts/wp-restore-owned-code.test.sh
 scripts/wp-remote-db-export.test.sh
 
 echo "Running WordPress local runtime script tests..."

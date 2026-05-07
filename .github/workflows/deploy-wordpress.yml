@@ -8,6 +8,9 @@ on:
       - wordpress/wp-content/themes/luciastuy/**
       - wordpress/wp-content/mu-plugins/**
       - scripts/wp-push-theme.sh
+      - scripts/wp-backup.sh
+      - scripts/wp-backup-wp-content.sh
+      - scripts/wp-restore-owned-code.sh
       - scripts/wp-test-owned-code.sh
       - scripts/wp-deploy-manifest.sh
       - scripts/wp-smoke-test.mjs
@@ -87,6 +90,16 @@ jobs:
       - name: Preview WordPress upload
         run: scripts/wp-push-theme.sh --dry-run
 
+      - name: Archive current production owned code
+        run: |
+          set -eu
+          backup_id="wordpress-owned-code-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          WP_BACKUP_TIMESTAMP="$backup_id" \
+          WP_BACKUP_WP_CONTENT_SUBDIRS="mu-plugins themes/luciastuy" \
+          scripts/wp-backup.sh --skip-db
+          printf 'WP_ROLLBACK_BACKUP_DIR=backups/%s\n' "$backup_id" >> "$GITHUB_ENV"
+          cp "backups/$backup_id/backup-manifest.md" wp-rollback-backup-manifest.md
+
       - name: Deploy WordPress owned code
         run: scripts/wp-push-theme.sh
 
@@ -100,10 +113,16 @@ jobs:
       - name: Assert production Store API inventory
         run: node scripts/woo-storefront-assert.mjs --sheet-csv catalog-generator/data/CATALOGO_BASE.csv --require-managed-products --require-images --forbid-unmanaged-products
 
+      - name: Roll back WordPress owned code
+        if: failure() && env.WP_ROLLBACK_BACKUP_DIR != ''
+        run: scripts/wp-restore-owned-code.sh --backup-dir "$WP_ROLLBACK_BACKUP_DIR" --allow-delete
+
       - name: Upload deployment artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: wordpress-owned-code-deployment
-          path: wp-deploy-manifest.txt
+          path: |
+            wp-deploy-manifest.txt
+            wp-rollback-backup-manifest.md
           if-no-files-found: ignore
