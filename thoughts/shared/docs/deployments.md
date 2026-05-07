@@ -74,7 +74,7 @@ Configured state on 2026-05-02:
 
 - `WP_FTP_USER` and `WP_FTP_PASSWORD` exist as `production-wordpress` environment secrets.
 - `WP_FTP_HOST`, `WP_REMOTE_PATH`, `WP_REMOTE_THEME_DIR`, and `WP_REMOTE_MU_PLUGIN_DIR` exist as `production-wordpress` environment variables.
-- Manual WordPress deployment is still held until the pre-deploy archive and rollback helper are automated.
+- Manual WordPress deployment is still held until one reviewed workflow run validates the pre-deploy archive, rollback helper, and production smoke checks.
 
 ## Workflows
 
@@ -165,16 +165,18 @@ The workflow:
 2. Creates a checksum manifest for owned deployable files.
 3. Writes FTP runtime config from GitHub Environment secrets into a temporary file.
 4. Runs `scripts/wp-push-theme.sh --dry-run`.
-5. Uploads only the owned theme and MU plugin directories.
-6. Smoke-tests the public storefront.
-7. Verifies the WooCommerce Store API exposes the canonical managed catalog with images.
-8. Stores the deploy manifest as a workflow artifact.
+5. Archives the current production `mu-plugins` directory and `themes/luciastuy` directory as the rollback source.
+6. Uploads only the owned theme and MU plugin directories.
+7. Smoke-tests the public storefront.
+8. Verifies the WooCommerce Store API exposes the canonical managed catalog with images.
+9. Restores the archived owned code with `scripts/wp-restore-owned-code.sh --allow-delete` if the deploy or post-deploy checks fail.
+10. Stores the deploy manifest and rollback backup manifest as workflow artifacts.
 
 ## Rollback Notes
 
 Cloud Run rollback is automated in `catalog-generator/cloud-run/deploy.sh`: if verification fails, the script restores the previous Cloud Run Job image.
 
-WordPress rollback is not fully automated yet. The deployment manifest records what was sent, but restoring the previous remote owned-code archive still needs an explicit archive/restore helper before this gate is complete.
+WordPress rollback is automated inside `.github/workflows/deploy-wordpress.yml` for owned-code deploys. The workflow archives the current production `mu-plugins` directory and `themes/luciastuy` directory before upload, then restores that archive with `scripts/wp-restore-owned-code.sh --allow-delete` if deployment or post-deploy verification fails. The remaining gate before enabling push-triggered WordPress deploys is one reviewed manual workflow run with production smoke checks.
 
 ## Source Changes
 

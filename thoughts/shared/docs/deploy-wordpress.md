@@ -82,7 +82,9 @@ Production catalog output folder:
 ## Deployment Commands
 - Audit pull of the current production theme: `scripts/wp-pull-theme.sh`
 - Dry-run preview: `scripts/wp-push-theme.sh --dry-run`
+- Pre-deploy owned-code archive: `WP_BACKUP_WP_CONTENT_SUBDIRS="mu-plugins themes/luciastuy" scripts/wp-backup.sh --skip-db`
 - Owned theme and `mu-plugin` upload: `scripts/wp-push-theme.sh`
+- Owned-code rollback restore: `scripts/wp-restore-owned-code.sh --backup-dir backups/<backup-id> --allow-delete`
 - Owned-code checksum manifest: `scripts/wp-deploy-manifest.sh --output wp-deploy-manifest.txt`
 - DB dump staging: `scripts/wp-pull-db.sh /path/to/export.sql`
 - Upload sync placeholder: `scripts/wp-pull-uploads.sh`
@@ -101,8 +103,10 @@ scripts, and it can also be run manually. The workflow uses the
 
 The Environment should require maintainer approval before deployment. The
 workflow writes credentials only to a temporary runner file, runs the same
-dry-run preview as local operators, uploads only owned code, then smoke-tests the
-public storefront and Store API.
+dry-run preview as local operators, archives the current production owned code,
+uploads only owned code, then smoke-tests the public storefront and Store API.
+If deploy or verification fails after the archive step, the workflow restores the
+archived owned code automatically.
 
 ## Pre-Deploy Checklist
 - confirm the owned theme source exists at `wordpress/wp-content/themes/luciastuy`
@@ -111,6 +115,8 @@ public storefront and Store API.
 - confirm `scripts/wp-remote.env` points at `ftp.dondominio.com` for FTP and `/public`
 - run `scripts/wp-deploy-manifest.sh --output wp-deploy-manifest.txt` and keep the manifest with deployment evidence
 - run `scripts/wp-push-theme.sh --dry-run` and verify the remote target paths
+- run `WP_BACKUP_WP_CONTENT_SUBDIRS="mu-plugins themes/luciastuy" scripts/wp-backup.sh --skip-db` and keep the backup id with deployment evidence
+- run `scripts/wp-restore-owned-code.sh --backup-dir backups/<backup-id> --dry-run` and verify the rollback target paths
 - verify `WP_DEPLOY_TRANSPORT`, `WP_FTP_HOST`, `WP_FTP_USER`, and `WP_REMOTE_PATH` point to production before any upload
 - confirm `lftp` is installed when using FTP deployment
 - keep database changes and uploads changes out of this deployment step

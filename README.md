@@ -72,13 +72,13 @@ flowchart LR
 | PDF runtime | Apps Script, Cloud Run, Secret Manager, Google Drive | Render catalogs in Google Cloud as `mybrocorp@gmail.com` only when an operator requests a PDF | Live and manually deploy-validated; PDFs write to `OBRA/Catalogos` |
 | Monitoring | Cloud Run monitor, Cloud Logging | Detect failed, stale, or incomplete jobs | Live |
 | Catalog-agent delivery | GitHub Actions, Cloud Build, Artifact Registry | Validate, build, deploy, verify, and roll back the catalog worker | Configured and manually validated; auto-deploy disabled |
-| WordPress delivery | GitHub Actions, DonDominio FTP | Deploy owned theme and MU plugin changes | Configured; held until rollback automation is finished |
+| WordPress delivery | GitHub Actions, DonDominio FTP | Deploy owned theme and MU plugin changes | Configured with rollback archive/restore; held until one reviewed manual deployment passes |
 
 ## Current Gates
 
 - Customer handoff gate: one catalog still needs to be queued, completed, opened, and reviewed from the customer's mybro WordPress account.
 - Catalog image gate: strict `_cat` image selection should stay disabled until the shared Drive image folder contains exactly one `_cat` image per included, catalog-ready artwork.
-- WordPress CD gate: do not run or enable unattended WordPress deploys until the pre-deploy archive and rollback restore path are automated.
+- WordPress CD gate: do not enable unattended WordPress deploys until one reviewed manual workflow run validates the pre-deploy archive, rollback restore path, and production smoke checks.
 - Auto-deploy gate: `ENABLE_CATALOG_AGENT_AUTO_DEPLOY` and `ENABLE_WORDPRESS_AUTO_DEPLOY` remain unset until manual validation is complete.
 - Source-sync gate: WooCommerce auto-apply remains disabled until source readiness monitoring and repeated safe dry-runs are proven.
 
