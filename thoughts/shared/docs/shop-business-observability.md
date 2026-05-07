@@ -416,20 +416,20 @@ Attempted for task 5.2 on 2026-05-07.
 
 Current status:
 
-- Blocked pending deployment and authenticated GA4 verification.
-- Current production public HTML includes the Site Kit Google tag, so production can be expected to send baseline `page_view` events.
-- Current production public HTML does not include the owned `lucia-ga4-ecommerce` script or `luciaGa4Ecommerce` configuration.
-- Therefore production cannot yet be used to verify the owned `view_item`, `add_to_cart`, `begin_checkout`, or `purchase` events implemented in task 4.4.
-- The WordPress workflow now includes a pre-deploy owned-code archive and rollback restore helper, but production still needs one reviewed manual deploy before this GA4 controlled verification can run.
+- Blocked only on authenticated GA4 Realtime / DebugView verification.
+- Production owned-code deploy succeeded from GitHub Actions run `25509617424` on 2026-05-07.
+- The deploy used `main` commit `501091f4891ee6377c3c43c91512c2c4b965f6dd`.
+- The pre-deploy rollback archive id was `wordpress-owned-code-25509617424-1`; artifact `wordpress-owned-code-deployment` includes the deploy manifest and rollback backup manifest.
+- Production public HTML checked after deploy includes the Site Kit Google tag, owned Consent Mode default snippet, the compact owned consent banner assets, and `lucia-ga4-ecommerce.js`.
+- Current production is ready for a controlled GA4 verification of `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, and `purchase`.
 
 Requirements to complete task 5.2:
 
-1. Deploy the owned mu-plugin ecommerce instrumentation to an approved target connected to GA4, or otherwise make an equivalent approved target available.
-2. Use an authenticated Google Analytics session for account `304572042`, property `429908294`, web stream `7591928299`, measurement id `G-MVG8PL9Y42`.
-3. Use GA4 Realtime or DebugView for the controlled browser/device.
-4. Accept analytics consent in the controlled browser before exercising the flow.
-5. Exercise the launch-critical flow: `page_view`, product detail `view_item`, `add_to_cart`, non-empty checkout `begin_checkout`, and one approved WooCommerce test `purchase`.
-6. Record event evidence with timestamp and key parameters, including `currency`, `value`, `items[]`, and `transaction_id` for `purchase`.
+1. Use an authenticated Google Analytics session for account `304572042`, property `429908294`, web stream `7591928299`, measurement id `G-MVG8PL9Y42`.
+2. Use GA4 Realtime or DebugView for the controlled browser/device.
+3. Accept analytics consent in the controlled browser before exercising the flow.
+4. Exercise the launch-critical flow: `page_view`, product detail `view_item`, `add_to_cart`, non-empty checkout `begin_checkout`, and one approved WooCommerce test `purchase`.
+5. Record event evidence with timestamp and key parameters, including `currency`, `value`, `items[]`, and `transaction_id` for `purchase`.
 
 Do not mark task 5.2 complete until GA4 Realtime or DebugView confirms every required event.
 

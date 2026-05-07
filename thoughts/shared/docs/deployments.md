@@ -74,7 +74,7 @@ Configured state on 2026-05-02:
 
 - `WP_FTP_USER` and `WP_FTP_PASSWORD` exist as `production-wordpress` environment secrets.
 - `WP_FTP_HOST`, `WP_REMOTE_PATH`, `WP_REMOTE_THEME_DIR`, and `WP_REMOTE_MU_PLUGIN_DIR` exist as `production-wordpress` environment variables.
-- Manual WordPress deployment is still held until one reviewed workflow run validates the pre-deploy archive, rollback helper, and production smoke checks.
+- Manual WordPress deployment was validated on 2026-05-07 by workflow run `25509617424`, including pre-deploy archive, deploy, production smoke checks, Store API assertion, and rollback artifact capture.
 
 ## Workflows
 
@@ -176,7 +176,7 @@ The workflow:
 
 Cloud Run rollback is automated in `catalog-generator/cloud-run/deploy.sh`: if verification fails, the script restores the previous Cloud Run Job image.
 
-WordPress rollback is automated inside `.github/workflows/deploy-wordpress.yml` for owned-code deploys. The workflow archives the current production `mu-plugins` directory and `themes/luciastuy` directory before upload, then restores that archive with `scripts/wp-restore-owned-code.sh --allow-delete` if deployment or post-deploy verification fails. The remaining gate before enabling push-triggered WordPress deploys is one reviewed manual workflow run with production smoke checks.
+WordPress rollback is automated inside `.github/workflows/deploy-wordpress.yml` for owned-code deploys. The workflow archives the current production `mu-plugins` directory and `themes/luciastuy` directory before upload, then restores that archive with `scripts/wp-restore-owned-code.sh --allow-delete` if deployment or post-deploy verification fails. Reviewed manual workflow run `25509617424` validated the archive/deploy/smoke path on 2026-05-07; push-triggered WordPress deploys remain disabled until `ENABLE_WORDPRESS_AUTO_DEPLOY=true` is intentionally set.
 
 ## Source Changes
 

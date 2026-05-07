@@ -85,7 +85,7 @@
 ## 📋 Next Steps
 
 1. Run `fic-validate-plan thoughts/shared/plans/2026-05-01-woocommerce-catalog-photo-gap-plan.md` to close the WooCommerce catalog photo-gap workstream.
-2. Implement the WordPress pre-deploy remote owned-code archive and rollback restore helper, then run one reviewed manual `Deploy WordPress Owned Code` workflow.
+2. Run the GA4 Realtime / DebugView controlled verification for the deployed shop observability events.
 3. Queue one on-demand production catalog from the WordPress UI as the customer's mybro account, verify Apps Script starts Cloud Run immediately, and save a review state (legacy worker and monitor **Cloud Scheduler** jobs are already paused as of 2026-05-04).
 4. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
 5. Complete Phase 6 of `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md`: queue one catalog from the customer's mybro WordPress account, verify Cloud Run completes it from the Apps Script trigger, verify Drive read/write from the customer session, and persist a review state.
@@ -105,7 +105,7 @@
 - The imported historical tabs still need manual blocker review before catalog generation: 2025 has 30 blocker rows, 2024 has 3 blocker rows, and 2023 has 12 blocker rows. The 2023 import has four rows without deterministic image matches: `LA-2023-011`, `LA-2023-021`, `LA-2023-022`, and `LA-2023-034`.
 - The original Google Drive template link was not reliably readable without authentication in this session.
 - Customer-operated catalog generation is not yet fully verified; Cloud Run is live, the production Apps Script Web App is updated for on-demand worker startup, Cloud Run IAM allows the Nacho-owned Apps Script to invoke the worker, and direct Apps Script-triggered Cloud Run PDF jobs completed. Output to `OBRA/Catalogos` is verified. The final proof still requires queueing/reviewing a catalog from the customer's mybro WordPress account. Legacy **Cloud Scheduler** polling is **paused** (worker + monitor); resume the monitor job only if periodic automated health checks are required again.
-- CI/CD is not fully complete until WordPress rollback automation is implemented and one reviewed manual WordPress owned-code deployment passes smoke checks. Push-triggered production deploys remain disabled until `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` are intentionally set.
+- CI/CD now has a reviewed manual WordPress owned-code deployment passing smoke checks with rollback artifact capture in workflow run `25509617424`. Push-triggered production deploys remain disabled until `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` are intentionally set.
 - Remote admin execution is not performed yet in this environment; plugin versions/status are captured from the local imported runtime, but production still needs direct `wp-admin/plugins.php` confirmation before deletion.
 - The actual “remove no longer needed” set will be confirmed only after Phase 2 deactivation + smoke tests.
 
