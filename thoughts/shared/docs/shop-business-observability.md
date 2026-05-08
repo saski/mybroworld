@@ -412,24 +412,37 @@ Validation for task 4.4:
 
 ### GA4 Realtime / DebugView Verification Status
 
-Attempted for task 5.2 on 2026-05-07.
+Attempted for task 5.2 on 2026-05-07 and continued on 2026-05-08.
 
 Current status:
 
-- Blocked only on authenticated GA4 Realtime / DebugView verification.
-- Production owned-code deploy succeeded from GitHub Actions run `25509617424` on 2026-05-07.
-- The deploy used `main` commit `501091f4891ee6377c3c43c91512c2c4b965f6dd`.
-- The pre-deploy rollback archive id was `wordpress-owned-code-25509617424-1`; artifact `wordpress-owned-code-deployment` includes the deploy manifest and rollback backup manifest.
-- Production public HTML checked after deploy includes the Site Kit Google tag, owned Consent Mode default snippet, the compact owned consent banner assets, and `lucia-ga4-ecommerce.js`.
-- Current production is ready for a controlled GA4 verification of `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, and `purchase`.
+- Production has the owned consent banner and GA4 ecommerce instrumentation deployed.
+- Authenticated GA4 access was confirmed for account `304572042`, property `429908294`, stream `7591928299`, measurement id `G-MVG8PL9Y42`.
+- GA4 Realtime for `Lucia Astuy / www.luciastuy.com` showed the anonymous controlled browser as `1` active user after the test flow.
+- GA4 Realtime showed active page title evidence including `Cart - Lucia Astuy` and `Checkout - Lucia Astuy`.
+- Network evidence from the anonymous controlled browser confirmed GA4 requests to `region1.google-analytics.com/g/collect` for:
+  - `page_view` on `G-MVG8PL9Y42`.
+  - `view_item` on `G-MVG8PL9Y42` for item `LA-2026-018`, item name `Muy feliz por lo que acabo de tramar`, currency `EUR`, value `230`.
+- The controlled browser also queued a `begin_checkout` event in `window.dataLayer` for item `LA-2026-006`, currency `EUR`, value `230`, but that event still needs GA4 Realtime or DebugView confirmation as a received event.
+- `add_to_cart` was not confirmed. Production `/shop/` rendered WooCommerce product cards and Ajax add-to-cart buttons, but `window.luciaGa4Ecommerce.products` was empty, so the owned frontend listener could not map the clicked product to GA4 item data.
+- `purchase` was not tested because no approved WooCommerce test order has been run yet.
+
+Gap found during verification:
+
+- The Glacier theme's shop archive renders product cards without populating the standard `woocommerce_after_shop_loop_item` collection path used by the owned GA4 plugin.
+- Local fix added on 2026-05-08: `lucia_ga4_ecommerce_loop_products()` now falls back to WooCommerce products from the main query when the loop hook did not collect products.
+- Regression coverage added in `wordpress/wp-content/mu-plugins/tests/lucia-ga4-ecommerce-test.php`.
+- `sh scripts/wp-test-owned-code.sh` passed after the fix.
+- The fix still needs review, deploy, and repeat GA4 Realtime/DebugView verification before task 5.2 can be accepted.
 
 Requirements to complete task 5.2:
 
-1. Use an authenticated Google Analytics session for account `304572042`, property `429908294`, web stream `7591928299`, measurement id `G-MVG8PL9Y42`.
-2. Use GA4 Realtime or DebugView for the controlled browser/device.
-3. Accept analytics consent in the controlled browser before exercising the flow.
-4. Exercise the launch-critical flow: `page_view`, product detail `view_item`, `add_to_cart`, non-empty checkout `begin_checkout`, and one approved WooCommerce test `purchase`.
-5. Record event evidence with timestamp and key parameters, including `currency`, `value`, `items[]`, and `transaction_id` for `purchase`.
+1. Review and deploy the query-product fallback fix for shop archive product maps.
+2. Repeat an anonymous controlled GA4 Realtime or DebugView flow with analytics consent granted.
+3. Confirm received events for `page_view`, `view_item`, `add_to_cart`, and `begin_checkout`.
+4. Run one explicitly approved WooCommerce test order.
+5. Confirm the received `purchase` event and compare WooCommerce order id, currency, and value against GA4.
+6. Record any remaining delay, missing event, duplicate event, or reporting limitation.
 
 Do not mark task 5.2 complete until GA4 Realtime or DebugView confirms every required event.
 
@@ -514,13 +527,15 @@ Current event emitters:
 
 - Site Kit is the only active GA4 placement path detected in the production DB export.
 - Active production plugins do not include a dedicated WooCommerce GA plugin, Tag Manager plugin, Facebook/Meta pixel plugin, Mailchimp/Klaviyo/Metorik analytics plugin, or another ecommerce tracking add-on.
-- Owned code currently emits only Google Consent Mode commands. It does not emit `gtag('event', ...)`, ecommerce events, purchase events, checkout events, buyer identifiers, or order-note text.
+- Owned code emits Google Consent Mode commands and consent-gated GA4 ecommerce events through `lucia-ga4-ecommerce.php` and `assets/lucia-ga4-ecommerce.js`.
+- Owned code does not emit buyer identifiers, billing/shipping addresses, payment tokens, order keys, customer notes, order notes, or free-text form contents.
 - Local rendered HTML for the home page still shows Site Kit's `google_gtagjs-js` script and `gtag("config", "GT-M6B9CMXM")`.
 
 Payload privacy result:
 
 - No current GA4 event payload from owned code includes buyer name, email, phone, billing address, shipping address, customer note, order note, or other buyer free-text data.
-- No current ecommerce GA4 event payload is accepted yet. The purchase event remains a later 4.x/5.x task and must be implemented or verified with the same non-personal payload rule.
+- Ecommerce event payloads use the documented non-personal `items[]` mapping and purchase uses WooCommerce order id only as `transaction_id`.
+- Full GA4 acceptance is still pending because `add_to_cart`, `begin_checkout`, and `purchase` require repeat Realtime/DebugView verification after the local shop-product-map fix is deployed.
 - WooCommerce order attribution is present in rendered HTML and exposes attribution field names for source/referrer/UTM/session/user-agent data. It does not expose buyer fields and is not itself a GA4 event payload, but it remains part of the consent/privacy surface.
 
 Risk found and mitigated:
@@ -541,9 +556,86 @@ Acceptance for task 3.4:
 - Sensitive WooCommerce order URLs are excluded from automatic Site Kit page-view collection until a later sanitized purchase event is explicitly verified.
 - `scripts/wp-test-owned-code.sh` passed after implementation.
 
+## Final Configuration And Handoff Status
+
+Final configured baseline:
+
+- Business analytics stack: Site Kit plus GA4, with WooCommerce Analytics kept as the operational order record.
+- GA4 account id: `304572042`.
+- GA4 property id: `429908294`.
+- Web data stream id: `7591928299`.
+- Measurement id: `G-MVG8PL9Y42`.
+- Google tag id: `GT-M6B9CMXM`.
+- Site Kit places the public Google tag and excludes logged-in WordPress users.
+- Search Console remains connected for acquisition context.
+- Ads, AdSense, Reader Revenue Manager, Tag Manager, advertiser gateway, Sign in with Google, and plugin conversion tracking remain disabled unless explicitly approved later.
+- Consent is handled by the owned compact banner. The default state denies analytics and advertising storage; accepting analytics grants only `analytics_storage`.
+- Ecommerce instrumentation is owned mu-plugin code and adds no commercial/freemium WordPress dependency.
+
+Validation evidence:
+
+- Site Kit dashboard and public HTML confirmed Site Kit tag placement.
+- GA4 Realtime confirmed the `Lucia Astuy / www.luciastuy.com` property and one anonymous active user during the controlled flow.
+- Network evidence confirmed `page_view` and `view_item` on `G-MVG8PL9Y42`.
+- Local controlled browser state confirmed `begin_checkout` was queued in `dataLayer`.
+- Verification found a missing `add_to_cart` product map on `/shop/`; the local fallback fix is covered by `wordpress/wp-content/mu-plugins/tests/lucia-ga4-ecommerce-test.php`.
+- `sh scripts/wp-test-owned-code.sh` passed after the fallback fix.
+
+Known gaps:
+
+- The local shop product-map fallback fix is not yet deployed and reverified in production GA4.
+- `add_to_cart` still needs GA4 Realtime or DebugView confirmation after deploy.
+- `begin_checkout` still needs GA4 Realtime or DebugView confirmation as a received event, not only as a queued `dataLayer` event.
+- `purchase` still needs one explicitly approved WooCommerce test order and GA4 comparison against WooCommerce order id/value.
+- Site Health still reports performance/security improvements unrelated to this analytics acceptance path.
+
 ## Rollback
 
-- Disable Site Kit Analytics snippet placement or disconnect Analytics in Site Kit.
-- Remove any owned-code GA event instrumentation added later.
-- Remove `lucia-consent-banner.php` and its two assets if the owned banner path is replaced by an approved CMP.
-- Keep WooCommerce order records as the fallback source for sales facts.
+Use the smallest rollback that matches the issue found:
+
+1. Disable owned ecommerce events only:
+   - Remove or disable `wordpress/wp-content/mu-plugins/lucia-ga4-ecommerce.php`.
+   - Remove or stop enqueueing `wordpress/wp-content/mu-plugins/assets/lucia-ga4-ecommerce.js`.
+   - Keep Site Kit active if baseline visit/acquisition analytics should remain.
+
+2. Disable the owned consent banner only:
+   - Remove or disable `wordpress/wp-content/mu-plugins/lucia-consent-banner.php`.
+   - Remove or stop enqueueing `wordpress/wp-content/mu-plugins/assets/lucia-consent-banner.js`.
+   - Remove or stop enqueueing `wordpress/wp-content/mu-plugins/assets/lucia-consent-banner.css`.
+   - Replace it only with an approved CMP that passes the project dependency rule.
+
+3. Disable Site Kit tag placement:
+   - In WordPress admin, open Site Kit settings and disable Analytics snippet placement or disconnect Analytics.
+   - Alternatively use the Site Kit `googlesitekit_analytics-4_tag_blocked` path for sensitive pages if a page-specific issue is found.
+   - Keep WooCommerce Analytics and WooCommerce order records as the sales fallback.
+
+4. Restore deployed owned code:
+   - Use the production deploy workflow rollback backup id recorded for the relevant deploy run.
+   - The successful production owned-code deploy recorded backup id `wordpress-owned-code-25509617424-1`.
+   - After rollback, verify public HTML no longer includes the removed owned script/config and record the reason in this document.
+
+## Customer Operating Guide
+
+Use Google Analytics for visitor behavior before purchase:
+
+- Visits and recurrence: GA4 `Reports > Realtime` for immediate checks, and `Reports > Life cycle > Engagement` for pages and repeated visits over time.
+- Acquisition: Site Kit dashboard and GA4 acquisition reports for Search, direct, referral, and campaign traffic. Search Console in Site Kit is the simplest place to read search impressions, clicks, and queries.
+- Product interest: GA4 ecommerce item events, especially `view_item`, `view_item_list`, and later `select_item` once enough data accumulates.
+- Cart and checkout behavior: GA4 ecommerce funnel events `add_to_cart`, `view_cart`, and `begin_checkout` after the pending production fix is deployed and verified.
+- Purchases and order truth: WooCommerce remains the source of truth for orders, customer fulfillment, tax/shipping, refunds, and operational revenue. GA4 `purchase` is for analytics trend comparison after the approved test order verifies it.
+- Consent checks: Open an anonymous/incognito browser, accept analytics in the compact banner, then use GA4 Realtime to confirm the visit. Rejecting analytics should not create accepted analytics events.
+
+Operator rules:
+
+- Do not enable Ads, AdSense, Reader Revenue Manager, Tag Manager, advertiser gateway, or Site Kit plugin conversion tracking without a separate explicit decision.
+- Do not install paid/freemium analytics or consent plugins unless they pass the local WordPress dependency rule.
+- Do not treat GA4 as the source of fulfillment truth; use WooCommerce orders for customer and money facts.
+- Do not share screenshots containing buyer personal data when validating purchase events.
+
+## Completion Blockers
+
+- Deploy the local `/shop/` product-map fallback fix and repeat GA4 Realtime or DebugView.
+- Confirm `add_to_cart` and `begin_checkout` as received GA4 events.
+- Run one explicitly approved WooCommerce test order.
+- Compare the WooCommerce order id/currency/value against the GA4 `purchase` event.
+- Only then mark OpenSpec tasks 5.2 and 5.3 complete.

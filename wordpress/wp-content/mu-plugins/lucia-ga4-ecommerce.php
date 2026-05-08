@@ -405,9 +405,52 @@ function lucia_ga4_ecommerce_collect_loop_item(): void
 
 function lucia_ga4_ecommerce_loop_products(): array
 {
-    return isset($GLOBALS['lucia_ga4_ecommerce_loop_products']) && is_array($GLOBALS['lucia_ga4_ecommerce_loop_products'])
-        ? $GLOBALS['lucia_ga4_ecommerce_loop_products']
-        : [];
+    if (
+        isset($GLOBALS['lucia_ga4_ecommerce_loop_products'])
+        && is_array($GLOBALS['lucia_ga4_ecommerce_loop_products'])
+        && $GLOBALS['lucia_ga4_ecommerce_loop_products'] !== []
+    ) {
+        return $GLOBALS['lucia_ga4_ecommerce_loop_products'];
+    }
+
+    return lucia_ga4_ecommerce_query_products();
+}
+
+function lucia_ga4_ecommerce_query_products(): array
+{
+    if (! function_exists('wc_get_product')) {
+        return [];
+    }
+
+    if (function_exists('is_product') && is_product()) {
+        return [];
+    }
+
+    $query = $GLOBALS['wp_query'] ?? null;
+    if (! is_object($query) || ! isset($query->posts) || ! is_array($query->posts)) {
+        return [];
+    }
+
+    $products = [];
+    $seenProductIds = [];
+
+    foreach ($query->posts as $post) {
+        $product = wc_get_product($post);
+        if (! is_object($product)) {
+            continue;
+        }
+
+        $productId = lucia_ga4_ecommerce_product_id($product);
+        if ($productId === '' || isset($seenProductIds[$productId])) {
+            continue;
+        }
+
+        $seenProductIds[$productId] = true;
+        lucia_ga4_ecommerce_register_product_item($product);
+        $products[] = $product;
+    }
+
+    return $products;
 }
 
 function lucia_ga4_ecommerce_current_product(): ?object

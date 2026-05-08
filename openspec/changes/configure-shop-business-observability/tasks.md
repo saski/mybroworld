@@ -31,10 +31,10 @@
 - [x] 5.1 Verify Site Kit Analytics settings in WordPress and record whether Site Kit places the GA4 tag.
 - [ ] 5.2 Use GA4 Realtime or DebugView to confirm `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, and `purchase` during a controlled test.
 - [ ] 5.3 Run one approved WooCommerce test order and compare the WooCommerce order id and value with the GA4 purchase event.
-- [ ] 5.4 Record any delay, missing event, duplicate event, or reporting limitation discovered during verification.
+- [x] 5.4 Record any delay, missing event, duplicate event, or reporting limitation discovered during verification.
 
 ## 6. Handoff And Rollback
 
-- [ ] 6.1 Document the final configuration, event contract, consent setup, owner accounts, validation evidence, and known gaps.
-- [ ] 6.2 Document the rollback path for disabling Site Kit tag placement or removing owned-code instrumentation.
-- [ ] 6.3 Give the customer a short operating guide for where to read visits, acquisition, product interest, checkout behavior, and purchases.
+- [x] 6.1 Document the final configuration, event contract, consent setup, owner accounts, validation evidence, and known gaps.
+- [x] 6.2 Document the rollback path for disabling Site Kit tag placement or removing owned-code instrumentation.
+- [x] 6.3 Give the customer a short operating guide for where to read visits, acquisition, product interest, checkout behavior, and purchases.
