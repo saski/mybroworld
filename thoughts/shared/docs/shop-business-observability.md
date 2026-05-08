@@ -451,6 +451,7 @@ Gaps found during verification:
 Checkout blocker found during verification:
 
 - The 2026-05-08 checkout inspection stored evidence under `/private/tmp/lucia-woo-codex_payment_inspect_1778250263250`.
+- The post-deploy 2026-05-08 checkout inspection stored evidence under `/private/tmp/lucia-woo-codex_payment_inspect_1778252700962` and showed the same blocker.
 - The controlled browser added product `16596` to the cart and opened checkout.
 - WooCommerce rendered no `payment_method` inputs and no payment method labels.
 - WooCommerce showed: `Lo siento, parece que no hay métodos de pago disponibles. Por favor, ponte en contacto con nosotros si necesitas ayuda.`
