@@ -126,6 +126,15 @@
     });
   }
 
+  function sendInitialEventsWhenTagIsReady() {
+    if (document.readyState === 'complete') {
+      sendInitialEvents();
+      return;
+    }
+
+    window.addEventListener('load', sendInitialEvents, { once: true });
+  }
+
   function setupSelectItemTracking() {
     document.addEventListener('click', function (event) {
       var link = event.target && event.target.closest ? event.target.closest('a') : null;
@@ -175,13 +184,13 @@
   }
 
   function setupTracking() {
-    sendInitialEvents();
     setupSelectItemTracking();
     setupAddToCartTracking();
     setupRemoveFromCartTracking();
+    sendInitialEventsWhenTagIsReady();
   }
 
-  document.addEventListener('lucia:analytics-consent', sendInitialEvents);
+  document.addEventListener('lucia:analytics-consent', sendInitialEventsWhenTagIsReady);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupTracking);

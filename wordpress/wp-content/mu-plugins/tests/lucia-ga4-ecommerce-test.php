@@ -339,6 +339,7 @@ assertSameValue(false, str_contains($configScript, 'wc_order_'), 'Frontend confi
 
 $frontendAsset = file_get_contents(__DIR__ . '/../assets/lucia-ga4-ecommerce.js') ?: '';
 
+assertSameValue(true, str_contains($frontendAsset, "window.addEventListener('load', sendInitialEvents"), 'Frontend asset should wait for the Google tag before sending initial ecommerce events.');
 assertSameValue(true, str_contains($frontendAsset, 'select_item'), 'Frontend asset should emit select_item from product clicks.');
 assertSameValue(true, str_contains($frontendAsset, 'add_to_cart'), 'Frontend asset should emit add_to_cart from WooCommerce add-to-cart interactions.');
 assertSameValue(true, str_contains($frontendAsset, 'remove_from_cart'), 'Frontend asset should emit remove_from_cart from WooCommerce cart removal interactions.');
