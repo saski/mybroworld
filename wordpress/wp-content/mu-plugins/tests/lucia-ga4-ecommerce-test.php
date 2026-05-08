@@ -140,6 +140,16 @@ final class LuciaGa4EcommerceTestOrder
     }
 }
 
+function wc_get_product(mixed $product): mixed
+{
+    $productId = is_object($product) && isset($product->ID) ? (int) $product->ID : 0;
+    if (is_int($product) || is_string($product)) {
+        $productId = (int) $product;
+    }
+
+    return $GLOBALS['lucia_ga4_ecommerce_test_products'][$productId] ?? null;
+}
+
 require __DIR__ . '/../lucia-ga4-ecommerce.php';
 
 function assertSameValue(mixed $expected, mixed $actual, string $message): void
@@ -216,6 +226,27 @@ assertSameValue(
     ],
     lucia_ga4_ecommerce_view_item_list_event([$availableArtwork], 'shop', 'Shop'),
     'Product lists should emit view_item_list with stable list context and indexed items.',
+);
+
+$GLOBALS['lucia_ga4_ecommerce_test_products'] = [16610 => $availableArtwork];
+$GLOBALS['wp_query'] = (object) [
+    'posts' => [(object) ['ID' => 16610]],
+];
+$GLOBALS['lucia_ga4_ecommerce_product_items'] = [];
+$GLOBALS['lucia_ga4_ecommerce_loop_products'] = [];
+
+assertSameValue(
+    [
+        lucia_ga4_ecommerce_view_item_list_event([$availableArtwork], 'shop', 'Shop'),
+    ],
+    lucia_ga4_ecommerce_initial_events(),
+    'Product archive query products should emit view_item_list even when the theme skips the standard loop hook.',
+);
+
+assertSameValue(
+    ['16610' => $item],
+    lucia_ga4_ecommerce_product_items(),
+    'Product archive query products should populate the frontend product map for add_to_cart events.',
 );
 
 assertSameValue(
