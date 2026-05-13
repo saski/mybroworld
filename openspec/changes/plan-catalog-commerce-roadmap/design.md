@@ -13,14 +13,15 @@ The immediate risk is coordination drift: customer feedback, source-sheet comple
 - Keep the catalog contract and WooCommerce artwork status behavior aligned.
 - Decide whether WooCommerce remains the right starting platform using evidence.
 - If WooCommerce stays, reduce plugin risk with tests and rollback points.
-- Delay ecommerce visual identity implementation until the platform direction is stable.
+- Treat WooCommerce plus the owned `luciastuy` theme as the near-term replacement baseline after the 2026-05-06 shop-stage decision.
+- Require payment readiness, buyer data capture, and artwork fulfillment evidence before the shop is marked buyer-ready.
 
 **Non-Goals:**
 
 - Do not redesign the catalog in this change.
 - Do not migrate ecommerce platforms in this change.
 - Do not remove WordPress plugins in this change.
-- Do not introduce a new production payment or checkout stack in this change.
+- Do not rebuild WooCommerce checkout or introduce a new production payment stack in this change.
 
 ## Decisions
 
@@ -40,11 +41,15 @@ The immediate risk is coordination drift: customer feedback, source-sheet comple
    - Rationale: plugin removal is exactly where unsupported dependencies and hidden production coupling can break publication or commerce flows.
    - Alternative considered: bulk disable candidate plugins. That is faster but makes failures hard to attribute and rollback.
 
-5. Start ecommerce visual identity after the platform decision.
-   - Rationale: visual identity work depends on the frontend surface that will actually be shipped.
-   - Alternative considered: define identity first. That is useful for mood and direction, but it can waste design effort if the implementation platform changes.
+5. Use WooCommerce plus `luciastuy` as the near-term shop replacement surface.
+   - Rationale: the customer-validated catalog generator moves the project into shop delivery, and the repo already has WooCommerce data, local validation scripts, canonical products, and an owned theme baseline.
+   - Alternative considered: pause theme work until a full platform re-evaluation completes. That keeps options open, but delays the concrete replacement of the commercial/builder production layer.
 
-6. Run ecommerce simplification as a Lean build-measure-learn loop.
+6. Make checkout, payment, buyer data, and fulfillment evidence part of the theme replacement gate.
+   - Rationale: a visually acceptable shop is not buyer-ready unless WooCommerce can take payment and expose the buyer/shipping data needed to deliver the artwork.
+   - Alternative considered: complete visual replacement first and validate checkout later. That risks switching themes before the critical buyer path is proven.
+
+7. Run ecommerce simplification as a Lean build-measure-learn loop.
    - Rationale: each WordPress/WooCommerce addition should be removed only when the smallest useful simplification hypothesis has been proposed, tested, measured, and recorded.
    - Alternative considered: create a one-time plugin cleanup project. That can reduce obvious waste, but it does not create a repeatable habit for future WP additions, custom code, theme dependencies, or configuration drift.
 
@@ -77,6 +82,8 @@ Stop the loop when the next candidate requires a customer/platform decision, a t
 - The simplification loop rewards removal without enough value -> Mitigation: require a written Lean hypothesis and expected improvement before each cycle.
 - Lean ecommerce spike underestimates operational needs -> Mitigation: require explicit evidence for product publishing, orders, payments, inventory, taxes/shipping if relevant, and maintenance cost.
 - Tests become too broad and slow -> Mitigation: keep many fast owned-code/unit checks, some integration checks, and only a small set of critical end-to-end commerce flows.
+- Payment readiness is treated as visual-launch follow-up instead of launch gate -> Mitigation: require an approved payment test order or an explicit no-payment launch decision before marking the shop buyer-ready.
+- Buyer data for artwork shipping is incomplete -> Mitigation: verify checkout fields, physical product settings, order emails, and the WooCommerce order record before production replacement is accepted.
 
 ## Migration Plan
 
@@ -85,10 +92,12 @@ This change is planning-only. Implementation should proceed through separate Ope
 1. Catalog feedback and contract update.
 2. Source-sheet completion by year.
 3. Commerce platform decision and optional lean spike.
-4. Lean simplification loop setup.
-5. WooCommerce baseline tests and plugin inventory.
-6. One-addition-at-a-time WooCommerce/WordPress reduction.
-7. Ecommerce visual identity and implementation.
+4. Shop visual baseline and `luciastuy` replacement plan.
+5. Checkout, payment, buyer data, and fulfillment readiness.
+6. Lean simplification loop setup.
+7. WooCommerce baseline tests and plugin inventory.
+8. One-addition-at-a-time WooCommerce/WordPress reduction.
+9. Ecommerce visual identity and implementation.
 
 Rollback for this planning change is deleting or revising the active OpenSpec change before it is archived. Rollback for later implementation changes must be defined in each change's design or tasks.
 
@@ -96,6 +105,6 @@ Rollback for this planning change is deleting or revising the active OpenSpec ch
 
 - Which customer feedback thread will be the canonical source for catalog visual and field decisions?
 - Which years remain missing from the source sheet, and do they share the same required field set?
-- What minimum commerce flow must be considered launch-critical: inquiry only, reservation, direct purchase, checkout, shipping, or local pickup?
+- Which exact payment method and shipping/pickup rules does the customer want for the first buyer-ready launch?
 - Which WooCommerce plugins are currently active in production, and which are already unused?
 - Should the leaner ecommerce alternative be a static catalog plus inquiry flow, a lightweight checkout provider, or a custom storefront backed by WooCommerce?

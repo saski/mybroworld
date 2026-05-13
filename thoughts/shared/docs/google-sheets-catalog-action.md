@@ -160,7 +160,7 @@ Deploy the bound Apps Script as a Web App when WordPress needs to queue and moni
 Deployment settings:
 
 - Execute as the script owner account that can edit the workbook.
-- Use an access mode reachable by the production WordPress server.
+- Use Web App access `Anyone` / manifest `ANYONE_ANONYMOUS` so the production WordPress server can reach the endpoint; the shared token remains the API authorization boundary.
 - Store the deployed Web App URL in WordPress configuration outside tracked files.
 - Keep the shared API token, OAuth client JSON, and OAuth token files outside the repository.
 
@@ -232,6 +232,9 @@ Run the following acceptance checks after both profiles are installed:
 
 - `Unauthorized catalog API request.`
   The WordPress-side token does not match the Apps Script `CATALOG_API_TOKEN` property.
+
+- `Catalog API Web App is not reachable from WordPress.`
+  The Apps Script Web App returned Google access-denied HTML before catalog token validation. Redeploy the Web App with access set to `Anyone`, confirm the deployment URL still matches `LUCIA_CATALOG_API_URL`, then send a no-secret probe with a dummy token. A reachable endpoint should return JSON containing `Unauthorized catalog API request`, not HTTP 403.
 
 - `Cloud Run catalog worker trigger failed with HTTP ...`
   The Apps Script Web App queued the job but could not start the Cloud Run Job. Verify the Apps Script trigger properties, OAuth scopes, and `roles/run.invoker` access for the account that executes the Web App.

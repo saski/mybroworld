@@ -56,9 +56,13 @@ SETUP_OUTPUT=$(WORDPRESS_ENV_FILE="$ENV_FILE" scripts/wp-local-setup.sh --dry-ru
 assert_contains "$SETUP_OUTPUT" "docker compose --env-file" "setup dry-run should use docker compose"
 assert_contains "$SETUP_OUTPUT" "wordpress/docker-compose.yml up -d" "setup dry-run should start the stack"
 assert_contains "$SETUP_OUTPUT" "core install --url=http://localhost:9090" "setup dry-run should install WordPress with configured URL"
+assert_contains "$SETUP_OUTPUT" "option update home http://localhost:9090" "setup dry-run should keep home URL aligned with the configured URL"
+assert_contains "$SETUP_OUTPUT" "option update siteurl http://localhost:9090" "setup dry-run should keep site URL aligned with the configured URL"
 assert_contains "$SETUP_OUTPUT" "plugin install woocommerce --activate" "setup dry-run should install WooCommerce"
 assert_contains "$SETUP_OUTPUT" "theme activate luciastuy" "setup dry-run should activate the owned theme"
 assert_contains "$SETUP_OUTPUT" "WC_Install" "setup dry-run should create WooCommerce pages"
+assert_contains "$SETUP_OUTPUT" "wp-local-ensure-commerce-pages.php" "setup dry-run should repair critical WooCommerce page assignments"
+assert_contains "$SETUP_OUTPUT" "wp-local-ensure-checkout-readiness.php" "setup dry-run should repair local checkout payment and shipping readiness"
 
 VALIDATE_OUTPUT=$(env -u WP_EXPECTED_THEME -u WP_REQUIRE_PRODUCT_SMOKE WORDPRESS_ENV_FILE="$ENV_FILE" scripts/wp-local-validate.sh --dry-run)
 assert_contains "$VALIDATE_OUTPUT" "scripts/wp-test-owned-code.sh" "validate dry-run should run owned-code checks"

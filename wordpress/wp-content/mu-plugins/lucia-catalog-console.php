@@ -271,6 +271,23 @@ function lucia_catalog_console_is_allowed_api_redirect(string $location): bool
     return in_array($host, ['script.google.com', 'script.googleusercontent.com'], true);
 }
 
+function lucia_catalog_console_api_http_error_message(int $responseCode, string $responseBody): string
+{
+    if (in_array($responseCode, [401, 403], true)) {
+        $normalizedBody = strtolower(strip_tags($responseBody));
+        $looksLikeGoogleAccessDenied = str_contains($normalizedBody, 'access denied')
+            || str_contains($normalizedBody, 'you need access')
+            || str_contains($normalizedBody, 'acceso denegado')
+            || str_contains($normalizedBody, 'necesitas acceso');
+
+        if ($looksLikeGoogleAccessDenied) {
+            return 'Catalog API Web App is not reachable from WordPress. Redeploy the Apps Script Web App with access set to Anyone and update LUCIA_CATALOG_API_URL if the deployment URL changed.';
+        }
+    }
+
+    return 'Catalog API request failed with HTTP ' . $responseCode . '.';
+}
+
 function lucia_catalog_console_post_api_request(array $body, array $config): mixed
 {
     $requestArgs = [
@@ -329,7 +346,7 @@ function lucia_catalog_console_call_api(string $action, array $data, ?array $con
     $responseBody = lucia_catalog_console_response_body($response);
 
     if ($responseCode < 200 || $responseCode >= 300) {
-        throw new RuntimeException('Catalog API request failed with HTTP ' . $responseCode . '.');
+        throw new RuntimeException(lucia_catalog_console_api_http_error_message($responseCode, $responseBody));
     }
 
     $payload = json_decode($responseBody, true);

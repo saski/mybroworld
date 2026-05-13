@@ -15,10 +15,11 @@ Run these steps before making assumptions or edits:
 1. Read `AGENTS.md`.
 2. Read this file.
 3. Load any task-specific rule or skill triggered by the request.
-4. Read the most relevant canonical docs and status artifacts for the active workstream.
-5. Read active OpenSpec changes under `openspec/changes/` when the task touches planned or proposed work.
-6. Inspect the current code, tests, and workspace diff before changing anything.
-7. Summarize the applicable rules, assumptions, and sources of truth before acting.
+4. If a referenced repo-local artifact is missing, check `/Users/ignacio.viejo/.agents/` and `/Users/ignacio.viejo/saski/augmentedcode-configuration/` for the canonical equivalent before treating it as unavailable.
+5. Read the most relevant canonical docs and status artifacts for the active workstream.
+6. Read active OpenSpec changes under `openspec/changes/` when the task touches planned or proposed work.
+7. Inspect the current code, tests, and workspace diff before changing anything.
+8. Summarize the applicable rules, assumptions, and sources of truth before acting.
 
 ## Source Priority
 
@@ -43,6 +44,7 @@ Before finishing a task, persist reusable knowledge in the correct place:
 - Stable implementation behavior: encode it in code and tests, then document only what operators need.
 - Proposed roadmap or implementation plan: create or update the relevant OpenSpec change under `openspec/changes/`.
 - Ongoing execution state, milestones, or next steps outside OpenSpec scope: update `PROJECT_STATUS.md` or the relevant file under `thoughts/shared/plans/`.
+- Missing-rule or missing-tool discovery pattern: update `AGENTS.md`, this protocol, or the referenced `.agents/` artifact so future chats can resolve the resource directly.
 
 Do not promote a one-off anecdote into project policy unless the user states it as a recurring rule or the same pattern is evidenced multiple times.
 

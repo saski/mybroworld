@@ -66,12 +66,15 @@ The setup script:
 - installs WordPress when the local database is empty
 - installs and activates WooCommerce
 - creates WooCommerce pages
+- repairs local checkout readiness with `EUR`, `ES`, core BACS, and a zero-cost flat-rate shipping method
 - activates the owned `luciastuy` theme
 - flushes permalinks
 
 Open:
 - WordPress: `http://localhost:8080`
 - phpMyAdmin: `http://localhost:8081`
+
+If another local process already owns port `8080`, edit the ignored `wordpress/.env` file and change `WORDPRESS_PORT`, `PHPMYADMIN_PORT`, and `WORDPRESS_INSTALL_URL` together. The setup script updates the WordPress `home` and `siteurl` options to match `WORDPRESS_INSTALL_URL`.
 
 To preview the commands without changing containers, run:
 
@@ -201,6 +204,8 @@ Current production deployment now defaults new catalog jobs to the scheduled Clo
 
 The Apps Script Web App redirects successful responses through `script.googleusercontent.com`. The MU plugin handles that redirect server-side with an allowlisted Google GET follow-up, because WordPress automatic POST redirect handling can otherwise return a Google HTTP 400 response.
 
+If the console shows `Catalog API Web App is not reachable from WordPress`, the Apps Script Web App returned Google's access-denied page before the catalog token check ran. Redeploy the Web App with access set to `Anyone`, confirm `LUCIA_CATALOG_API_URL` still points at the active `/exec` deployment, then probe it with a dummy token; a reachable deployment should return the JSON error `Unauthorized catalog API request` instead of HTTP 403.
+
 On the current operator Mac, the interim local worker is installed as the user LaunchAgent `com.mybroworld.catalog-agent`. Check it with:
 
 ```bash
@@ -233,6 +238,49 @@ For production or staging, point `WP_BASE_URL` at the target site. The default s
 ```bash
 WP_BASE_URL=https://www.luciastuy.com WP_SMOKE_INCLUDE_FIRST_PRODUCT=1 WP_REQUIRE_PRODUCT_SMOKE=1 WP_SMOKE_PATHS="/,/shop/,/cart/,/checkout/" scripts/wp-plugin-removal-smoke.sh
 ```
+
+## Shop Visual Baseline
+
+Use the visual baseline helper when comparing production `Glacier` against the owned `luciastuy` theme. Screenshots are written under `wordpress/.tmp/visual-baseline/`, which is ignored by git.
+
+Capture production:
+
+```bash
+scripts/woo-visual-baseline.mjs --base-url https://www.luciastuy.com --label glacier-production --include-first-product --require-first-product
+```
+
+Capture the local owned theme:
+
+```bash
+scripts/wp-local-setup.sh
+scripts/woo-visual-baseline.mjs --base-url http://localhost:8080 --label luciastuy-local --include-first-product
+```
+
+The default surfaces are `/`, `/shop/`, and the commerce pages `/cart/` and `/checkout/`, plus one product detail page when `--include-first-product` is set. The default viewports are desktop `1440x1100` and mobile `390x844@2`. The helper decodes images and scroll-warms long pages before full-page screenshots so lazy-loaded artwork is more likely to be captured consistently.
+
+## Shop Interaction Baseline
+
+Use the interaction baseline helper to replay the critical buyer affordances before replacing `Glacier`: header logo, desktop navigation links, mobile menu toggle, shop sorting, product links, add-to-cart controls, shop/product typography rhythm, product image/detail behavior, cart/checkout typography rhythm, cart, and checkout buyer fields.
+
+Production runs should stay non-mutating unless a deliberate cart-session test is approved:
+
+```bash
+scripts/woo-interaction-baseline.mjs --base-url https://www.luciastuy.com --label glacier-production
+```
+
+Local owned-theme runs should exercise cart and checkout mutation:
+
+```bash
+scripts/woo-interaction-baseline.mjs --base-url http://localhost:8090 --label luciastuy-local --allow-cart-mutation
+```
+
+For buyer-ready local checks, require an available payment method:
+
+```bash
+scripts/woo-interaction-baseline.mjs --base-url http://localhost:8090 --label luciastuy-local-payment --allow-cart-mutation --require-payment-method
+```
+
+Reports and interaction screenshots are written under `wordpress/.tmp/interaction-baseline/`, which is ignored by git. The report fails when shop/product headings lose uppercase tracking, cart/checkout headings or primary actions lose uppercase tracking, the product title scale regresses, the product primary image exists in markup but is not visibly rendered, or `--require-payment-method` is set and checkout exposes no available payment method.
 
 ## Inventory Parity Audit
 

@@ -15,3 +15,12 @@ The project SHALL cover launch-critical publication and commerce flows before pl
 - **WHEN** the project starts a plugin removal step
 - **THEN** the smoke suite covers storefront reachability, shop reachability, cart reachability, checkout reachability, and critical error detection
 - **AND** failures block further plugin removal until investigated
+
+### Requirement: Buyer-ready checkout evidence
+The project SHALL verify checkout, payment readiness, buyer data capture, and fulfillment visibility before the shop is marked buyer-ready.
+
+#### Scenario: Buyer-ready shop is reviewed
+- **WHEN** the shop is considered ready for external buyers
+- **THEN** an approved payment test order has been recorded or an explicit no-payment launch decision exists
+- **AND** the WooCommerce order record contains the buyer contact, billing, shipping, purchased artwork, payment status, and order-note information needed for fulfillment
+- **AND** buyer and admin order notifications have been verified

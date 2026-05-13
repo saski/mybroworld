@@ -11,6 +11,7 @@ define('LUCIA_CATALOG_DEFAULT_ACTIVE_SHEET_ID', '102593401');
 
 $GLOBALS['lucia_catalog_console_allowed_capabilities'] = [];
 $GLOBALS['lucia_catalog_console_http_calls'] = [];
+$GLOBALS['lucia_catalog_console_next_get_response'] = null;
 
 function admin_url(string $path = ''): string
 {
@@ -73,6 +74,13 @@ function wp_remote_get(string $url, array $args): array
         'url' => $url,
         'args' => $args,
     ];
+
+    if (is_array($GLOBALS['lucia_catalog_console_next_get_response'])) {
+        $response = $GLOBALS['lucia_catalog_console_next_get_response'];
+        $GLOBALS['lucia_catalog_console_next_get_response'] = null;
+
+        return $response;
+    }
 
     return [
         'body' => json_encode([
@@ -248,3 +256,26 @@ assertSameValue(
     array_column($GLOBALS['lucia_catalog_console_http_calls'], 'method'),
     'Apps Script API calls should post first and follow the redirect with a GET.',
 );
+
+$GLOBALS['lucia_catalog_console_http_calls'] = [];
+$GLOBALS['lucia_catalog_console_next_get_response'] = [
+    'body' => '<!DOCTYPE html><title>Acceso denegado</title><div>Necesitas acceso</div>',
+    'headers' => [],
+    'response' => [
+        'code' => 403,
+    ],
+];
+
+try {
+    lucia_catalog_console_call_api('list_recent_catalog_jobs', [
+        'limit' => 1,
+    ]);
+    fwrite(STDERR, 'Catalog API Google access-denied response should throw.' . PHP_EOL);
+    exit(1);
+} catch (RuntimeException $error) {
+    assertSameValue(
+        'Catalog API Web App is not reachable from WordPress. Redeploy the Apps Script Web App with access set to Anyone and update LUCIA_CATALOG_API_URL if the deployment URL changed.',
+        $error->getMessage(),
+        'Google access-denied HTML should produce an actionable Apps Script deployment error.',
+    );
+}
