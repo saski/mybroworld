@@ -15,3 +15,12 @@ The project SHALL keep any lean ecommerce experiment isolated from production co
 - **WHEN** a leaner ecommerce approach is tested
 - **THEN** the experiment defines the flows it must prove
 - **AND** production WooCommerce remains the fallback until the evidence is accepted
+
+### Requirement: WooCommerce near-term shop baseline
+The project SHALL treat WooCommerce plus the owned `luciastuy` theme as the near-term shop replacement baseline unless a recorded platform decision proves a better alternative.
+
+#### Scenario: Shop replacement starts
+- **WHEN** the project begins replacing the current production theme
+- **THEN** WooCommerce remains the commerce engine for products, cart, checkout, orders, and payment configuration
+- **AND** the work focuses on replacing the commercial/builder presentation layer with owned code
+- **AND** any alternative commerce stack remains out of production until it proves payment, buyer data, shipping, order management, and rollback needs

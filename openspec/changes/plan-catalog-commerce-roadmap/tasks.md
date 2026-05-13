@@ -16,11 +16,11 @@
 
 ## 3. Commerce Platform Decision
 
-- [ ] 3.1 Define the minimum launch-critical commerce flow with the customer: inquiry, reservation, direct purchase, checkout, pickup, shipping, or another model.
-- [ ] 3.2 Document WooCommerce baseline strengths, risks, plugin dependencies, and maintenance costs.
+- [x] 3.1 Capture the minimum launch-critical commerce flow from the 2026-05-06 customer-stage decision: owned shop theme replacement, direct payment readiness, and buyer data capture for artwork shipping.
+- [ ] 3.2 Document WooCommerce baseline strengths, risks, plugin dependencies, payment needs, shipping needs, and maintenance costs.
 - [ ] 3.3 Define one leaner alternative and the evidence it must produce to beat the WooCommerce baseline.
 - [ ] 3.4 If needed, run a bounded lean-commerce spike outside production commerce behavior.
-- [ ] 3.5 Record the platform decision in `thoughts/shared/docs/woocommerce-audit.md` or a successor OpenSpec change before visual identity implementation starts.
+- [ ] 3.5 Record the platform decision in `thoughts/shared/docs/woocommerce-audit.md` or a successor OpenSpec change before production theme replacement starts.
 
 ## 4. WooCommerce Test Coverage And Plugin Safety
 
@@ -44,15 +44,26 @@
 
 ## 6. Ecommerce Visual Identity
 
-- [ ] 6.1 Start ecommerce identity only after the platform decision is accepted.
-- [ ] 6.2 Prepare a customer-facing identity brief covering typography, color, imagery, product presentation, and interaction priorities.
-- [ ] 6.3 Map approved identity decisions to the actual selected ecommerce surfaces.
-- [ ] 6.4 Implement identity changes incrementally with screenshots or browser verification at each step.
-- [ ] 6.5 Keep catalog identity and ecommerce identity aligned where the customer expects continuity.
+- [ ] 6.1 Treat WooCommerce plus the owned `luciastuy` theme as the near-term implementation surface unless the platform decision records different evidence.
+- [x] 6.2 Capture desktop and mobile screenshots for current production `Glacier` and `luciastuy` on `/`, `/shop/`, one product page, `/cart/`, and `/checkout/`.
+- [x] 6.3 Replay and compare production and owned-theme interactions for navigation, shop sorting, product links, add-to-cart controls, product detail behavior, cart state, and checkout buyer fields.
+- [ ] 6.4 Prepare a customer-facing identity brief covering typography, color, imagery, product presentation, cart/checkout readability, and interaction priorities.
+- [ ] 6.5 Map approved identity decisions to the actual selected ecommerce surfaces.
+- [ ] 6.6 Implement identity changes incrementally with screenshots or browser verification at each step.
+- [ ] 6.7 Keep catalog identity and ecommerce identity aligned where the customer expects continuity.
 
-## 7. OpenSpec Governance
+## 7. Checkout, Payment, And Fulfillment Readiness
 
-- [ ] 7.1 Review this OpenSpec change before implementation and revise proposal, specs, design, or tasks while the plan is still active.
-- [ ] 7.2 Split implementation into smaller OpenSpec changes when a phase is ready to begin.
-- [ ] 7.3 Keep each implementation change test-first and archive it only after validation passes.
-- [ ] 7.4 Archive this roadmap change after the planning scope is accepted and the first implementation change is created.
+- [ ] 7.1 Audit WooCommerce currency, tax, payment, shipping, checkout field, email, and order settings.
+- [ ] 7.2 Choose the smallest payment configuration that satisfies customer needs and avoids paid add-ons.
+- [ ] 7.3 Verify checkout captures buyer name, email, phone when needed, billing address, shipping address, and order notes.
+- [ ] 7.4 Verify physical artwork products require shipping data when fulfillment needs it.
+- [ ] 7.5 Run one approved payment test order and record payment status, order id, buyer confirmation, admin notification, shipping fields, and refund/cancel path.
+- [ ] 7.6 Confirm the customer can use the WooCommerce order record to ship the purchased artwork.
+
+## 8. OpenSpec Governance
+
+- [ ] 8.1 Review this OpenSpec change before implementation and revise proposal, specs, design, or tasks while the plan is still active.
+- [ ] 8.2 Split implementation into smaller OpenSpec changes when a phase is ready to begin.
+- [ ] 8.3 Keep each implementation change test-first and archive it only after validation passes.
+- [ ] 8.4 Archive this roadmap change after the planning scope is accepted and the first implementation change is created.

@@ -20,6 +20,9 @@ function luciastuy_theme_setup(): void
         'single_image_width' => 1200,
         'thumbnail_image_width' => 600,
     ]);
+    add_theme_support('wc-product-gallery-zoom');
+    add_theme_support('wc-product-gallery-lightbox');
+    add_theme_support('wc-product-gallery-slider');
     add_theme_support('html5', [
         'search-form',
         'comment-form',
@@ -49,6 +52,17 @@ function luciastuy_enqueue_assets(): void
         [],
         $stylesheet_version
     );
+
+    $navigation_script_path = get_stylesheet_directory() . '/assets/header-navigation.js';
+    if (file_exists($navigation_script_path)) {
+        wp_enqueue_script(
+            'luciastuy-header-navigation',
+            get_stylesheet_directory_uri() . '/assets/header-navigation.js',
+            [],
+            (string) filemtime($navigation_script_path),
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'luciastuy_enqueue_assets');
 
@@ -67,6 +81,73 @@ function luciastuy_related_products_args(array $args): array
 }
 add_filter('woocommerce_output_related_products_args', 'luciastuy_related_products_args');
 
+function luciastuy_cart_item_count(): int
+{
+    if (! function_exists('WC') || ! WC() || ! WC()->cart) {
+        return 0;
+    }
+
+    return (int) WC()->cart->get_cart_contents_count();
+}
+
+function luciastuy_render_cart_link(): void
+{
+    if (! function_exists('wc_get_cart_url')) {
+        return;
+    }
+
+    $count = luciastuy_cart_item_count();
+    $label = sprintf(
+        _n('Cart, %d item', 'Cart, %d items', $count, 'luciastuy'),
+        $count
+    );
+    ?>
+    <a class="site-cart-link" href="<?php echo esc_url(wc_get_cart_url()); ?>" aria-label="<?php echo esc_attr($label); ?>">
+        <span class="site-cart-icon" aria-hidden="true"></span>
+        <span class="site-cart-count" aria-hidden="true"><?php echo esc_html((string) $count); ?></span>
+    </a>
+    <?php
+}
+
+function luciastuy_cart_fragments(array $fragments): array
+{
+    ob_start();
+    luciastuy_render_cart_link();
+    $fragments['a.site-cart-link'] = ob_get_clean();
+
+    return $fragments;
+}
+add_filter('woocommerce_add_to_cart_fragments', 'luciastuy_cart_fragments');
+
+function luciastuy_logo_asset_url(): string
+{
+    $relative_path = '/assets/logo-lucia-astuy.png';
+    $absolute_path = get_stylesheet_directory() . $relative_path;
+
+    if (! file_exists($absolute_path)) {
+        return '';
+    }
+
+    return get_stylesheet_directory_uri() . $relative_path;
+}
+
+function luciastuy_render_site_branding(): void
+{
+    $logo_url = luciastuy_logo_asset_url();
+
+    if ($logo_url !== '') {
+        ?>
+        <a class="site-logo" href="<?php echo esc_url(home_url('/')); ?>" aria-label="<?php echo esc_attr(get_bloginfo('name')); ?>">
+            <img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr(get_bloginfo('name')); ?>" width="118" height="90">
+        </a>
+        <?php
+        return;
+    }
+    ?>
+    <p class="site-title"><a href="<?php echo esc_url(home_url('/')); ?>"><?php bloginfo('name'); ?></a></p>
+    <?php
+}
+
 function luciastuy_render_header(): void
 {
     $description = get_bloginfo('description');
@@ -82,23 +163,33 @@ function luciastuy_render_header(): void
     <?php wp_body_open(); ?>
     <header class="site-header">
         <div class="site-branding">
-            <p class="site-title"><a href="<?php echo esc_url(home_url('/')); ?>"><?php bloginfo('name'); ?></a></p>
+            <?php luciastuy_render_site_branding(); ?>
             <?php if ($description !== '') : ?>
                 <p class="site-tagline"><?php echo esc_html($description); ?></p>
             <?php endif; ?>
         </div>
-        <?php
-        if (has_nav_menu('primary')) {
-            wp_nav_menu([
-                'container' => 'nav',
-                'container_class' => 'primary-navigation',
-                'depth' => 1,
-                'menu_class' => 'primary-menu',
-                'menu_id' => 'primary-menu',
-                'theme_location' => 'primary',
-            ]);
-        }
-        ?>
+        <div class="site-actions">
+            <?php
+            if (has_nav_menu('primary')) {
+                ?>
+                <button class="site-menu-toggle" type="button" aria-controls="site-primary-navigation" aria-expanded="false">
+                    <span class="site-menu-toggle-label"><?php esc_html_e('Menu', 'luciastuy'); ?></span>
+                    <span class="site-menu-toggle-icon" aria-hidden="true"></span>
+                </button>
+                <?php
+                wp_nav_menu([
+                    'container' => 'nav',
+                    'container_class' => 'primary-navigation',
+                    'container_id' => 'site-primary-navigation',
+                    'depth' => 1,
+                    'menu_class' => 'primary-menu',
+                    'menu_id' => 'primary-menu',
+                    'theme_location' => 'primary',
+                ]);
+            }
+            luciastuy_render_cart_link();
+            ?>
+        </div>
     </header>
     <?php
 }

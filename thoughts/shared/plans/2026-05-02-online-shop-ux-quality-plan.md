@@ -8,6 +8,8 @@ The preferred path is an owned `luciastuy` WooCommerce theme plus small owned `m
 
 OpenAI Images is not a UX dependency. It can only be considered later as an offline secondary-media experiment after the real product imagery and owned theme UX are stable.
 
+As of 2026-05-06, the catalog generator is working and customer-validated. The shop is now the primary workstream, and the replacement theme must also support launch-operational checkout: payments, buyer billing/shipping data capture, order notifications, and artwork fulfillment review. The detailed execution plan lives at `thoughts/shared/plans/2026-05-06-shop-theme-replacement-and-checkout-plan.md`.
+
 ## Implementation Progress
 
 - [x] Phase 1 automated UX assertion CLI and owned-code integration.
@@ -20,8 +22,10 @@ OpenAI Images is not a UX dependency. It can only be considered later as an offl
 - [x] Phase 3 first product detail without sidebar or widget coupling.
 - [x] Phase 4 real image quality with owned media rules.
 - [x] Phase 5 local theme switch and plugin deactivation readiness.
-- [ ] Phase 6 optional offline OpenAI Images secondary-media spike.
-- [ ] Phase 7 production rollout and staged plugin uncoupling.
+- [ ] Phase 6 visual parity review against current production `Glacier`.
+- [ ] Phase 7 checkout, payment, buyer data, and fulfillment readiness.
+- [ ] Phase 8 optional offline OpenAI Images secondary-media spike.
+- [ ] Phase 9 production rollout and staged plugin uncoupling.
 
 ## Sources And Constraints
 
@@ -135,6 +139,10 @@ This means the implementation should not become a generic WooCommerce store, a m
 - Product cards use a stable image frame, consistent spacing, readable titles, clear prices, and aligned actions across shop grids and related-product sections.
 - Product images remain truthful to the real artwork while being visually normalized through framing, aspect ratio, scale, and background rules.
 - Product detail pages have a clear hierarchy: artwork image, title, price/status, purchase action, product information, and related products.
+- Cart and checkout pages remain visually consistent with the owned theme and are readable on desktop and mobile.
+- Checkout collects the buyer contact, billing, shipping, and order-note fields needed to fulfill physical artwork delivery.
+- Payment configuration is proven through an approved test order before the shop is marked buyer-ready.
+- WooCommerce order records expose the information the customer needs to ship each purchased artwork.
 - Secondary/sidebar product lists are either removed from product pages or rendered by owned theme code so they do not compete with the main buying flow.
 - Optional plugins such as SEO, analytics, migration, and contact-form tooling are not allowed to shape the product-card, product-detail, cart, checkout, or related-products UX.
 - Any AI-generated imagery is optional, secondary, governed, and never used as the primary representation of the artwork for sale.
@@ -157,7 +165,7 @@ This means the implementation should not become a generic WooCommerce store, a m
 ## Out Of Scope
 
 - Replacing WooCommerce.
-- Rebuilding checkout or payments.
+- Rebuilding WooCommerce checkout or replacing WooCommerce order management.
 - Adding commercial, freemium, or broad third-party WordPress plugins.
 - Introducing a page builder, product-gallery plugin, related-products plugin, image-optimization plugin, or AI image plugin.
 - Changing canonical artwork data in Google Sheets.
@@ -165,6 +173,20 @@ This means the implementation should not become a generic WooCommerce store, a m
 - Replacing primary product photos with AI-generated images.
 - Bulk-deactivating production plugins.
 - Running production writes during the local implementation phases.
+- Running a real production payment test without explicit approval for the test order.
+
+## Launch Operations Scope
+
+The next stage includes operational readiness for the existing WooCommerce checkout path. That means configuring and validating checkout, payments, buyer data capture, emails, and fulfillment workflow without rebuilding the checkout stack or adding paid visual/runtime dependencies.
+
+Launch-critical checks:
+
+- checkout reaches a payment-capable state for available artworks
+- required buyer fields are present and understandable
+- shipping address and delivery notes are captured when fulfillment needs them
+- physical artwork products are not accidentally marked as virtual
+- buyer and admin emails fire as expected
+- the customer can find payment status, buyer contact details, shipping address, purchased artwork, and notes in the order record
 
 ## Design Options
 

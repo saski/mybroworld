@@ -79,6 +79,13 @@ wp_cli() {
   run "${COMPOSE[@]}" run --rm wpcli "$@"
 }
 
+wp_cli_eval_file() {
+  local local_file="$1"
+  local container_file="/tmp/$(basename "$local_file")"
+
+  run "${COMPOSE[@]}" run --rm -v "$REPO_ROOT/$local_file:$container_file:ro" wpcli eval-file "$container_file"
+}
+
 run "${COMPOSE[@]}" up -d
 
 if [ "$DRY_RUN" -eq 1 ]; then
@@ -90,8 +97,12 @@ if [ "$DRY_RUN" -eq 1 ]; then
     --admin_password="$WP_ADMIN_PASSWORD" \
     --admin_email="$WP_ADMIN_EMAIL" \
     --skip-email
+  wp_cli option update home "$WP_URL"
+  wp_cli option update siteurl "$WP_URL"
   wp_cli plugin install woocommerce --activate
   wp_cli eval 'if (class_exists("WC_Install")) { WC_Install::create_pages(); }'
+  wp_cli_eval_file scripts/wp-local-ensure-commerce-pages.php
+  wp_cli_eval_file scripts/wp-local-ensure-checkout-readiness.php
   wp_cli theme activate luciastuy
   wp_cli rewrite structure '/%postname%/'
   wp_cli rewrite flush
@@ -115,6 +126,9 @@ if ! "${COMPOSE[@]}" run --rm wpcli core is-installed >/dev/null 2>&1; then
     --skip-email
 fi
 
+wp_cli option update home "$WP_URL"
+wp_cli option update siteurl "$WP_URL"
+
 if ! "${COMPOSE[@]}" run --rm wpcli plugin is-installed woocommerce >/dev/null 2>&1; then
   wp_cli plugin install woocommerce --activate
 else
@@ -122,6 +136,8 @@ else
 fi
 
 wp_cli eval 'if (class_exists("WC_Install")) { WC_Install::create_pages(); }'
+wp_cli_eval_file scripts/wp-local-ensure-commerce-pages.php
+wp_cli_eval_file scripts/wp-local-ensure-checkout-readiness.php
 wp_cli theme activate luciastuy
 wp_cli rewrite structure '/%postname%/'
 wp_cli rewrite flush
