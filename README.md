@@ -6,61 +6,121 @@ The production goal is that the customer can run the shop and generate catalogs 
 
 ## System Map
 
-These diagrams keep the system at operating level. Detailed runbooks live in the linked docs below.
-
-### Production Flow
+This diagram keeps the system at operating level: logical layers, production runtime, infrastructure boundaries, observability, and delivery stages. Detailed runbooks live in the linked docs below.
 
 ```mermaid
-flowchart LR
-  customer["Customer<br/>mybro WordPress account"]
-  wordpress["WordPress + WooCommerce<br/>shop and catalog console"]
-  appsScript["Apps Script API<br/>queue, status, review"]
-  sheet["Google Sheets<br/>artworks and catalog_jobs"]
-  worker["Cloud Run catalog worker<br/>lucia-mybrocorp"]
-  secrets["Secret Manager<br/>mybrocorp OAuth and config"]
-  assets["Google Drive<br/>_cat images and brand assets"]
-  output["Google Drive<br/>OBRA/Catalogos PDFs"]
-  monitor["Cloud Run monitor<br/>every 10 min"]
-  logs["Cloud Logging<br/>alerts and runtime logs"]
+flowchart TB
+  subgraph governance["Stage 0 - Planning and governance"]
+    repo["GitHub repo<br/>saski/mybroworld"]
+    openspec["OpenSpec changes<br/>catalog roadmap and shop observability"]
+    plans["Project docs and plans<br/>runbooks, readiness gates, evidence"]
+    ci["GitHub Actions CI<br/>secret scan, tests, diff check"]
+  end
 
-  customer -->|"uses"| wordpress
-  wordpress -->|"queue, status, review"| appsScript
-  appsScript -->|"read/write jobs"| sheet
-  appsScript -->|"starts on Generate PDF"| worker
-  sheet -->|"queued jobs + artwork data"| worker
-  secrets -->|"runtime identity"| worker
-  assets -->|"catalog inputs"| worker
-  worker -->|"PDF upload"| output
-  worker -->|"status + result URL"| sheet
-  output -->|"PDF link"| wordpress
-  monitor -->|"checks jobs"| sheet
-  worker -->|"logs"| logs
-  monitor -->|"alerts"| logs
-```
+  subgraph users["Stage 1 - Operators and customer surfaces"]
+    customer["Customer<br/>mybro WordPress account"]
+    operator["Maintainer / operator<br/>GitHub, WordPress, Google Cloud"]
+    publicShop["Public shop<br/>WordPress + WooCommerce"]
+    wpAdmin["WordPress admin<br/>shop operations"]
+    catalogConsole["Catalog PDFs console<br/>owned MU plugin"]
+  end
 
-### Delivery Flow
+  subgraph wordpressLayer["Stage 2 - Owned WordPress layer"]
+    host["DonDominio WordPress host<br/>production PHP runtime"]
+    theme["Owned theme<br/>wp-content/themes/luciastuy"]
+    muPlugins["Owned MU plugins<br/>catalog console, GA4 ecommerce, artwork rules"]
+    woo["WooCommerce core<br/>products, cart, checkout, Store API"]
+    localWp["Local WordPress runtime<br/>Docker Compose, setup, smoke checks"]
+  end
 
-```mermaid
-flowchart LR
-  repo["GitHub repo<br/>saski/mybroworld"]
-  ci["GitHub Actions CI<br/>tests and secret scan"]
-  catalogEnv["Reviewed environment<br/>production-catalog-agent"]
-  cloudBuild["Cloud Build<br/>container image"]
-  registry["Artifact Registry<br/>SHA-tagged image"]
-  cloudRun["Cloud Run Job<br/>catalog worker"]
-  wpEnv["Reviewed environment<br/>production-wordpress"]
-  ftp["DonDominio FTP<br/>owned WordPress code"]
-  wordpress["WordPress host<br/>theme and MU plugins"]
+  subgraph sourceData["Stage 3 - Source data and Google Workspace"]
+    sheets["Google Sheets<br/>artworks, catalog_jobs, review state"]
+    appsScript["Apps Script Web App<br/>queue, status, review, Cloud Run trigger"]
+    driveAssets["Google Drive input assets<br/>_cat images, logos, brand files"]
+    driveOutput["Google Drive output<br/>OBRA/Catalogos PDFs"]
+  end
 
-  repo -->|"pull request / main"| ci
-  ci -->|"manual deploy or enabled auto-deploy"| catalogEnv
-  catalogEnv -->|"build"| cloudBuild
-  cloudBuild -->|"push"| registry
-  registry -->|"deploy pinned image"| cloudRun
-  catalogEnv -->|"post-deploy verification"| cloudRun
-  ci -->|"manual deploy after rollback gate"| wpEnv
-  wpEnv -->|"upload owned code only"| ftp
-  ftp -->|"update"| wordpress
+  subgraph catalogRuntime["Stage 4 - Catalog generation runtime"]
+    cloudRunJob["Cloud Run Job<br/>lucia-mybrocorp-catalog-agent"]
+    runtimeSecrets["Secret Manager<br/>agent config, OAuth client, OAuth token"]
+    catalogAgent["Node catalog agent<br/>one queued job per run"]
+    generator["PDF generator<br/>CSV contract, HTML/CSS, Puppeteer"]
+    monitor["Cloud Run monitor<br/>failed, stale, incomplete jobs"]
+  end
+
+  subgraph observability["Stage 5 - Business and runtime observability"]
+    siteKit["Site Kit + GA4<br/>page and ecommerce events"]
+    ga4["GA4 reports<br/>traffic, product interest, funnel, purchase"]
+    cloudLogging["Cloud Logging<br/>Cloud Run execution logs"]
+    ghArtifacts["GitHub workflow artifacts<br/>deploy manifests and rollback evidence"]
+  end
+
+  subgraph delivery["Stage 6 - Delivery and rollback infrastructure"]
+    catalogDeploy["Deploy catalog agent workflow<br/>production-catalog-agent"]
+    cloudBuild["Cloud Build<br/>container image build"]
+    artifactRegistry["Artifact Registry<br/>SHA-tagged catalog-agent images"]
+    wpDeploy["Deploy WordPress workflow<br/>production-wordpress"]
+    ftp["DonDominio FTP<br/>owned theme and MU plugin upload"]
+    wpBackup["WordPress rollback archive<br/>owned code backup and restore"]
+  end
+
+  repo --> openspec
+  repo --> plans
+  repo --> ci
+  ci --> catalogDeploy
+  ci --> wpDeploy
+
+  customer --> publicShop
+  customer --> wpAdmin
+  operator --> repo
+  operator --> wpAdmin
+  wpAdmin --> catalogConsole
+
+  publicShop --> host
+  wpAdmin --> host
+  host --> theme
+  host --> muPlugins
+  host --> woo
+  theme --> publicShop
+  muPlugins --> catalogConsole
+  muPlugins --> siteKit
+  woo --> publicShop
+  woo --> siteKit
+  localWp --> theme
+  localWp --> muPlugins
+  localWp --> woo
+
+  catalogConsole -->|"server-side AJAX with token"| appsScript
+  appsScript -->|"read/write queue and review state"| sheets
+  appsScript -->|"run job on demand"| cloudRunJob
+  sheets -->|"source rows and queued jobs"| catalogAgent
+  driveAssets -->|"catalog images and brand assets"| generator
+  runtimeSecrets -->|"runtime identity and config"| catalogAgent
+  cloudRunJob --> catalogAgent
+  catalogAgent --> generator
+  generator -->|"PDF upload"| driveOutput
+  catalogAgent -->|"status, result URL, errors"| sheets
+  driveOutput -->|"PDF link"| catalogConsole
+
+  monitor -->|"health sweep"| sheets
+  catalogAgent --> cloudLogging
+  monitor --> cloudLogging
+  siteKit --> ga4
+  publicShop --> siteKit
+
+  catalogDeploy --> cloudBuild
+  cloudBuild --> artifactRegistry
+  artifactRegistry -->|"deploy pinned image"| cloudRunJob
+  catalogDeploy -->|"execute and verify job"| cloudRunJob
+  catalogDeploy -->|"rollback to previous image on failure"| artifactRegistry
+  catalogDeploy --> ghArtifacts
+
+  wpDeploy -->|"pre-deploy archive"| wpBackup
+  wpDeploy -->|"dry-run, upload, smoke, Store API assert"| ftp
+  ftp --> host
+  wpDeploy -->|"restore owned code on failure"| wpBackup
+  wpBackup --> host
+  wpDeploy --> ghArtifacts
 ```
 
 ## Stage Summary
