@@ -2,6 +2,7 @@
 
 - [x] 0.1 Sync the roadmap tracker with the 2026-05-08 local `luciastuy` visual, interaction, and checkout-readiness evidence.
 - [x] 0.2 Separate locally proven checkout behavior from the remaining production/staging payment and fulfillment launch gates.
+- [x] 0.3 Publish `luciastuy` on production and record the immediate next-stage blocker from interaction evidence: `missing_checkout_payment_method` during production checkout-readiness validation (`2026-05-15-production-next-stage-checkout-readiness`).
 
 ## 1. Catalog Contract And Customer Feedback
 
