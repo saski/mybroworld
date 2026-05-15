@@ -39,6 +39,66 @@ function luciastuy_theme_setup(): void
 }
 add_action('after_setup_theme', 'luciastuy_theme_setup');
 
+function luciastuy_normalize_path(string $value): string
+{
+    $path = wp_parse_url($value, PHP_URL_PATH);
+    if (! is_string($path) || $path === '') {
+        return '/';
+    }
+
+    $normalized = '/' . ltrim($path, '/');
+    $normalized = untrailingslashit($normalized);
+
+    return $normalized === '' ? '/' : $normalized;
+}
+
+function luciastuy_is_current_menu_item(object $menu_item): bool
+{
+    $request_uri = isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI'])
+        ? $_SERVER['REQUEST_URI']
+        : '/';
+    $current_path = luciastuy_normalize_path($request_uri);
+    $item_path = luciastuy_normalize_path((string) $menu_item->url);
+
+    if ($item_path === $current_path) {
+        return true;
+    }
+
+    if (is_front_page() && ($item_path === '/' || strcasecmp((string) $menu_item->title, 'INTRO') === 0)) {
+        return true;
+    }
+
+    return false;
+}
+
+function luciastuy_nav_menu_css_class(array $classes, object $menu_item, stdClass $args): array
+{
+    if (($args->theme_location ?? '') !== 'primary') {
+        return $classes;
+    }
+
+    if (luciastuy_is_current_menu_item($menu_item)) {
+        $classes[] = 'is-current-owned';
+    }
+
+    return array_values(array_unique($classes));
+}
+add_filter('nav_menu_css_class', 'luciastuy_nav_menu_css_class', 10, 3);
+
+function luciastuy_nav_menu_link_attributes(array $attributes, object $menu_item, stdClass $args): array
+{
+    if (($args->theme_location ?? '') !== 'primary') {
+        return $attributes;
+    }
+
+    if (luciastuy_is_current_menu_item($menu_item)) {
+        $attributes['aria-current'] = 'page';
+    }
+
+    return $attributes;
+}
+add_filter('nav_menu_link_attributes', 'luciastuy_nav_menu_link_attributes', 10, 3);
+
 function luciastuy_enqueue_assets(): void
 {
     $stylesheet_path = get_stylesheet_directory() . '/style.css';
@@ -121,14 +181,20 @@ add_filter('woocommerce_add_to_cart_fragments', 'luciastuy_cart_fragments');
 
 function luciastuy_logo_asset_url(): string
 {
-    $relative_path = '/assets/logo-lucia-astuy.png';
+    $relative_path = '/assets/logo_oldschool_transp.png';
     $absolute_path = get_stylesheet_directory() . $relative_path;
+    $production_logo_url = 'https://www.luciastuy.com/wp-content/uploads/2023/09/logo_oldschool_transp.png';
 
-    if (! file_exists($absolute_path)) {
-        return '';
+    if (file_exists($absolute_path)) {
+        return get_stylesheet_directory_uri() . $relative_path;
     }
 
-    return get_stylesheet_directory_uri() . $relative_path;
+    return $production_logo_url;
+}
+
+function luciastuy_home_hero_video_url(): string
+{
+    return 'https://www.youtube.com/embed/E4_s9_Ky91E?autoplay=1&mute=1&loop=1&playlist=E4_s9_Ky91E&controls=1&modestbranding=1&rel=0&playsinline=1';
 }
 
 function luciastuy_render_site_branding(): void
@@ -138,7 +204,7 @@ function luciastuy_render_site_branding(): void
     if ($logo_url !== '') {
         ?>
         <a class="site-logo" href="<?php echo esc_url(home_url('/')); ?>" aria-label="<?php echo esc_attr(get_bloginfo('name')); ?>">
-            <img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr(get_bloginfo('name')); ?>" width="118" height="90">
+            <img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr(get_bloginfo('name')); ?>" width="165" height="100">
         </a>
         <?php
         return;
@@ -151,6 +217,7 @@ function luciastuy_render_site_branding(): void
 function luciastuy_render_header(): void
 {
     $description = get_bloginfo('description');
+    $show_home_hero = is_front_page();
     ?>
     <!doctype html>
     <html <?php language_attributes(); ?>>
@@ -191,6 +258,20 @@ function luciastuy_render_header(): void
             ?>
         </div>
     </header>
+    <?php if ($show_home_hero) : ?>
+        <section class="home-hero" aria-label="<?php esc_attr_e('Intro video', 'luciastuy'); ?>">
+            <div class="home-hero__media" data-home-hero data-jarallax-video="https://www.youtube.com/watch?v=E4_s9_Ky91E">
+                <iframe
+                    src="<?php echo esc_url(luciastuy_home_hero_video_url()); ?>"
+                    title="<?php esc_attr_e('Lucia Astuy intro video', 'luciastuy'); ?>"
+                    loading="eager"
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            </div>
+            <div class="home-hero__overlay" aria-hidden="true"></div>
+        </section>
+    <?php endif; ?>
     <?php
 }
 
@@ -198,7 +279,10 @@ function luciastuy_render_footer(): void
 {
     ?>
     <footer class="site-footer">
-        <p><?php echo esc_html(get_bloginfo('name')); ?></p>
+        <ul class="site-footer-social-icons">
+            <li><a href="https://www.instagram.com/luciastuy/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+        </ul>
+        <p class="site-footer-copyright"><span>Lucia Astuy</span> <span class="site-footer-heart" aria-hidden="true">❤</span> <span>2024</span></p>
     </footer>
     <?php wp_footer(); ?>
     </body>

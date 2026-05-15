@@ -40,7 +40,7 @@ function parseArgs(argv) {
 
 function printUsage(logger) {
   logger.error(
-    'Usage: scripts/woo-interaction-baseline.mjs --base-url URL --label LABEL [--allow-cart-mutation] [--require-payment-method] [--out-dir PATH]',
+    'Usage: scripts/woo-interaction-baseline.mjs --base-url URL --label LABEL [--allow-cart-mutation] [--require-payment-method] [--require-home-identity] [--ignore-https-errors] [--out-dir PATH]',
   );
 }
 
@@ -84,7 +84,10 @@ export function requiredCheckoutFieldIds() {
   return [...DEFAULT_REQUIRED_CHECKOUT_FIELDS];
 }
 
-export function evaluateInteractionReport(report, { expectCartMutation = false, requirePaymentMethod = false } = {}) {
+export function evaluateInteractionReport(
+  report,
+  { expectCartMutation = false, requireHomeIdentity = false, requirePaymentMethod = false } = {},
+) {
   const failures = [];
   const presentFieldIds = new Set(report.checkout?.presentFieldIds || []);
 
@@ -225,6 +228,20 @@ export function evaluateInteractionReport(report, { expectCartMutation = false, 
     failures.push('missing_checkout_payment_method');
   }
 
+  if (requireHomeIdentity) {
+    if ((report.homeIdentity?.heroVideoCount || 0) < 1) {
+      failures.push('missing_home_video_identity');
+    }
+
+    if ((report.homeIdentity?.footerInstagramLinkCount || 0) < 1) {
+      failures.push('missing_footer_instagram_link');
+    }
+
+    if ((report.homeIdentity?.footerIdentityTextCount || 0) < 1) {
+      failures.push('missing_footer_identity_text');
+    }
+  }
+
   return failures;
 }
 
@@ -349,6 +366,30 @@ async function collectMobileNavigation(page, baseUrl, desktopViewport) {
   return {
     opensOnToggle,
     toggleCount,
+  };
+}
+
+async function collectHomeIdentity(page, baseUrl) {
+  await page.goto(new URL('/', baseUrl).toString(), {
+    waitUntil: 'networkidle2',
+  });
+
+  const footerIdentityTextCount = await page.$$eval('footer, .footer', (elements) => elements
+    .map((element) => (element.textContent || '').toLowerCase())
+    .filter((text) => text.includes('lucia astuy'))
+    .length).catch(() => 0);
+
+  return {
+    footerIdentityTextCount,
+    footerInstagramLinkCount: await count(page, 'footer a[href*="instagram.com"], .footer a[href*="instagram.com"]'),
+    heroVideoCount: await count(page, '[data-jarallax-video*="E4_s9_Ky91E"], iframe[src*="E4_s9_Ky91E"], iframe[src*="youtube.com/embed/E4_s9_Ky91E"]'),
+    logoOverlayImageCount: await count(page, '.parallax .logo img, .logo img, .site-logo img, .custom-logo-link img'),
+    navigationLinkStyle: await computedStyle(page, 'header nav a, #glacier_menu a, .primary-navigation a', [
+      'fontFamily',
+      'fontSize',
+      'letterSpacing',
+      'textTransform',
+    ]),
   };
 }
 
@@ -538,16 +579,28 @@ export async function runWooInteractionBaselineCli({
   const label = safeLabel(args.label || env.WP_INTERACTION_LABEL || new URL(baseUrl).hostname);
   const outDir = args['out-dir'] || env.WP_INTERACTION_OUT_DIR || `wordpress/.tmp/interaction-baseline/${todayStamp(now)}-${label}`;
   const allowCartMutation = parseBooleanFlag(args['allow-cart-mutation'] || env.WP_INTERACTION_ALLOW_CART_MUTATION);
+  const ignoreHttpsErrors = parseBooleanFlag(args['ignore-https-errors'] || env.WP_IGNORE_HTTPS_ERRORS);
+  const requireHomeIdentity = parseBooleanFlag(args['require-home-identity'] || env.WP_INTERACTION_REQUIRE_HOME_IDENTITY);
   const requirePaymentMethod = parseBooleanFlag(args['require-payment-method'] || env.WP_INTERACTION_REQUIRE_PAYMENT_METHOD);
   const browserExecutablePath = args['browser-executable-path'] || resolveBrowserExecutablePath(env);
   const reportPath = path.join(outDir, 'interaction-report.json');
 
   await fs.mkdir(outDir, { recursive: true });
 
+  if (ignoreHttpsErrors) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
+
   const browser = await puppeteer.launch({
-    args: ['--disable-dev-shm-usage', '--disable-setuid-sandbox', '--no-sandbox'],
+    args: [
+      '--disable-dev-shm-usage',
+      '--disable-setuid-sandbox',
+      '--no-sandbox',
+      ...(ignoreHttpsErrors ? ['--ignore-certificate-errors'] : []),
+    ],
     executablePath: browserExecutablePath,
     headless: true,
+    ignoreHTTPSErrors: ignoreHttpsErrors,
   });
 
   const page = await browser.newPage();
@@ -562,6 +615,7 @@ export async function runWooInteractionBaselineCli({
     const report = {
       allowCartMutation,
       baseUrl,
+      homeIdentity: await collectHomeIdentity(page, baseUrl),
       label,
       navigation: await collectNavigation(page, baseUrl),
       requirePaymentMethod,
@@ -599,6 +653,7 @@ export async function runWooInteractionBaselineCli({
 
     const failures = evaluateInteractionReport(report, {
       expectCartMutation: allowCartMutation,
+      requireHomeIdentity,
       requirePaymentMethod,
     });
     report.failures = failures;

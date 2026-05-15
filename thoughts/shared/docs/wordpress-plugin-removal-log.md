@@ -25,6 +25,37 @@ Track each plugin you consider removing so you can prove:
 |---|---|---|---|---|
 | 2026-05-01 | `all-in-one-wp-migration-src` | local deactivated | Baseline and post-change `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` passed; WP-CLI inactive-state assertion passed after deactivation; smoke checks returned 200 for `/`, `/shop/`, `/cart/`, and `/checkout/`. | pass; keep inactive locally; production untouched; rollback with `wp plugin activate all-in-one-wp-migration-src` |
 
+## 2026-05-15 Post-Glacier Identity Migration Candidate Snapshot
+
+Captured for OpenSpec change `align-luciastuy-live-identity` after baseline evidence review of:
+
+- `thoughts/shared/docs/woocommerce-audit.md`
+- `thoughts/shared/docs/wordpress-plugin-inventory.md`
+- this removal log
+- `wordpress/.tmp/identity-baseline/2026-05-15/glacier-home.html`
+
+This is a **candidate list only**. Nothing below is marked safe to delete yet.
+
+| Candidate | Why It Is A Candidate | Evidence | Blocker Before Any Deactivation | Rollback Note |
+|---|---|---|---|---|
+| `elementor` | Builder coupling for legacy runtime | Active in inventory; production assets loaded on home page | Confirm no production page depends on Elementor-only templates once owned theme is active | Reactivate plugin and clear caches if shop/content layout regresses |
+| `rev_slider` | Visual builder dependency for hero/slider path | Active in inventory; `rs6.css` loaded on home page | Confirm owned home hero fully replaces slider behavior on production | Reactivate plugin and restore old hero route if needed |
+| `js_composer` (WPBakery) | Legacy shortcode/builder dependency | Classified as blocked candidate in inventory and audit | Migrate any remaining `[vc_*]` content and verify frontend pages | Reactivate and restore shortcode-bearing content if failures appear |
+| `visual-portfolio` | Legacy portfolio/gallery runtime dependency | Visual Portfolio CSS assets loaded on production home | Confirm catalog/portfolio pages render with owned templates without plugin output | Reactivate plugin if portfolio/gallery pages break |
+| `acf_pro` | Glacier field dependency | Classified as blocked candidate in inventory and audit | Replace required field reads in owned runtime and verify data continuity | Restore plugin and field config if metadata display breaks |
+| `kirki` | Glacier customizer dependency | Classified as blocked candidate in inventory and audit | Glacier is no longer production runtime | Reactivate plugin if customizer-driven settings are still required |
+| `glacier` theme helpers/assets | Legacy theme coupling | Production home still loads `wp-content/themes/glacier/*` CSS/JS | Complete production switch to `luciastuy` and verify parity | Re-enable previous theme as rollback if replacement fails |
+
+### Safety Rule (Reconfirmed 2026-05-15)
+
+Visual parity evidence does not make any plugin or extension safe to delete. Every candidate still requires:
+
+1. production backup capture,
+2. one-plugin-at-a-time deactivation,
+3. pre/post smoke validation,
+4. admin review of affected surfaces,
+5. explicit rollback path.
+
 ## Planned UX Uncoupling Candidate Order
 
 Captured on 2026-05-02 for `thoughts/shared/plans/2026-05-02-online-shop-ux-quality-plan.md`.
