@@ -15,7 +15,7 @@ Text Domain: luciastuy
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("https://www.luciastuy.com/wp-content/fonts/dosis/HhyaU5sn9vOmLzloC_U.woff2") format("woff2");
+  src: url("assets/fonts/dosis/dosis-600.woff2") format("woff2");
 }
 
 @font-face {
@@ -23,7 +23,7 @@ Text Domain: luciastuy
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("https://www.luciastuy.com/wp-content/fonts/dosis/HhyaU5sn9vOmLzloC_U.woff2") format("woff2");
+  src: url("assets/fonts/dosis/dosis-600.woff2") format("woff2");
 }
 
 @font-face {
@@ -31,7 +31,7 @@ Text Domain: luciastuy
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url("https://www.luciastuy.com/wp-content/fonts/source-sans-pro/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwlxdu.woff2") format("woff2");
+  src: url("assets/fonts/source-sans-pro/source-sans-pro-300.woff2") format("woff2");
 }
 
 @font-face {
@@ -39,7 +39,7 @@ Text Domain: luciastuy
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("https://www.luciastuy.com/wp-content/fonts/source-sans-pro/6xK3dSBYKcSV-LCoeQqfX1RYOo3qNa7lqDY.woff2") format("woff2");
+  src: url("assets/fonts/source-sans-pro/source-sans-pro-300.woff2") format("woff2");
 }
 
 :root {

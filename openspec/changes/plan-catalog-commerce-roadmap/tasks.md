@@ -57,6 +57,7 @@
 - [x] 6.6 Implement local `luciastuy` identity changes incrementally for header/navigation, shop grid, product detail, cart, and checkout with screenshots or browser verification at each step.
 - [x] 6.7 Apply the individual portfolio-page typography rhythm to individual WooCommerce product pages, including uppercase rhythm, image framing, buttons, and desktop/mobile spacing.
 - [ ] 6.8 Confirm with the customer which catalog identity decisions must also carry into the final ecommerce surfaces.
+- [ ] 6.9 Finish catalog item-page parity validation and customer sign-off (local implementation 2026-05-16 in `luciastuy` `single-portfolio.php`; compare `wordpress/.tmp/visual-baseline/2026-05-16-catalog-item-supergreat-after/` vs live) and sync accepted deltas back into this roadmap.
 
 ## 7. Checkout, Payment, And Fulfillment Readiness
 
@@ -74,6 +75,6 @@
 ## 8. OpenSpec Governance
 
 - [x] 8.1 Review this OpenSpec change and sync the task tracker with completed local implementation evidence while the plan is still active.
-- [ ] 8.2 Split implementation into smaller OpenSpec changes when a phase is ready to begin.
+- [x] 8.2 Split implementation into smaller OpenSpec changes when a phase is ready to begin.
 - [ ] 8.3 Keep each implementation change test-first and archive it only after validation passes.
 - [ ] 8.4 Archive this roadmap change after the planning scope is accepted and the first implementation change is created.

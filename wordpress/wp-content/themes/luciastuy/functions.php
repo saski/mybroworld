@@ -6,6 +6,8 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+require_once get_stylesheet_directory() . '/inc/portfolio-item.php';
+
 function luciastuy_theme_setup(): void
 {
     add_theme_support('title-tag');
@@ -123,8 +125,43 @@ function luciastuy_enqueue_assets(): void
             true
         );
     }
+
+    if (! is_singular('portfolio')) {
+        return;
+    }
+
+    $portfolio_style_path = get_stylesheet_directory() . '/assets/portfolio-item.css';
+    if (file_exists($portfolio_style_path)) {
+        wp_enqueue_style(
+            'luciastuy-portfolio-item',
+            get_stylesheet_directory_uri() . '/assets/portfolio-item.css',
+            ['luciastuy-style'],
+            (string) filemtime($portfolio_style_path)
+        );
+    }
+
+    $portfolio_script_path = get_stylesheet_directory() . '/assets/portfolio-item.js';
+    if (file_exists($portfolio_script_path)) {
+        wp_enqueue_script(
+            'luciastuy-portfolio-item',
+            get_stylesheet_directory_uri() . '/assets/portfolio-item.js',
+            [],
+            (string) filemtime($portfolio_script_path),
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'luciastuy_enqueue_assets');
+
+function luciastuy_dequeue_portfolio_conflicts(): void
+{
+    if (! is_singular('portfolio')) {
+        return;
+    }
+
+    wp_dequeue_style('rs-plugin-settings');
+}
+add_action('wp_enqueue_scripts', 'luciastuy_dequeue_portfolio_conflicts', 100);
 
 function luciastuy_loop_columns(): int
 {

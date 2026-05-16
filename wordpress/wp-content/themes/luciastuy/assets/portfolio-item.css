@@ -1,0 +1,262 @@
+.luciastuy-portfolio-item {
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.luciastuy-portfolio-item__article {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.luciastuy-portfolio-item__info {
+  display: grid;
+  gap: 0;
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.5;
+  text-transform: none;
+}
+
+.luciastuy-portfolio-item__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: "Dosis", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.luciastuy-portfolio-item__description {
+  margin: 0.65rem 0 0;
+  color: var(--color-ink);
+}
+
+.luciastuy-portfolio-item__description p {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-transform: none;
+}
+
+.luciastuy-portfolio-item__details {
+  margin: 30px 0;
+  padding: 0;
+}
+
+.luciastuy-portfolio-item__detail + .luciastuy-portfolio-item__detail {
+  margin-top: 0;
+}
+
+.luciastuy-portfolio-item__detail-label {
+  margin: 18px 0 0;
+  color: var(--color-ink);
+  font-family: "Dosis", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.luciastuy-portfolio-item__detail:first-child .luciastuy-portfolio-item__detail-label {
+  margin-top: 0;
+}
+
+.luciastuy-portfolio-item__detail-value {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-transform: none;
+}
+
+.luciastuy-portfolio-item__gallery {
+  display: grid;
+  gap: 25px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.luciastuy-portfolio-item__gallery-item {
+  margin: 0;
+}
+
+.luciastuy-portfolio-item__gallery-trigger {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: zoom-in;
+}
+
+.luciastuy-portfolio-item__gallery-trigger img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border: 0;
+  object-fit: contain;
+}
+
+.luciastuy-portfolio-item__gallery-trigger:hover img,
+.luciastuy-portfolio-item__gallery-trigger:focus-visible img {
+  opacity: 0.92;
+}
+
+.luciastuy-portfolio-item__gallery-trigger:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 4px;
+}
+
+.luciastuy-portfolio-item__nav {
+  margin-top: 55px;
+}
+
+.luciastuy-portfolio-item__nav-inner {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.luciastuy-portfolio-item__nav-prev {
+  margin-right: auto;
+}
+
+.luciastuy-portfolio-item__nav-next {
+  order: 1;
+}
+
+.luciastuy-portfolio-item__nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 0;
+  background: #000;
+  color: #fff;
+  font-family: "Dosis", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  line-height: 1.1;
+  padding: 10px 28px 9px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.luciastuy-portfolio-item__nav-link:hover,
+.luciastuy-portfolio-item__nav-link:focus-visible {
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+}
+
+.luciastuy-portfolio-item__nav-icon {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.luciastuy-portfolio-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.luciastuy-portfolio-lightbox[hidden] {
+  display: none;
+}
+
+.luciastuy-portfolio-lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 72%);
+}
+
+.luciastuy-portfolio-lightbox__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 2.5rem 1.5rem;
+}
+
+.luciastuy-portfolio-lightbox__image {
+  max-width: min(92vw, 72rem);
+  max-height: calc(100vh - 5rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.luciastuy-portfolio-lightbox__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: 1px solid #fff;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-family: var(--font-display), "Dosis", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 0.55rem 0.85rem;
+  text-transform: uppercase;
+}
+
+.luciastuy-portfolio-lightbox__close:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.screen-reader-text {
+  border: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+  word-wrap: normal !important;
+}
+
+@media (min-width: 768px) {
+  .luciastuy-portfolio-item__article {
+    grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.95fr);
+    column-gap: 2rem;
+    align-items: start;
+  }
+
+  .luciastuy-portfolio-item__info {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .luciastuy-portfolio-item__media {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 992px) {
+  .luciastuy-portfolio-item__article {
+    column-gap: 2.5rem;
+  }
+}
