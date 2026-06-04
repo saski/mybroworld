@@ -38,3 +38,29 @@
 - [x] 6.1 Document the final configuration, event contract, consent setup, owner accounts, validation evidence, and known gaps.
 - [x] 6.2 Document the rollback path for disabling Site Kit tag placement or removing owned-code instrumentation.
 - [x] 6.3 Give the customer a short operating guide for where to read visits, acquisition, product interest, checkout behavior, and purchases.
+
+## 7. Final Verification Runbook
+
+### Sequential Critical Path
+
+- [ ] 7.1 Confirm the operator has access to WordPress admin, GA4 Realtime or DebugView, and the approved non-production or production test-order path.
+- [ ] 7.2 Open a public buyer session with analytics consent accepted and logged-in user tracking excluded.
+- [ ] 7.3 Trigger `page_view`, `view_item`, `add_to_cart`, and `begin_checkout` on one available artwork while recording timestamps and URLs.
+- [ ] 7.4 Confirm each triggered event appears in GA4 Realtime or DebugView with non-personal item parameters.
+- [ ] 7.5 Run one approved WooCommerce test order only after the payment/shipping test path is confirmed.
+- [ ] 7.6 Compare WooCommerce order id, total, currency, and item identity against the GA4 `purchase` event.
+- [ ] 7.7 Update `thoughts/shared/docs/shop-business-observability.md` with evidence, gaps, and any accepted reporting delay.
+- [ ] 7.8 Archive this change only after tasks 5.2 and 5.3 are complete or an explicit no-purchase-verification waiver is documented.
+
+### Parallel Work
+
+- [ ] 7.9 Event observer: watch GA4 Realtime/DebugView, capture event names, timestamps, item ids, value, currency, and consent state.
+- [ ] 7.10 Buyer-flow operator: perform the public shop path without logging in, avoid entering personal free text beyond the approved test order data, and record the WooCommerce order evidence.
+- [ ] 7.11 Repository recorder: update the observability doc and this task file, keeping raw screenshots or account-sensitive exports out of git unless explicitly sanitized.
+
+### Fallback If Events Are Missing
+
+- [ ] 7.12 Record the missing event and exact reproduction path before adding code.
+- [ ] 7.13 Add or extend a failing owned-code verification for the missing launch-critical event.
+- [ ] 7.14 Implement the smallest owned instrumentation needed, preserving the no-PII event payload rule.
+- [ ] 7.15 Rerun the same GA4 verification path before marking the fallback complete.

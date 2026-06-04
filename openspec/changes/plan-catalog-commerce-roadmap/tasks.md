@@ -78,3 +78,28 @@
 - [x] 8.2 Split implementation into smaller OpenSpec changes when a phase is ready to begin.
 - [ ] 8.3 Keep each implementation change test-first and archive it only after validation passes.
 - [ ] 8.4 Archive this roadmap change after the planning scope is accepted and the first implementation change is created.
+
+## 9. Next-Stage Execution Plan
+
+### Sequential Critical Path
+
+- [ ] 9.1 Confirm the two completed implementation changes are archived and their accepted requirements live under `openspec/specs/`.
+- [ ] 9.2 Choose the next buyer-readiness gate owner: customer feedback, production checkout/payment, GA4 verification, or plugin-safety inventory.
+- [ ] 9.3 Run the chosen gate to evidence before starting production-affecting code or admin changes.
+- [ ] 9.4 Update the relevant operational doc immediately after the gate produces evidence or a blocker.
+- [ ] 9.5 Create or update a smaller implementation OpenSpec for the next executable slice before this roadmap is archived.
+- [ ] 9.6 Archive this roadmap only after the first next-slice OpenSpec exists and the remaining open decisions are captured outside this planning tracker.
+
+### Parallel Lanes
+
+- [ ] 9.7 Customer/catalog lane: identify the canonical feedback source, extract accepted/rejected/open decisions, update `thoughts/shared/docs/artwork-data-contract.md`, and translate approved visual/field decisions into the catalog-generator plan.
+- [ ] 9.8 Source-data lane: identify missing artwork years, import one year batch, validate required headers/status/images, generate a preview, and repeat only after blockers from the current batch are closed.
+- [ ] 9.9 Commerce-readiness lane: audit production WooCommerce payment, shipping, checkout fields, emails, and order records before running an approved test order.
+- [ ] 9.10 Observability lane: finish GA4 Realtime/DebugView and purchase/order reconciliation through `openspec/changes/configure-shop-business-observability/`.
+- [ ] 9.11 Plugin-safety lane: refresh production plugin inventory, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then propose exactly one reversible simplification candidate.
+
+### Coordination Rules
+
+- [ ] 9.12 Do not let the source-data lane change the contract while the customer/catalog lane still has open field decisions.
+- [ ] 9.13 Do not let plugin deactivation run before the commerce-readiness lane has a fresh smoke baseline and rollback evidence.
+- [ ] 9.14 Do not mark the shop buyer-ready until payment, buyer data, fulfillment record, and GA4 purchase visibility are all evidenced or explicitly waived.

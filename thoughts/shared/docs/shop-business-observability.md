@@ -176,6 +176,31 @@ Acceptance for task 5.1:
 - Confirm live `wp-admin/plugins.php` still matches the DB export before changing production configuration.
 - Verify GA4 Realtime or DebugView for shop funnel events before accepting the setup.
 
+## Final Verification Runbook
+
+Use this runbook to close OpenSpec `configure-shop-business-observability`. Keep account screenshots, raw GA exports, and buyer data out of git unless they are sanitized.
+
+### Sequential Critical Path
+
+1. Confirm access to production WordPress admin, GA4 Realtime or DebugView, and the approved WooCommerce test-order path.
+2. Open a public buyer session, accept analytics consent, and keep logged-in WordPress tracking excluded.
+3. Visit the home page, shop page, one available artwork product page, cart, and checkout.
+4. Trigger and timestamp `page_view`, `view_item`, `add_to_cart`, and `begin_checkout`.
+5. Confirm those events appear in GA4 Realtime or DebugView with non-personal item parameters.
+6. Run one approved WooCommerce test order only after payment and shipping behavior are confirmed safe for the test.
+7. Compare WooCommerce order id, total, currency, and item identity with the GA4 `purchase` event.
+8. Record any delay, missing event, duplicate event, or accepted limitation in this document and in the OpenSpec task file.
+
+### Parallel Roles
+
+- Event observer: watches GA4 Realtime or DebugView and records event names, timestamps, item ids, value, currency, and consent state.
+- Buyer-flow operator: performs the public shop path and records WooCommerce order evidence.
+- Repository recorder: updates this guide and `openspec/changes/configure-shop-business-observability/tasks.md` without committing account-sensitive raw exports.
+
+### Missing-Event Fallback
+
+If a launch-critical event is missing, first record the reproduction path and add or extend a failing owned-code verification. Add owned instrumentation only for the proven gap, and keep event payloads free of buyer name, email, phone, billing or shipping address, order notes, order keys, payment tokens, and free-text form data.
+
 ## Configuration Plan
 
 ### GA4 Selection
