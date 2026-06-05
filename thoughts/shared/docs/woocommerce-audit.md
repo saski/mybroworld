@@ -15,8 +15,10 @@ Capture the minimum production facts needed to bring the WooCommerce site into t
 
 ## Runtime Inventory
 - Production domain: `https://www.luciastuy.com`
-- Public front page status: HTTP 200 on 2026-04-30
-- Public shop page status: HTTP 200 on 2026-04-30
+- Public front page status: HTTP 200 on 2026-04-30 and 2026-06-05
+- Public shop page status: HTTP 200 on 2026-04-30 and 2026-06-05
+- Public cart page status: HTTP 200 on 2026-06-05
+- Public checkout page status: HTTP 200 on 2026-06-05
 - WordPress admin status: login/admin page opens on 2026-04-30
 - PHP version: `8.4.18` from WooCommerce system status on 2026-04-30; earlier staged SQL export evidence noted `8.2.12`
 - WordPress version: `6.9.4`
@@ -86,6 +88,9 @@ Types:
 - Production cleanup result: `create=0 update=0 needs_image=0 unchanged=20 invalid_source=0 unexpected_unmanaged=15`; public Store API assertion returned `products=20 expected=20 missing=0 missing_images=0 unexpected=0`.
 - Production post-cleanup dry-run result: `create=0 update=0 needs_image=0 unchanged=20 invalid_source=0 unexpected_unmanaged=15`.
 - Production sync status: managed canonical products are applied with images, and unmanaged legacy/demo products are hidden from the public Store API.
+- Production Store API assertion on 2026-06-05 returned `products=20 expected=20 missing=0 missing_images=0 unexpected=0` against `catalog-generator/data/CATALOGO_BASE.csv`.
+- Production public smoke on 2026-06-05 returned HTTP 200 for `/`, `/shop/`, `/cart/`, `/checkout/`, and `/product/fanzimad-2026-yuju/`.
+- Production anonymous browser checkout probe on 2026-06-05 found shop/product availability signals (`productLinkCount=24`, `shop addToCartActionCount=3`, product image visible, product add-to-cart actions present), but the cart stayed empty after the add-to-cart attempt and checkout did not expose buyer fields or payment methods. Treat production checkout/payment as blocked until the add-to-cart/cart persistence issue is diagnosed.
 
 ## Decision Gate
 

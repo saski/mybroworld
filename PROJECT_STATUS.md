@@ -1,6 +1,6 @@
 # mybroworld - Project Status
 
-**Last Updated**: 2026-06-04
+**Last Updated**: 2026-06-05
 **Overall Status**: 🟡 **Multiple active workstreams** - The completed `align-luciastuy-live-identity` and `align-luciastuy-catalog-item-parity` OpenSpecs are archived, with accepted requirements promoted under `openspec/specs/`. The living OpenSpecs are now `plan-catalog-commerce-roadmap` and `configure-shop-business-observability`: the first coordinates customer catalog decisions, source-sheet completion, production checkout/payment readiness, and plugin-safety sequencing; the second is in final GA4 Realtime/DebugView plus WooCommerce test-order verification.
 
 ---
@@ -16,7 +16,11 @@
 | WordPress plugin cleanup plan | 🟡 In Progress | 5% | No |
 | Safe cleanup execution + verification | ⚠️ Pending | 0% | Requires admin access + backups |
 
-**Current Readiness**: 🟡 - The catalog generator now implements the client-approved rules for inclusion, ordering, metadata, PVP price, contact details, cover use, Gotham fonts, and official logos. `_cat` image resolution is implemented and wired as an optional worker config, but the shared image folder currently has 0 `_cat` candidates, so strict image-folder selection should remain disabled until the customer renames one image per included artwork. The WordPress catalog PDF console is deployed and operator-validated, and the `lucia-mybrocorp` Cloud Run worker is authorized as `mybrocorp@gmail.com`, updated with the latest PDF generator, and verified with direct 14-artwork PDF jobs (the optional catalog **monitor** Cloud Run job remains deployed; its **Scheduler** tick is paused until resumed). Apps Script Web App deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` now runs version 6, is linked to standard Cloud project `mybroworld-catalog-260501`, has Web App access for server-side WordPress calls, and successfully started Cloud Run on demand for jobs `catalog_20260503_100246_1dd2` and `catalog_20260503_102110_2c0d`. Production WordPress and `catalog_profiles` now target Drive folder `183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` (`OBRA/Catalogos`), and the latest validation PDF landed there. Production still benefits from one WordPress UI queue/review validation from the customer's mybro account; the legacy worker **scheduler** is already paused in favor of Apps Script on-demand runs.
+**Current Readiness**: 🟡 - The catalog generator now implements the client-approved rules for inclusion, ordering, metadata, PVP price, contact details, cover use, Gotham fonts, and official logos. `_cat` image resolution is implemented and wired as an optional worker config, but the shared image folder currently has 0 `_cat` candidates, so strict image-folder selection should remain disabled until the customer renames one image per included artwork. A 2026-06-05 local end-to-end render from `catalog-generator/data/CATALOGO_BASE.csv` completed a 14-artwork PDF at `/private/tmp/mybroworld-catalog-e2e-2026-06-05.pdf`.
+
+The WordPress catalog PDF console is deployed and operator-validated, and the `lucia-mybrocorp` Cloud Run worker is authorized as `mybrocorp@gmail.com`, updated with the latest PDF generator, and verified with direct 14-artwork PDF jobs (the optional catalog **monitor** Cloud Run job remains deployed; its **Scheduler** tick is paused until resumed). Apps Script Web App deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` now runs version 6, is linked to standard Cloud project `mybroworld-catalog-260501`, has Web App access for server-side WordPress calls, and successfully started Cloud Run on demand for jobs `catalog_20260503_100246_1dd2` and `catalog_20260503_102110_2c0d`. Production WordPress and `catalog_profiles` now target Drive folder `183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` (`OBRA/Catalogos`), and the latest validation PDF landed there. Production still benefits from one WordPress UI queue/review validation from the customer's mybro account; the legacy worker **scheduler** is already paused in favor of Apps Script on-demand runs.
+
+Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` runtime passed add-to-cart, cart, checkout fields, shipping fields, and payment-method visibility through `scripts/woo-interaction-baseline.mjs`; production public Store API parity and smoke checks passed with `products=20 expected=20 missing=0 missing_images=0 unexpected=0` and HTTP 200 for `/`, `/shop/`, `/cart/`, `/checkout/`, and `/product/fanzimad-2026-yuju/`. Production is not buyer-ready yet: the anonymous production browser checkout probe did not persist a cart item and therefore reported `cart_did_not_receive_item`, `missing_checkout_link`, missing checkout buyer fields, and `missing_checkout_payment_method`.
 
 ---
 
@@ -90,14 +94,15 @@
 
 ## 📋 Next Steps
 
-1. Close `configure-shop-business-observability`: run GA4 Realtime/DebugView for `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, and one approved `purchase`; compare WooCommerce order id/value to GA4 before archiving.
-2. Choose the next buyer-readiness gate in `plan-catalog-commerce-roadmap` section 9: customer/catalog decisions, source-data batch, production checkout/payment, observability closure, or plugin-safety inventory.
-3. Queue one on-demand production catalog from the WordPress UI as the customer's mybro account, verify Apps Script starts Cloud Run immediately, and save a review state (legacy worker and monitor **Cloud Scheduler** jobs are already paused as of 2026-05-04).
-4. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
-5. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
-6. Run one real queued `lucia-mybrocorp` catalog PDF render from WordPress and confirm `result_file_url` is written back to `catalog_jobs` with the PDF in `OBRA/Catalogos`.
-7. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
-8. Refresh live production plugin inventory from `wp-admin/plugins.php`, compare it with the 2026-04-30 direct admin snapshot and 2026-05-03 local imported runtime, then execute only one reversible simplification candidate at a time with smoke checks and rollback notes.
+1. Diagnose the production anonymous add-to-cart/cart blocker from the 2026-06-05 browser probe before attempting a production payment test order.
+2. Close `configure-shop-business-observability`: run GA4 Realtime/DebugView for `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, and one approved `purchase`; compare WooCommerce order id/value to GA4 before archiving.
+3. Choose the next buyer-readiness gate in `plan-catalog-commerce-roadmap` section 9 after the production checkout blocker is understood: customer/catalog decisions, source-data batch, production checkout/payment, observability closure, or plugin-safety inventory.
+4. Queue one on-demand production catalog from the WordPress UI as the customer's mybro account, verify Apps Script starts Cloud Run immediately, and save a review state (legacy worker and monitor **Cloud Scheduler** jobs are already paused as of 2026-05-04).
+5. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
+6. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
+7. Run one real queued `lucia-mybrocorp` catalog PDF render from WordPress and confirm `result_file_url` is written back to `catalog_jobs` with the PDF in `OBRA/Catalogos`.
+8. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
+9. Refresh live production plugin inventory from `wp-admin/plugins.php`, compare it with the 2026-04-30 direct admin snapshot and 2026-05-03 local imported runtime, then execute only one reversible simplification candidate at a time with smoke checks and rollback notes.
 
 ---
 

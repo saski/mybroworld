@@ -6,6 +6,9 @@ Use this guide when the customer needs to test the live online shop and the Word
 
 - The production WordPress shop is live at `https://www.luciastuy.com/`.
 - The canonical artwork products have been created in production WooCommerce with images.
+- 2026-06-05 public Store API parity passed: `products=20 expected=20 missing=0 missing_images=0 unexpected=0`.
+- 2026-06-05 public smoke passed for `/`, `/shop/`, `/cart/`, `/checkout/`, and `/product/fanzimad-2026-yuju/`.
+- 2026-06-05 anonymous production browser checkout probe is blocked: add-to-cart did not persist into the cart, so checkout buyer fields and payment methods were not reachable. Do not ask the customer to place or approve a production order until this blocker is resolved.
 - The catalog PDF console is deployed in production WordPress.
 - New production catalog jobs now target the on-demand Cloud Run `lucia-mybrocorp` worker authorized as `mybrocorp@gmail.com`.
 - Generated PDFs are written to the Drive folder `OBRA/Catalogos` (`183-IMb93mqASyyKEMz3lTVG1S8GLrK_2`).
@@ -21,6 +24,8 @@ Use this guide when the customer needs to test the live online shop and the Word
 ## Online Shop Test
 
 Ask the customer to test from a normal browser session, preferably in a private window first so the public buyer experience is visible.
+
+Current operator note: as of 2026-06-05, steps 1-5 are suitable for customer content review, but steps 6-11 are a blocker-verification path rather than an expected pass. If the cart stays empty after adding an available artwork, record that as the current production checkout blocker and stop before requesting payment/order testing.
 
 1. Open `https://www.luciastuy.com/`.
 2. Open `https://www.luciastuy.com/shop/`.

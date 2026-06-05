@@ -3,6 +3,7 @@
 - [x] 0.1 Sync the roadmap tracker with the 2026-05-08 local `luciastuy` visual, interaction, and checkout-readiness evidence.
 - [x] 0.2 Separate locally proven checkout behavior from the remaining production/staging payment and fulfillment launch gates.
 - [x] 0.3 Publish `luciastuy` on production and record the immediate next-stage blocker from interaction evidence: `missing_checkout_payment_method` during production checkout-readiness validation (`2026-05-15-production-next-stage-checkout-readiness`).
+- [x] 0.4 Sync the 2026-06-05 end-to-end verification: local catalog generation and local owned ecommerce flow pass; production Store API parity and public smoke pass; production buyer checkout remains blocked by `cart_did_not_receive_item` and missing payment/checkout fields.
 
 ## 1. Catalog Contract And Customer Feedback
 
@@ -71,6 +72,7 @@
 - [x] 7.8 Run one local non-production BACS checkout order and record payment status, order id, buyer data, shipping fields, and order note evidence.
 - [ ] 7.9 Run one approved production/staging payment test order and record payment status, order id, buyer confirmation, admin notification, shipping fields, and refund/cancel path.
 - [ ] 7.10 Confirm the customer can use the WooCommerce order record to ship the purchased artwork.
+- [ ] 7.11 Diagnose why the anonymous production add-to-cart path leaves the cart empty before attempting a production payment test order.
 
 ## 8. OpenSpec Governance
 
