@@ -2,9 +2,9 @@
 
 The next work needs a shared, explicit roadmap because the project spans customer-facing catalog decisions, source data completion, ecommerce architecture, WooCommerce risk reduction, and test coverage. Planning this as an OpenSpec change keeps decisions reviewable before changing production commerce behavior.
 
-## Workstream Branch
+## Delivery Branching
 
-Use branch `eb/plan-catalog-commerce-roadmap` for this OpenSpec workstream. Keep PRs from this branch scoped to `openspec/changes/plan-catalog-commerce-roadmap/` and the supporting roadmap, shop theme, local setup, and baseline-test artifacts that unblock this roadmap.
+This workstream now follows trunk-based development. The previous `eb/plan-catalog-commerce-roadmap` workstream branch was merged into `main` and pruned on 2026-06-05. Keep future planning updates on `main` when they are documentation-only and validated; use a short-lived `eb/...` branch only for one executable slice that needs isolated review, then merge and delete it promptly.
 
 ## What Changes
 
@@ -31,7 +31,7 @@ Use branch `eb/plan-catalog-commerce-roadmap` for this OpenSpec workstream. Keep
 
 ### Modified Capabilities
 
-- None. This repository does not yet contain archived OpenSpec specs; this change introduces the planning capabilities.
+- None in this planning change. Archived accepted specs now live under `openspec/specs/`; this active roadmap coordinates the remaining work rather than changing those accepted requirements.
 
 ## Impact
 

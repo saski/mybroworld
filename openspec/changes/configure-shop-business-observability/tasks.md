@@ -64,3 +64,10 @@
 - [ ] 7.13 Add or extend a failing owned-code verification for the missing launch-critical event.
 - [ ] 7.14 Implement the smallest owned instrumentation needed, preserving the no-PII event payload rule.
 - [ ] 7.15 Rerun the same GA4 verification path before marking the fallback complete.
+
+## 8. Trunk Sync And Branch Closure
+
+- [x] 8.1 Confirm the observability workstream branch is merged into `main` and the remote tracks `main` as its only branch.
+- [x] 8.2 Confirm the GA4 initial-event timing work is represented by `origin/main` commit `78e730c` and `thoughts/shared/docs/shop-business-observability.md`, so no separate branch remains open.
+- [ ] 8.3 Rerun the section 7 evidence path before adding new owned instrumentation for `view_item`, `begin_checkout`, or `purchase`.
+- [ ] 8.4 If final verification exposes another instrumentation gap, create the smallest trunk-based fix slice with the failing verification from 7.12/7.13 before implementing code.

@@ -2,9 +2,9 @@
 
 The Lucia Astuy shop needs business observability for visits, useful visitor behavior, recurrence, product interest, checkout flow, and purchase outcomes before the shop is treated as buyer-ready. The project has accepted Site Kit and Google Analytics 4 as the first business analytics layer because they are Google-standard tools familiar to the customer, while still preserving the local rule against paid, freemium, or dependency-heavy WordPress extensions.
 
-## Workstream Branch
+## Delivery Branching
 
-Use branch `eb/configure-shop-business-observability` for this OpenSpec workstream. Keep PRs from this branch scoped to `openspec/changes/configure-shop-business-observability/` and the supporting GA4/Site Kit evidence, blocker, and verification artifacts that close this observability change.
+This workstream now follows trunk-based development. The previous `eb/configure-shop-business-observability` workstream branch was merged into `main` and pruned on 2026-06-05. Keep final verification evidence and task updates on `main`; create a short-lived `eb/...` branch only if the final GA4 pass proves a new owned-code instrumentation gap.
 
 ## What Changes
 

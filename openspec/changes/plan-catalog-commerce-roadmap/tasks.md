@@ -83,7 +83,7 @@
 
 ### Sequential Critical Path
 
-- [ ] 9.1 Confirm the two completed implementation changes are archived and their accepted requirements live under `openspec/specs/`.
+- [x] 9.1 Confirm the two completed implementation changes are archived and their accepted requirements live under `openspec/specs/`.
 - [ ] 9.2 Choose the next buyer-readiness gate owner: customer feedback, production checkout/payment, GA4 verification, or plugin-safety inventory.
 - [ ] 9.3 Run the chosen gate to evidence before starting production-affecting code or admin changes.
 - [ ] 9.4 Update the relevant operational doc immediately after the gate produces evidence or a blocker.
@@ -103,3 +103,11 @@
 - [ ] 9.12 Do not let the source-data lane change the contract while the customer/catalog lane still has open field decisions.
 - [ ] 9.13 Do not let plugin deactivation run before the commerce-readiness lane has a fresh smoke baseline and rollback evidence.
 - [ ] 9.14 Do not mark the shop buyer-ready until payment, buyer data, fulfillment record, and GA4 purchase visibility are all evidenced or explicitly waived.
+
+## 10. Trunk-Based Delivery Hygiene
+
+- [x] 10.1 Merge the verified roadmap and observability workstream branches back to `main`.
+- [x] 10.2 Absorb useful stale branch evidence into current documentation or confirm it is already represented on trunk.
+- [x] 10.3 Confirm the remote tracks `main` as its only branch after pruning completed, stale, and dependency-update branches.
+- [ ] 10.4 Keep future roadmap edits on `main` when they are documentation-only and validated; use short-lived `eb/...` branches only for executable slices that need isolated review.
+- [ ] 10.5 Before starting the next executable slice, update its OpenSpec on `main`, name the gate it advances, and list the branch deletion condition.

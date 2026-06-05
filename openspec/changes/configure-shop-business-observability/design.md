@@ -40,6 +40,10 @@ Google's GA4 ecommerce model provides recommended events for online sales such a
    - Rationale: recommended event names populate standard GA4 ecommerce reporting and reduce custom-reporting maintenance.
    - Guardrail: custom parameters are allowed only for artwork-specific facts that do not contain personal data.
 
+5. Keep the remaining observability work evidence-first on trunk.
+   - Rationale: the GA4 initial-event timing fix is already represented on `main`, while the remaining blocker is final GA4 Realtime/DebugView evidence plus one approved WooCommerce test-order comparison.
+   - Guardrail: do not add more owned instrumentation until the section 7 runbook records the missing event, exact reproduction path, and failing verification.
+
 ## Event Contract
 
 Baseline page and engagement events come from GA4 enhanced measurement:

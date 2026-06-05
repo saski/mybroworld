@@ -53,6 +53,10 @@ The immediate risk is coordination drift: customer feedback, source-sheet comple
    - Rationale: each WordPress/WooCommerce addition should be removed only when the smallest useful simplification hypothesis has been proposed, tested, measured, and recorded.
    - Alternative considered: create a one-time plugin cleanup project. That can reduce obvious waste, but it does not create a repeatable habit for future WP additions, custom code, theme dependencies, or configuration drift.
 
+8. Use trunk-based delivery for roadmap execution.
+   - Rationale: the completed workstream branches have been merged and pruned, and the remote now has only `main`; keeping planning state current on trunk reduces branch drift before the next buyer-readiness gate.
+   - Guardrail: use short-lived `eb/...` branches only for one executable slice with a named gate, explicit validation, and a delete-after-merge condition.
+
 ## Lean Simplification Loop
 
 Each simplification cycle follows the same sequence:
@@ -87,7 +91,7 @@ Stop the loop when the next candidate requires a customer/platform decision, a t
 
 ## Migration Plan
 
-This change is planning-only. Implementation should proceed through separate OpenSpec changes or small task branches:
+This change is planning-only. Implementation should proceed through separate OpenSpec changes and short-lived trunk-based slices. Use direct `main` commits for documentation/status-only updates after validation; use a short-lived `eb/...` branch when code, admin evidence, or review isolation is needed. Every branch must name the sequential gate it advances, run its checks, and be deleted after merge.
 
 1. Catalog feedback and contract update.
 2. Source-sheet completion by year.
