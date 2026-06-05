@@ -68,6 +68,15 @@ For Google Sheets, catalog review, normalization, completeness, blocker, readine
 3. Read `.agents/skills/mybroworld-sheet-reviewer/references/project-criteria.md` before final judgments.
 4. If a new reusable review rule is learned, update the reviewer artifacts before finishing.
 
+## WordPress-Specific Reminder
+
+For WordPress/WooCommerce development in `wordpress/`, owned theme/MU-plugin changes, WP-CLI ops, Playground blueprints, or production deploy/rollback:
+
+1. Load `.agents/skills/wordpress-router/SKILL.md`.
+2. Follow `.agents/docs/wordpress-skills-routing.md` to pick domain skills under `.agents/skills/`.
+3. When structure or tooling is unclear, run `node .agents/skills/wp-project-triage/scripts/detect_wp_project.mjs` from the repo root.
+4. For production deploy evidence and remote paths, read `thoughts/shared/docs/deploy-wordpress.md` and `wordpress/README.md`.
+
 ## Completion Checklist
 
 Before closing the task, confirm:

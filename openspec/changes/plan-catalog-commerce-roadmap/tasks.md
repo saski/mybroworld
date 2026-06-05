@@ -1,3 +1,9 @@
+## Status Sync
+
+- [x] 0.1 Sync the roadmap tracker with the 2026-05-08 local `luciastuy` visual, interaction, and checkout-readiness evidence.
+- [x] 0.2 Separate locally proven checkout behavior from the remaining production/staging payment and fulfillment launch gates.
+- [x] 0.3 Publish `luciastuy` on production and record the immediate next-stage blocker from interaction evidence: `missing_checkout_payment_method` during production checkout-readiness validation (`2026-05-15-production-next-stage-checkout-readiness`).
+
 ## 1. Catalog Contract And Customer Feedback
 
 - [ ] 1.1 Select the canonical customer-feedback thread for PDF catalog visual design and required fields.
@@ -17,12 +23,10 @@
 ## 3. Commerce Platform Decision
 
 - [x] 3.1 Capture the minimum launch-critical commerce flow from the 2026-05-06 customer-stage decision: owned shop theme replacement, direct payment readiness, and buyer data capture for artwork shipping.
-- [ ] 3.2 Document WooCommerce baseline strengths, risks, plugin dependencies, payment needs, shipping needs, and maintenance costs.
+- [ ] 3.2 Document WooCommerce baseline strengths, risks, plugin dependencies, production payment needs, shipping needs, and maintenance costs.
 - [ ] 3.3 Define one leaner alternative and the evidence it must produce to beat the WooCommerce baseline.
 - [ ] 3.4 If needed, run a bounded lean-commerce spike outside production commerce behavior.
 - [ ] 3.5 Record the platform decision in `thoughts/shared/docs/woocommerce-audit.md` or a successor OpenSpec change before production theme replacement starts.
-
-## 4. WooCommerce Test Coverage And Plugin Safety
 
 ## 4. Lean Ecommerce Simplification Loop
 
@@ -35,35 +39,67 @@
 
 ## 5. WooCommerce Test Coverage And Plugin Safety
 
-- [ ] 5.1 Keep `scripts/wp-test-owned-code.sh` green before changing owned WordPress code.
-- [ ] 5.2 Expand tests for any new artwork meta, status, publication, or product-display rules before implementing them.
-- [ ] 5.3 Define the storefront, shop, cart, checkout, and critical-error smoke paths for local and production-like environments.
-- [ ] 5.4 Classify every active plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN` with evidence and rollback notes.
-- [ ] 5.5 Remove or deactivate only one `CANDIDATE` plugin at a time after baseline tests pass.
-- [ ] 5.6 Run smoke checks before and after each plugin change and update the plugin-removal log immediately.
+- [x] 5.1 Record that the visual and local checkout slices were supported by owned-code, local runtime, interaction, and OpenSpec checks.
+- [ ] 5.2 Keep `scripts/wp-test-owned-code.sh` green before the next owned WordPress code change.
+- [ ] 5.3 Expand tests for any new artwork meta, status, publication, or product-display rules before implementing them.
+- [x] 5.4 Define repeatable storefront, shop, product, cart, checkout, and critical-error smoke or interaction paths for local and production-like environments.
+- [ ] 5.5 Classify every active plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN` with evidence and rollback notes.
+- [ ] 5.6 Remove or deactivate only one `CANDIDATE` plugin at a time after baseline tests pass.
+- [ ] 5.7 Run smoke checks before and after each plugin change and update the plugin-removal log immediately.
 
 ## 6. Ecommerce Visual Identity
 
-- [ ] 6.1 Treat WooCommerce plus the owned `luciastuy` theme as the near-term implementation surface unless the platform decision records different evidence.
+- [x] 6.1 Treat WooCommerce plus the owned `luciastuy` theme as the near-term implementation surface unless the platform decision records different evidence.
 - [x] 6.2 Capture desktop and mobile screenshots for current production `Glacier` and `luciastuy` on `/`, `/shop/`, one product page, `/cart/`, and `/checkout/`.
 - [x] 6.3 Replay and compare production and owned-theme interactions for navigation, shop sorting, product links, add-to-cart controls, product detail behavior, cart state, and checkout buyer fields.
 - [ ] 6.4 Prepare a customer-facing identity brief covering typography, color, imagery, product presentation, cart/checkout readability, and interaction priorities.
 - [ ] 6.5 Map approved identity decisions to the actual selected ecommerce surfaces.
-- [ ] 6.6 Implement identity changes incrementally with screenshots or browser verification at each step.
-- [ ] 6.7 Keep catalog identity and ecommerce identity aligned where the customer expects continuity.
+- [x] 6.6 Implement local `luciastuy` identity changes incrementally for header/navigation, shop grid, product detail, cart, and checkout with screenshots or browser verification at each step.
+- [x] 6.7 Apply the individual portfolio-page typography rhythm to individual WooCommerce product pages, including uppercase rhythm, image framing, buttons, and desktop/mobile spacing.
+- [ ] 6.8 Confirm with the customer which catalog identity decisions must also carry into the final ecommerce surfaces.
+- [ ] 6.9 Finish catalog item-page parity validation and customer sign-off (local implementation 2026-05-16 in `luciastuy` `single-portfolio.php`; compare `wordpress/.tmp/visual-baseline/2026-05-16-catalog-item-supergreat-after/` vs live) and sync accepted deltas back into this roadmap.
 
 ## 7. Checkout, Payment, And Fulfillment Readiness
 
-- [ ] 7.1 Audit WooCommerce currency, tax, payment, shipping, checkout field, email, and order settings.
-- [ ] 7.2 Choose the smallest payment configuration that satisfies customer needs and avoids paid add-ons.
-- [ ] 7.3 Verify checkout captures buyer name, email, phone when needed, billing address, shipping address, and order notes.
-- [ ] 7.4 Verify physical artwork products require shipping data when fulfillment needs it.
-- [ ] 7.5 Run one approved payment test order and record payment status, order id, buyer confirmation, admin notification, shipping fields, and refund/cancel path.
-- [ ] 7.6 Confirm the customer can use the WooCommerce order record to ship the purchased artwork.
+- [x] 7.1 Audit and repair local WooCommerce currency, country, payment, shipping, and checkout-field readiness for buyer-flow validation.
+- [ ] 7.2 Audit production/staging WooCommerce currency, tax, payment, shipping, checkout field, email, and order settings.
+- [ ] 7.3 Choose the smallest production/staging payment configuration that satisfies customer needs and avoids paid add-ons.
+- [x] 7.4 Verify local checkout captures buyer name, email, phone, billing address, shipping address, and order notes.
+- [ ] 7.5 Verify production/staging checkout captures buyer name, email, phone when needed, billing address, shipping address, and order notes.
+- [x] 7.6 Verify local physical artwork checkout collects shipping data when fulfillment needs it.
+- [ ] 7.7 Verify production/staging physical artwork products require shipping data when fulfillment needs it.
+- [x] 7.8 Run one local non-production BACS checkout order and record payment status, order id, buyer data, shipping fields, and order note evidence.
+- [ ] 7.9 Run one approved production/staging payment test order and record payment status, order id, buyer confirmation, admin notification, shipping fields, and refund/cancel path.
+- [ ] 7.10 Confirm the customer can use the WooCommerce order record to ship the purchased artwork.
 
 ## 8. OpenSpec Governance
 
-- [ ] 8.1 Review this OpenSpec change before implementation and revise proposal, specs, design, or tasks while the plan is still active.
-- [ ] 8.2 Split implementation into smaller OpenSpec changes when a phase is ready to begin.
+- [x] 8.1 Review this OpenSpec change and sync the task tracker with completed local implementation evidence while the plan is still active.
+- [x] 8.2 Split implementation into smaller OpenSpec changes when a phase is ready to begin.
 - [ ] 8.3 Keep each implementation change test-first and archive it only after validation passes.
 - [ ] 8.4 Archive this roadmap change after the planning scope is accepted and the first implementation change is created.
+
+## 9. Next-Stage Execution Plan
+
+### Sequential Critical Path
+
+- [ ] 9.1 Confirm the two completed implementation changes are archived and their accepted requirements live under `openspec/specs/`.
+- [ ] 9.2 Choose the next buyer-readiness gate owner: customer feedback, production checkout/payment, GA4 verification, or plugin-safety inventory.
+- [ ] 9.3 Run the chosen gate to evidence before starting production-affecting code or admin changes.
+- [ ] 9.4 Update the relevant operational doc immediately after the gate produces evidence or a blocker.
+- [ ] 9.5 Create or update a smaller implementation OpenSpec for the next executable slice before this roadmap is archived.
+- [ ] 9.6 Archive this roadmap only after the first next-slice OpenSpec exists and the remaining open decisions are captured outside this planning tracker.
+
+### Parallel Lanes
+
+- [ ] 9.7 Customer/catalog lane: identify the canonical feedback source, extract accepted/rejected/open decisions, update `thoughts/shared/docs/artwork-data-contract.md`, and translate approved visual/field decisions into the catalog-generator plan.
+- [ ] 9.8 Source-data lane: identify missing artwork years, import one year batch, validate required headers/status/images, generate a preview, and repeat only after blockers from the current batch are closed.
+- [ ] 9.9 Commerce-readiness lane: audit production WooCommerce payment, shipping, checkout fields, emails, and order records before running an approved test order.
+- [ ] 9.10 Observability lane: finish GA4 Realtime/DebugView and purchase/order reconciliation through `openspec/changes/configure-shop-business-observability/`.
+- [ ] 9.11 Plugin-safety lane: refresh production plugin inventory, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then propose exactly one reversible simplification candidate.
+
+### Coordination Rules
+
+- [ ] 9.12 Do not let the source-data lane change the contract while the customer/catalog lane still has open field decisions.
+- [ ] 9.13 Do not let plugin deactivation run before the commerce-readiness lane has a fresh smoke baseline and rollback evidence.
+- [ ] 9.14 Do not mark the shop buyer-ready until payment, buyer data, fulfillment record, and GA4 purchase visibility are all evidenced or explicitly waived.

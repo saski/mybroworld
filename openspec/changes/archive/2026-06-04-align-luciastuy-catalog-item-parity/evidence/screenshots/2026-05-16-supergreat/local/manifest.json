@@ -1,0 +1,25 @@
+{
+  "baseUrl": "http://localhost:8090",
+  "createdAt": "2026-05-16T09:39:49.260Z",
+  "label": "luciastuy-local",
+  "screenshots": [
+    {
+      "filePath": "/Users/ignacio.viejo/saski/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/local/luciastuy-local-desktop-portfolio-supergreat.png",
+      "slug": "portfolio-supergreat",
+      "url": "http://localhost:8090/portfolio/supergreat/",
+      "viewport": "desktop"
+    },
+    {
+      "filePath": "/Users/ignacio.viejo/saski/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/local/luciastuy-local-tablet-portfolio-supergreat.png",
+      "slug": "portfolio-supergreat",
+      "url": "http://localhost:8090/portfolio/supergreat/",
+      "viewport": "tablet"
+    },
+    {
+      "filePath": "/Users/ignacio.viejo/saski/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/local/luciastuy-local-mobile-portfolio-supergreat.png",
+      "slug": "portfolio-supergreat",
+      "url": "http://localhost:8090/portfolio/supergreat/",
+      "viewport": "mobile"
+    }
+  ]
+}

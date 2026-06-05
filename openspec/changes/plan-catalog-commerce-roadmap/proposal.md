@@ -2,6 +2,10 @@
 
 The next work needs a shared, explicit roadmap because the project spans customer-facing catalog decisions, source data completion, ecommerce architecture, WooCommerce risk reduction, and test coverage. Planning this as an OpenSpec change keeps decisions reviewable before changing production commerce behavior.
 
+## Workstream Branch
+
+Use branch `eb/plan-catalog-commerce-roadmap` for this OpenSpec workstream. Keep PRs from this branch scoped to `openspec/changes/plan-catalog-commerce-roadmap/` and the supporting roadmap, shop theme, local setup, and baseline-test artifacts that unblock this roadmap.
+
 ## What Changes
 
 - Establish a staged roadmap for the catalog and ecommerce work ahead.

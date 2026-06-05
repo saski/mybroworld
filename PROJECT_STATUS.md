@@ -1,7 +1,7 @@
 # mybroworld - Project Status
 
-**Last Updated**: 2026-05-04
-**Overall Status**: 🟡 **Multiple active workstreams** - Catalog editorial uplift now implements the approved client feedback and official assets, with strict `_cat` image selection prepared but waiting on customer-renamed files; the WordPress catalog PDF console is production-deployed, Apps Script starts Cloud Run on demand, and the legacy **Cloud Scheduler** jobs for the catalog worker and monitor are **paused** in production (worker runs on queue + manual/GitHub only); production plugin cleanup remains paused on remote backup/admin execution.
+**Last Updated**: 2026-06-04
+**Overall Status**: 🟡 **Multiple active workstreams** - The completed `align-luciastuy-live-identity` and `align-luciastuy-catalog-item-parity` OpenSpecs are archived, with accepted requirements promoted under `openspec/specs/`. The living OpenSpecs are now `plan-catalog-commerce-roadmap` and `configure-shop-business-observability`: the first coordinates customer catalog decisions, source-sheet completion, production checkout/payment readiness, and plugin-safety sequencing; the second is in final GA4 Realtime/DebugView plus WooCommerce test-order verification.
 
 ---
 
@@ -22,6 +22,8 @@
 
 ## ✅ Completed Components
 
+- Registered WordPress agent skills from `wordpress/agent-skills` under `.agents/skills/`, with Cursor/Codex discovery via `.cursor/skills/` and `.claude/skills/` symlinks and routing docs in `AGENTS.md`, `.agents/docs/chat-memory-protocol.md`, and `.agents/docs/wordpress-skills-routing.md` (2026-05-16).
+- Archived completed OpenSpecs `align-luciastuy-live-identity` and `align-luciastuy-catalog-item-parity` on 2026-06-04. Canonical accepted requirements now live under `openspec/specs/luciastuy-live-identity/` and `openspec/specs/luciastuy-catalog-item-parity/`.
 - Paused production Cloud Scheduler jobs `lucia-mybrocorp-catalog-agent-every-5m` and `lucia-mybrocorp-catalog-monitor-every-10m` in `mybroworld-catalog-260501` / `europe-west1` on 2026-05-04 so the catalog Cloud Run job no longer runs on a fixed interval; catalog worker runs when Apps Script triggers after `queue_catalog_job`, on manual **Execute**, or from CI verification. The monitor job is paused until explicitly resumed if periodic health checks are needed again.
 - Reworked the generated catalog toward the client's reference template using local `.ai` and PDF reference files.
 - Extracted temporary reference assets for the catalog generator and regenerated the latest PDF output.
@@ -79,23 +81,23 @@
 - Production WooCommerce now contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are hidden from the public Store API.
 - The WordPress catalog PDF console is live in production. Runtime config and secrets remain outside git. New source code targets the monitored Cloud Run `lucia-mybrocorp` worker on demand through Apps Script; generated PDFs write to Drive folder `183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` (`OBRA/Catalogos`). The remaining handoff gate is WordPress UI validation from the customer's mybro account; legacy **Cloud Scheduler** jobs for the worker and monitor are **paused** (see completed note dated 2026-05-04). Optional follow-up: resume only the monitor scheduler if periodic health checks are needed again.
 - CI/CD workflows are committed and the catalog-agent path is remotely validated through GitHub Actions. WordPress credentials are configured in the `production-wordpress` GitHub Environment, but WordPress deployment is intentionally held until the pre-deploy remote owned-code archive and rollback restore helper are automated. Explicit auto-deploy enable variables remain unset.
+- OpenSpec `align-luciastuy-catalog-item-parity` implementation landed locally (2026-05-16): `single-portfolio.php`, `inc/portfolio-item.php`, scoped portfolio CSS/JS, gallery lightbox, metadata from legacy ACF meta, prev/next nav. Post-impl screenshots: `wordpress/.tmp/visual-baseline/2026-05-16-catalog-item-supergreat-after/`. `scripts/wp-test-owned-code.sh` passed.
+- OpenSpec coordination is now narrowed to two living changes:
+  - `plan-catalog-commerce-roadmap`: use `openspec/changes/plan-catalog-commerce-roadmap/tasks.md` section 9 to sequence customer/catalog, source-data, commerce-readiness, observability, and plugin-safety lanes.
+  - `configure-shop-business-observability`: use `openspec/changes/configure-shop-business-observability/tasks.md` section 7 and `thoughts/shared/docs/shop-business-observability.md` to close GA4 DebugView and purchase-event reconciliation.
 
 ---
 
 ## 📋 Next Steps
 
-1. Run `fic-validate-plan thoughts/shared/plans/2026-05-01-woocommerce-catalog-photo-gap-plan.md` to close the WooCommerce catalog photo-gap workstream.
-2. Run the GA4 Realtime / DebugView controlled verification for the deployed shop observability events.
+1. Close `configure-shop-business-observability`: run GA4 Realtime/DebugView for `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, and one approved `purchase`; compare WooCommerce order id/value to GA4 before archiving.
+2. Choose the next buyer-readiness gate in `plan-catalog-commerce-roadmap` section 9: customer/catalog decisions, source-data batch, production checkout/payment, observability closure, or plugin-safety inventory.
 3. Queue one on-demand production catalog from the WordPress UI as the customer's mybro account, verify Apps Script starts Cloud Run immediately, and save a review state (legacy worker and monitor **Cloud Scheduler** jobs are already paused as of 2026-05-04).
 4. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
-5. Complete Phase 6 of `thoughts/shared/plans/2026-05-01-wordpress-catalog-console-plan.md`: queue one catalog from the customer's mybro WordPress account, verify Cloud Run completes it from the Apps Script trigger, verify Drive read/write from the customer session, and persist a review state.
-6. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
-7. Run one real queued `lucia-mybrocorp` catalog PDF render from WordPress and confirm `result_file_url` is written back to `catalog_jobs` with the PDF in `OBRA/Catalogos`.
-8. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
-9. Execute Phase 2: deactivate one `CANDIDATE` plugin at a time from `wp-admin/plugins.php`, run smoke tests, and log results in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
-10. After a plugin passes smoke tests, execute Phase 3: delete its plugin files (preferred: delete from `wp-content/plugins/<plugin-folder>/`).
-11. Execute Phase 4: monitor stability and finalize removal log statuses.
-12. Use `fic-implement-plan thoughts/shared/plans/2026-04-02-wordpress-plugin-cleanup-plan.md` when remote/admin access is ready for Phase 2 execution.
+5. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
+6. Run one real queued `lucia-mybrocorp` catalog PDF render from WordPress and confirm `result_file_url` is written back to `catalog_jobs` with the PDF in `OBRA/Catalogos`.
+7. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
+8. Refresh production plugin inventory from `wp-admin/plugins.php`, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then execute only one reversible simplification candidate at a time with smoke checks and rollback notes.
 
 ---
 

@@ -61,6 +61,10 @@ Remote production recapture remains pending because this inventory is from the l
 - The owned theme and `mu-plugins` code scan found no references to `elementor`, `revslider`, `js_composer`, `visual-portfolio`, `acf_pro`, or `glacier`.
 - The public production site still serves `glacier`, so production plugin deactivation remains blocked until the owned theme is active or the front-page impact is explicitly approved.
 
+## 2026-05-15 Identity Parity Candidate Note
+
+OpenSpec change `align-luciastuy-live-identity` revalidated that production home still loads legacy `glacier`, `elementor`, `rev_slider`, and `visual-portfolio` assets. These are **deletion candidates only after** production `luciastuy` migration is accepted and one-plugin-at-a-time validation is complete. Detailed candidate evidence and rollback constraints are logged in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
+
 ## Local Backup Evidence (For Staged Rollback in Development)
 
 If you are using the local WordPress runtime, the repository currently contains:

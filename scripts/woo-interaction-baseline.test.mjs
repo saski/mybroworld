@@ -432,6 +432,58 @@ test('evaluateInteractionReport requires an available payment method only for bu
   ]);
 });
 
+test('evaluateInteractionReport requires home identity signals only when requested', () => {
+  const report = {
+    homeIdentity: {
+      footerIdentityTextCount: 1,
+      footerInstagramLinkCount: 1,
+      heroVideoCount: 1,
+    },
+    navigation: {
+      cartLinkCount: 1,
+      linkCount: 3,
+      logoImageCount: 1,
+      mobileMenu: { opensOnToggle: true, toggleCount: 1 },
+    },
+    product: {
+      primaryImageCount: 1,
+      primaryImageVisibleCount: 1,
+      titleStyle: {
+        fontSizePx: 26,
+        textTransform: 'uppercase',
+      },
+      zoomTriggerCount: 1,
+    },
+    shop: {
+      addToCartActionCount: 1,
+      pageTitleStyle: {
+        letterSpacingPx: 2,
+        textTransform: 'uppercase',
+      },
+      productTitleStyle: {
+        letterSpacingPx: 2,
+        textTransform: 'uppercase',
+      },
+      productLinkCount: 1,
+      sortControlCount: 1,
+    },
+  };
+
+  assert.deepEqual(evaluateInteractionReport(report), []);
+  assert.deepEqual(evaluateInteractionReport({
+    ...report,
+    homeIdentity: {
+      footerIdentityTextCount: 0,
+      footerInstagramLinkCount: 0,
+      heroVideoCount: 0,
+    },
+  }, { requireHomeIdentity: true }), [
+    'missing_home_video_identity',
+    'missing_footer_instagram_link',
+    'missing_footer_identity_text',
+  ]);
+});
+
 test('requiredCheckoutFieldIds captures the minimum buyer data needed for fulfillment', () => {
   assert.deepEqual(requiredCheckoutFieldIds(), [
     'billing_first_name',

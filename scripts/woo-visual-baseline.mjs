@@ -56,7 +56,7 @@ function parseArgs(argv) {
 
 function printUsage(logger) {
   logger.error(
-    'Usage: scripts/woo-visual-baseline.mjs --base-url URL --label LABEL [--paths /,/shop/] [--include-first-product] [--require-first-product] [--out-dir PATH]',
+    'Usage: scripts/woo-visual-baseline.mjs --base-url URL --label LABEL [--paths /,/shop/] [--include-first-product] [--require-first-product] [--ignore-https-errors] [--out-dir PATH]',
   );
 }
 
@@ -239,11 +239,24 @@ async function warmupPageForFullPageScreenshot(page) {
   }));
 }
 
-async function captureScreenshots({ browserExecutablePath, logger, plan, puppeteer, timeoutMs }) {
+async function captureScreenshots({
+  browserExecutablePath,
+  ignoreHttpsErrors = false,
+  logger,
+  plan,
+  puppeteer,
+  timeoutMs,
+}) {
   const browser = await puppeteer.launch({
-    args: ['--disable-dev-shm-usage', '--disable-setuid-sandbox', '--no-sandbox'],
+    args: [
+      '--disable-dev-shm-usage',
+      '--disable-setuid-sandbox',
+      '--no-sandbox',
+      ...(ignoreHttpsErrors ? ['--ignore-certificate-errors'] : []),
+    ],
     executablePath: browserExecutablePath,
     headless: true,
+    ignoreHTTPSErrors: ignoreHttpsErrors,
   });
 
   try {
@@ -290,6 +303,7 @@ export async function runWooVisualBaselineCli({
   const label = safeLabel(args.label || env.WP_VISUAL_LABEL || new URL(baseUrl).hostname);
   const outDir = args['out-dir'] || env.WP_VISUAL_OUT_DIR || `wordpress/.tmp/visual-baseline/${todayStamp(now)}-${label}`;
   const includeFirstProduct = parseBooleanFlag(args['include-first-product'] || env.WP_VISUAL_INCLUDE_FIRST_PRODUCT);
+  const ignoreHttpsErrors = parseBooleanFlag(args['ignore-https-errors'] || env.WP_IGNORE_HTTPS_ERRORS);
   const requireFirstProduct = parseBooleanFlag(args['require-first-product'] || env.WP_VISUAL_REQUIRE_FIRST_PRODUCT);
   const timeoutMs = Number.parseInt(args['timeout-ms'] || env.WP_VISUAL_TIMEOUT_MS || '45000', 10);
   const viewports = parseViewportSpecs(args.viewports || env.WP_VISUAL_VIEWPORTS);
@@ -316,6 +330,7 @@ export async function runWooVisualBaselineCli({
   await fs.mkdir(outDir, { recursive: true });
   await captureScreenshots({
     browserExecutablePath,
+    ignoreHttpsErrors,
     logger,
     plan,
     puppeteer,
