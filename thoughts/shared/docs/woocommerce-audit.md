@@ -5,7 +5,7 @@ Capture the minimum production facts needed to bring the WooCommerce site into t
 
 ## Access Inventory
 - WordPress admin URL: `https://www.luciastuy.com/wp-admin`
-- WordPress admin access confirmed: yes
+- WordPress admin access confirmed: yes; production admin and WooCommerce status were re-captured on 2026-04-30
 - DonDominio panel access confirmed: yes
 - FTP access confirmed: yes
 - SFTP access confirmed: not verified from current hosting evidence
@@ -15,10 +15,13 @@ Capture the minimum production facts needed to bring the WooCommerce site into t
 
 ## Runtime Inventory
 - Production domain: `https://www.luciastuy.com`
-- PHP version: `8.2.12` at the time of the staged SQL export
+- Public front page status: HTTP 200 on 2026-04-30
+- Public shop page status: HTTP 200 on 2026-04-30
+- WordPress admin status: login/admin page opens on 2026-04-30
+- PHP version: `8.4.18` from WooCommerce system status on 2026-04-30; earlier staged SQL export evidence noted `8.2.12`
 - WordPress version: `6.9.4`
-- WooCommerce version: `10.6.2`
-- Database engine/version: `MariaDB 11.8`
+- WooCommerce version: `10.7.0` from WooCommerce system status on 2026-04-30
+- Database engine/version: `MariaDB 11.8.3` from WooCommerce system status on 2026-04-30
 - Caching layer in use: no dedicated WordPress cache plugin detected in the active plugin list; live response headers only show Apache and standard admin no-cache headers, so any server-side cache remains unconfirmed
 
 ## Theme Inventory
@@ -34,13 +37,23 @@ List active plugins and classify them:
 
 | Plugin | Version | Type | Keep | Notes |
 |---|---|---|---|---|
-| WooCommerce |  | required | yes |  |
-| Elementor |  | builder | no | Indicates page-builder coupling |
-| Slider Revolution |  | builder | no | Adds another visual layer with maintenance cost |
-| Yoast SEO |  | infrastructure | maybe | Reasonable to keep if already configured |
-| Contact Form 7 |  | content/editorial | maybe | Keep only if forms are still in use |
-| Site Kit by Google |  | infrastructure | maybe | Keep only if analytics integration is needed |
-| All-in-One WP Migration |  | infrastructure | maybe | Useful for export/import, not part of runtime architecture |
+| Advanced Custom Fields PRO | 6.2.0 | builder/data modeling | maybe | Bundled/pro dependency; license activation is required for automatic updates |
+| Akismet Anti-spam: Spam Protection | 5.7 | infrastructure | maybe | Active in the 2026-04-30 production admin snapshot |
+| All-in-One WP Migration | 7.81 | infrastructure | maybe | Useful for export/import, not part of runtime architecture; direct export page was not accessible in the 2026-04-30 admin session |
+| Contact Form 7 | 6.1.5 | content/editorial | maybe | Keep only if forms are still in use |
+| Duplicate Page | 4.5.7 | editorial utility | maybe | No durable runtime need identified yet |
+| Elementor | 4.0.5 | builder | no | Indicates page-builder coupling |
+| Envato Market | 2.0.13 | infrastructure/theme updater | maybe | Tied to commercial theme/plugin update workflow |
+| Hello Dolly | 1.7.2 | nonessential | no | Active and not needed for runtime |
+| Kirki Customizer Framework | 5.2.2 | theme dependency | maybe | Tied to Glacier customizer/theme behavior |
+| One Click Demo Import | 3.4.1 | demo/import utility | no | Active demo importer; usually not needed in production runtime |
+| Site Kit by Google | 1.177.0 | infrastructure | maybe | Keep only if analytics/Search Console integration is needed |
+| Slider Revolution | 6.6.15 | builder | no | Adds another visual layer with maintenance cost |
+| Visual Portfolio, Posts & Image Gallery | 3.6.0 | portfolio/gallery | maybe | Active and tied to current portfolio content/menu |
+| WooCommerce | 10.7.0 | required | yes | Required commerce runtime |
+| WordPress Importer | 0.9.5 | import utility | no | Active importer; usually not needed in production runtime |
+| WPBakery Page Builder | 7.0 | builder | no | Heavy legacy shortcode/theme coupling |
+| Yoast SEO | 27.5 | infrastructure | maybe | Reasonable to keep if already configured |
 
 Types:
 - required
@@ -98,9 +111,11 @@ Choose this if any are true:
 
 ## Evidence Captured So Far
 - Active theme page confirms `Glacier` is active.
-- Plugins page confirms presence of `WooCommerce`, `Elementor`, `Slider Revolution`, `Yoast SEO`, `Contact Form 7`, `Site Kit by Google`, and `All-in-One WP Migration`.
+- Plugins page confirms 17 active plugins with versions on 2026-04-30.
 - Admin payload confirms WordPress version `6.9.4`.
+- WooCommerce status confirms WooCommerce `10.7.0`, PHP `8.4.18`, MariaDB `11.8.3`, and active theme `Glacier` `5.0.1`.
 - WooCommerce admin warns that the active theme contains outdated WooCommerce template overrides.
+- Public front page and shop returned HTTP 200 on 2026-04-30.
 - Production DB export for WooCommerce sync guardrail: `backups/production-db-export-20260501-195148/wordpress-db.sql`, sha256 `cfb23ca6901da64c784ad63fdc779649a345a3464e252b0d2dd1e198a7864ebb`.
 - Production DB export before unmanaged cleanup: `backups/production-db-export-20260501-203207/wordpress-db.sql`, sha256 `8f7755d7ed7af56b0b85ef33006396054f77267e96118227738bfe31f0e3d2bf`.
 
@@ -112,6 +127,23 @@ Choose this if any are true:
 - WordPress table prefix: `wp_nueva`
 - Theme version from `style.css`: `5.0.1`
 - Theme bundles ACF Pro, Slider Revolution, WPBakery (`js_composer`), and WooCommerce support through TGM/plugin coupling
+
+## WooCommerce Theme Warnings
+
+Captured from WooCommerce system status on 2026-04-30:
+
+- Active theme: `Glacier` `5.0.1`
+- Child theme: no; WooCommerce recommends using a child theme when modifying a parent theme not personally built by the operator.
+- Theme type: classic theme
+- Archive template warning: `woocommerce.php` takes priority over `woocommerce/archive-product.php`, so archive-product overrides will not apply.
+- Outdated overrides:
+  - `wp-content/themes/glacier/woocommerce/content-product.php`: version `3.6.0`, core version `9.4.0`
+  - `wp-content/themes/glacier/woocommerce/global/quantity-input.php`: version `7.4.0`, core version `10.1.0`
+  - `wp-content/themes/glacier/woocommerce/loop/pagination.php`: version `3.6.0`, core version `9.3.0`
+- Additional overrides present:
+  - `wp-content/themes/glacier/woocommerce/loop/loop-end.php`
+  - `wp-content/themes/glacier/woocommerce/loop/loop-start.php`
+  - `wp-content/themes/glacier/woocommerce/content-product_cat.php`
 
 ## Architecture Decision
 

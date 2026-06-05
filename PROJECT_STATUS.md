@@ -72,7 +72,7 @@
   - latest outputs available under `catalog-generator/output/`
   - client feedback implementation plan now lives at `thoughts/shared/plans/2026-05-01-catalog-client-feedback-implementation-plan.md`
 - Phased plan creation and safety criteria definition.
-- Creating inventory + executing cleanup phases on the WordPress admin site; local imported versions/status are captured, and live production admin confirmation plus remote backup record remain pending.
+- Creating inventory + executing cleanup phases on the WordPress admin site; direct production status was captured on 2026-04-30, local imported versions/status were refreshed on 2026-05-03, and a fresh live production confirmation plus remote backup record remain pending before deletion.
 - Local WordPress runtime remains available through Docker Compose for production snapshot testing, owned-theme work, and `mu-plugin` validation.
 - Local plugin cleanup now has one passing deactivation entry; production remains untouched until explicit remote backup/admin execution.
 - Local plugin/dependency audit was refreshed on 2026-05-03 with WP-CLI versions, status, and cleanup priority recorded in `thoughts/shared/docs/wordpress-plugin-inventory.md` and `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
@@ -97,7 +97,7 @@
 5. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
 6. Run one real queued `lucia-mybrocorp` catalog PDF render from WordPress and confirm `result_file_url` is written back to `catalog_jobs` with the PDF in `OBRA/Catalogos`.
 7. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
-8. Refresh production plugin inventory from `wp-admin/plugins.php`, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then execute only one reversible simplification candidate at a time with smoke checks and rollback notes.
+8. Refresh live production plugin inventory from `wp-admin/plugins.php`, compare it with the 2026-04-30 direct admin snapshot and 2026-05-03 local imported runtime, then execute only one reversible simplification candidate at a time with smoke checks and rollback notes.
 
 ---
 
@@ -108,7 +108,7 @@
 - The original Google Drive template link was not reliably readable without authentication in this session.
 - Customer-operated catalog generation is not yet fully verified; Cloud Run is live, the production Apps Script Web App is updated for on-demand worker startup, Cloud Run IAM allows the Nacho-owned Apps Script to invoke the worker, and direct Apps Script-triggered Cloud Run PDF jobs completed. Output to `OBRA/Catalogos` is verified. The final proof still requires queueing/reviewing a catalog from the customer's mybro WordPress account. Legacy **Cloud Scheduler** polling is **paused** (worker + monitor); resume the monitor job only if periodic automated health checks are required again.
 - CI/CD now has a reviewed manual WordPress owned-code deployment passing smoke checks with rollback artifact capture in workflow run `25509617424`. Push-triggered production deploys remain disabled until `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` are intentionally set.
-- Remote admin execution is not performed yet in this environment; plugin versions/status are captured from the local imported runtime, but production still needs direct `wp-admin/plugins.php` confirmation before deletion.
+- Production admin plugin status was directly captured on 2026-04-30 and then refreshed through the local imported runtime on 2026-05-03, but production still needs a fresh `wp-admin/plugins.php` confirmation immediately before deletion.
 - The actual “remove no longer needed” set will be confirmed only after Phase 2 deactivation + smoke tests.
 
 ---

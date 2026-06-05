@@ -80,6 +80,7 @@ Production catalog output folder:
 - Verified on 2026-05-03 by direct job `catalog_20260503_102110_2c0d`; the resulting PDF parent was the configured folder.
 
 ## Deployment Commands
+- Owned-code verification: `scripts/wp-test-owned-code.sh`
 - Audit pull of the current production theme: `scripts/wp-pull-theme.sh`
 - Dry-run preview: `scripts/wp-push-theme.sh --dry-run`
 - Pre-deploy owned-code archive: `WP_BACKUP_WP_CONTENT_SUBDIRS="mu-plugins themes/luciastuy" scripts/wp-backup.sh --skip-db`
@@ -113,6 +114,7 @@ archived owned code automatically.
 - confirm the `mu-plugin` source exists at `wordpress/wp-content/mu-plugins`
 - confirm catalog console secrets are configured on the target host, not in tracked files
 - confirm `scripts/wp-remote.env` points at `ftp.dondominio.com` for FTP and `/public`
+- run `scripts/wp-test-owned-code.sh`
 - run `scripts/wp-deploy-manifest.sh --output wp-deploy-manifest.txt` and keep the manifest with deployment evidence
 - run `scripts/wp-push-theme.sh --dry-run` and verify the remote target paths
 - run `WP_BACKUP_WP_CONTENT_SUBDIRS="mu-plugins themes/luciastuy" scripts/wp-backup.sh --skip-db` and keep the backup id with deployment evidence
@@ -120,6 +122,10 @@ archived owned code automatically.
 - verify `WP_DEPLOY_TRANSPORT`, `WP_FTP_HOST`, `WP_FTP_USER`, and `WP_REMOTE_PATH` point to production before any upload
 - confirm `lftp` is installed when using FTP deployment
 - keep database changes and uploads changes out of this deployment step
+
+Dry-run output masks configured deployment usernames as placeholders such as
+`<configured WP_REMOTE_USER>` or `<configured WP_FTP_USER>` so handoff notes can
+include deployment targets without exposing credentials.
 
 ## Post-Deploy Verification
 - `curl -I https://www.luciastuy.com`

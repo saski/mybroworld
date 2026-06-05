@@ -25,6 +25,11 @@ Track each plugin you consider removing so you can prove:
 |---|---|---|---|---|
 | 2026-05-01 | `all-in-one-wp-migration-src` | local deactivated | Baseline and post-change `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` passed; WP-CLI inactive-state assertion passed after deactivation; smoke checks returned 200 for `/`, `/shop/`, `/cart/`, and `/checkout/`. | pass; keep inactive locally; production untouched; rollback with `wp plugin activate all-in-one-wp-migration-src` |
 
+## Evidence Notes
+
+- 2026-04-30: Re-captured installed plugin list from production `wp-admin/plugins.php` and WooCommerce system status. All 17 installed plugins were active. No plugin was deactivated or deleted.
+- 2026-04-30: Fresh backups were still required before Phase 2 plugin cleanup. Do not deactivate/delete candidate plugins until the DB export and `wp-content` backup are recorded in `thoughts/shared/docs/wordpress-plugin-inventory.md` or a secure local handoff note.
+
 ## 2026-05-15 Post-Glacier Identity Migration Candidate Snapshot
 
 Captured for OpenSpec change `align-luciastuy-live-identity` after baseline evidence review of:

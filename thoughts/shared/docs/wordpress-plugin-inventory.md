@@ -5,8 +5,9 @@ Capture a stable inventory of the installed plugins so that “remove no longer 
 
 ## Source Of Truth (Captured Evidence)
 - Plugin list captured in `thoughts/shared/docs/woocommerce-audit.md` on `2026-04-02`.
+- Production plugin versions and active status were re-captured from `wp-admin/plugins.php` and WooCommerce system status on `2026-04-30`; all 17 installed plugins were active in that snapshot.
 - Local imported production runtime captured with WP-CLI on `2026-05-03` from the Docker WordPress instance at `http://localhost:8080`.
-- Remote production admin state still needs direct confirmation before production deletion.
+- Fresh remote production admin state still needs direct confirmation before production deletion because the latest direct admin snapshot is older than the local cleanup analysis.
 
 Primary reference page:
 - `https://www.luciastuy.com/wp-admin/plugins.php`
@@ -53,7 +54,18 @@ Captured on 2026-05-02 while implementing `thoughts/shared/plans/2026-05-02-onli
 | Contact Form 7 | Content/form utility | Do not use for product purchase flow unless explicitly approved. |
 | Site Kit by Google | Analytics infrastructure | Do not couple shop UI to it; decide separately after analytics evidence. |
 
-Remote production recapture remains pending because this inventory is from the local imported runtime, not the live `wp-admin/plugins.php` screen. Do not delete production files until the remote backup record is complete.
+A fresh remote production recapture remains pending because the cleanup-priority inventory is from the local imported runtime, not the current live `wp-admin/plugins.php` screen. Do not delete production files until the live admin list is refreshed and the remote backup record is complete.
+
+## 2026-04-30 Production Admin Update Notices
+
+These notices were visible on `wp-admin/plugins.php` or `wp-admin/themes.php` during the direct production admin recapture:
+
+| Component | Installed Version | Available Version | Notes |
+|---|---|---|---|
+| Advanced Custom Fields PRO | 6.2.0 | 6.8.0.1 | Automatic update unavailable until license key is entered |
+| Duplicate Page | 4.5.7 | 4.5.8 | Update link visible |
+| Kirki Customizer Framework | 5.2.2 | 6.0.2 | Update link and TGM notice visible |
+| WPBakery Page Builder | 7.0 | 8.7.2 | Automatic update unavailable until license activation |
 
 ## 2026-05-03 Owned Theme Readiness Note
 
@@ -92,3 +104,9 @@ How to create a repeatable backup locally:
 ## Next Action Needed (Before Phase 2 Execution)
 Confirm the local imported inventory against the live production admin list directly from:
 - `https://www.luciastuy.com/wp-admin/plugins.php`
+
+Before any plugin deactivation or production file deletion:
+
+1. Create a fresh production DB export through phpMyAdmin or `scripts/wp-backup.sh`.
+2. Create a fresh `wp-content` archive, at minimum covering `plugins`, `mu-plugins`, and `themes`.
+3. Record backup filenames, timestamps, and storage location in a local handoff note, not in git if the path exposes private machine details.
