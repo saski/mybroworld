@@ -47,6 +47,6 @@ echo "Running catalog-generator tests..."
 npm --prefix catalog-generator test
 
 echo "Checking changed-file whitespace and conflict markers..."
-git diff --check
+git diff --check -- . ':(exclude)catalog-generator/node_modules/**'
 
 echo "Auto-validation passed."

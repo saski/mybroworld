@@ -55,4 +55,4 @@ jobs:
         run: catalog-generator/cloud-run/deploy.test.sh
 
       - name: Check whitespace and conflict markers
-        run: git diff --check
+        run: git diff --check -- . ':(exclude)catalog-generator/node_modules/**'
