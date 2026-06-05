@@ -1,0 +1,23 @@
+$ORIGIN luciastuy.com.
+$TTL 3600
+
+@ IN A 31.214.178.45
+@ IN MX 10 mx01.dondominio.com.
+@ IN TXT "v=spf1 include:spf.dondominio.com"
+
+* IN CNAME hostingsrv28.dondominio.com.
+autoconfig IN CNAME autoconfig.panel247.com.
+autodiscover IN CNAME autodiscover.panel247.com.
+bbdd IN CNAME bbddsrv1.dondominio.com.
+dddk._domainkey IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDoxeZyUtdIcBO1KtEeEP0qldlkTHyFTqxd1JZvyOSaYD4mJZf156BS5AgmJgR4uXaBJRQGPPdbkMJzeG+dTOG24r1D8yMUTo89OHWU3qUI0Lo2U4jPNmwWZ9znQUYmptmp/l9PWO2V2sX8cStJ9ZyhxsSPzAg4X+quRzaVvqFONQIDAQAB"
+ftp IN CNAME ftp-server-00.dondominio.net.
+imap IN CNAME mailsrv2.dondominio.com.
+mail IN CNAME mailsrv2.dondominio.com.
+pop IN CNAME mailsrv2.dondominio.com.
+pop3 IN CNAME mailsrv2.dondominio.com.
+smtp IN CNAME mailsrv2.dondominio.com.
+webmail IN CNAME webmail-02.dondominio.net.
+www IN CNAME hostingsrv28.dondominio.com.
+_57375d291b9a55c056ae7702966cebd6 IN CNAME 84e3afc2f5f2d2dbca123cbec447df9f.15f923cd3412bc5e8cd223427840b37f.ssl228505.sectigo.com.
+_a6d44d77d194b7fcd9cfe52047cccf72 IN CNAME 7b9f51461de5963e7f3b96c50c88b532.06640f824d207bb8994d56f9cb8e500b.ssl305292.sectigo.com.
+_autodiscover._tcp IN SRV 0 0 443 autodiscover.panel247.com.

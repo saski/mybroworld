@@ -1,0 +1,19 @@
+luciastuy.com,ANAME,-,-,hostingsrv28.dondominio.com,22/05/2023 20:32:11
+luciastuy.com,MX,-,10,mx01.dondominio.com.,24/09/2023 20:45:03
+luciastuy.com,TXT,-,-,v=spf1 include:spf.dondominio.com,22/05/2023 20:32:12
+*.luciastuy.com,CNAME,-,-,hostingsrv28.dondominio.com.,22/05/2023 20:32:11
+autoconfig.luciastuy.com,CNAME,-,-,autoconfig.panel247.com.,24/09/2023 20:45:03
+autodiscover.luciastuy.com,CNAME,-,-,autodiscover.panel247.com.,24/09/2023 20:45:03
+bbdd.luciastuy.com,CNAME,-,-,bbddsrv1.dondominio.com.,22/05/2023 20:32:12
+dddk._domainkey.luciastuy.com,TXT,-,-,"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDoxeZyUtdIcBO1KtEeEP0qldlkTHyFTqxd1JZvyOSaYD4mJZf156BS5AgmJgR4uXaBJRQGPPdbkMJzeG+dTOG24r1D8yMUTo89OHWU3qUI0Lo2U4jPNmwWZ9znQUYmptmp/l9PWO2V2sX8cStJ9ZyhxsSPzAg4X+quRzaVvqFONQIDAQAB",24/09/2023 20:45:03
+ftp.luciastuy.com,CNAME,-,-,ftp-server-00.dondominio.net.,22/05/2023 20:32:11
+imap.luciastuy.com,CNAME,-,-,mailsrv2.dondominio.com.,22/05/2023 20:32:12
+mail.luciastuy.com,CNAME,-,-,mailsrv2.dondominio.com.,22/05/2023 20:32:11
+pop.luciastuy.com,CNAME,-,-,mailsrv2.dondominio.com.,22/05/2023 20:32:12
+pop3.luciastuy.com,CNAME,-,-,mailsrv2.dondominio.com.,22/05/2023 20:32:12
+smtp.luciastuy.com,CNAME,-,-,mailsrv2.dondominio.com.,22/05/2023 20:32:11
+webmail.luciastuy.com,CNAME,-,-,webmail-02.dondominio.net.,22/05/2023 20:32:12
+www.luciastuy.com,CNAME,-,-,hostingsrv28.dondominio.com.,22/05/2023 20:32:11
+_57375d291b9a55c056ae7702966cebd6.luciastuy.com,CNAME,-,-,84e3afc2f5f2d2dbca123cbec447df9f.15f923cd3412bc5e8cd223427840b37f.ssl228505.sectigo.com.,24/09/2023 21:33:06
+_a6d44d77d194b7fcd9cfe52047cccf72.luciastuy.com,CNAME,-,-,7b9f51461de5963e7f3b96c50c88b532.06640f824d207bb8994d56f9cb8e500b.ssl305292.sectigo.com.,13/05/2025 12:43:02
+_autodiscover._tcp.luciastuy.com,SRV,-,0,0 443 autodiscover.panel247.com,24/09/2023 20:45:03
