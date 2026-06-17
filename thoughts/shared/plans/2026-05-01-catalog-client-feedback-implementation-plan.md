@@ -31,7 +31,7 @@ Implement the client feedback received on 2026-05-01 for the PDF catalog while k
 ## Current Access Note
 
 The Google Drive connector available in this session was authenticated as
-`ignacio.viejo@eventbrite.com` and returned no files for:
+`former-eventbrite-email` and returned no files for:
 
 - image-selection folder: `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`
 - fonts/logos folder: `https://drive.google.com/drive/folders/1J98-QwFiEkRu99BLjvEbfE_J3C5FxRy9`

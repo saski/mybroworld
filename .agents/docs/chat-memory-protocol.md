@@ -15,7 +15,7 @@ Run these steps before making assumptions or edits:
 1. Read `AGENTS.md`.
 2. Read this file.
 3. Load any task-specific rule or skill triggered by the request.
-4. If a referenced repo-local artifact is missing, check `/Users/ignacio.viejo/.agents/` and `/Users/ignacio.viejo/saski/augmentedcode-configuration/` for the canonical equivalent before treating it as unavailable.
+4. If a referenced repo-local artifact is missing, check `/Users/saski/.agents/` and `/Users/saski/Code/augmentedcode-configuration/` for the canonical equivalent before treating it as unavailable.
 5. Read the most relevant canonical docs and status artifacts for the active workstream.
 6. Read active OpenSpec changes under `openspec/changes/` when the task touches planned or proposed work.
 7. Inspect the current code, tests, and workspace diff before changing anything.

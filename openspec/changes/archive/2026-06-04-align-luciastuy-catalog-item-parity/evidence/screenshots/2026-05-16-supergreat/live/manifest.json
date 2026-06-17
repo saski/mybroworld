@@ -4,19 +4,19 @@
   "label": "live-production",
   "screenshots": [
     {
-      "filePath": "/Users/ignacio.viejo/saski/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/live/live-production-desktop-portfolio-supergreat.png",
+      "filePath": "/Users/saski/Code/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/live/live-production-desktop-portfolio-supergreat.png",
       "slug": "portfolio-supergreat",
       "url": "https://www.luciastuy.com/portfolio/supergreat/",
       "viewport": "desktop"
     },
     {
-      "filePath": "/Users/ignacio.viejo/saski/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/live/live-production-tablet-portfolio-supergreat.png",
+      "filePath": "/Users/saski/Code/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/live/live-production-tablet-portfolio-supergreat.png",
       "slug": "portfolio-supergreat",
       "url": "https://www.luciastuy.com/portfolio/supergreat/",
       "viewport": "tablet"
     },
     {
-      "filePath": "/Users/ignacio.viejo/saski/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/live/live-production-mobile-portfolio-supergreat.png",
+      "filePath": "/Users/saski/Code/mybroworld/openspec/changes/align-luciastuy-catalog-item-parity/evidence/screenshots/2026-05-16-supergreat/live/live-production-mobile-portfolio-supergreat.png",
       "slug": "portfolio-supergreat",
       "url": "https://www.luciastuy.com/portfolio/supergreat/",
       "viewport": "mobile"
