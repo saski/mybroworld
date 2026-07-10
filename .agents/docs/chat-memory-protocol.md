@@ -15,7 +15,7 @@ Run these steps before making assumptions or edits:
 1. Read `AGENTS.md`.
 2. Read this file.
 3. Load any task-specific rule or skill triggered by the request.
-4. If a referenced repo-local artifact is missing, check `/Users/saski/.agents/` and `/Users/saski/Code/augmentedcode-configuration/` for the canonical equivalent before treating it as unavailable.
+4. If a referenced repo-local artifact is missing, check `/Users/saski/.agents/` and `/Users/saski/Code/augmentedcode-configuration/` for the canonical equivalent before treating it as unavailable. Treat `/Users/saski/.agents` as the shared agent configuration root; it normally resolves to `/Users/saski/Code/augmentedcode-configuration/.agents`.
 5. Read the most relevant canonical docs and status artifacts for the active workstream.
 6. Read active OpenSpec changes under `openspec/changes/` when the task touches planned or proposed work.
 7. Inspect the current code, tests, and workspace diff before changing anything.
@@ -39,6 +39,7 @@ Use repository artifacts in this order when reconstructing context:
 Before finishing a task, persist reusable knowledge in the correct place:
 
 - Cross-project working method or chat bootstrap rule: update `AGENTS.md` or this file.
+- Generic skill inventory or domain routing: use `/Users/saski/.agents/docs/skill-factory-skills.md` and `/Users/saski/.agents/docs/skill-domain-routing.md` when the matching files are absent from this repository.
 - Spreadsheet review criteria or judgment model: update `.agents/rules/mybroworld-sheet-reviewer-evolution.md`, `.agents/skills/mybroworld-sheet-reviewer/SKILL.md`, and `.agents/skills/mybroworld-sheet-reviewer/references/project-criteria.md` when the change is reusable.
 - User-facing or operator-facing behavior: update the relevant document under `thoughts/shared/docs/`.
 - Stable implementation behavior: encode it in code and tests, then document only what operators need.
