@@ -62,7 +62,7 @@ cat > "$LFTP_CAPTURE"
 SH
 chmod +x "$TMP_DIR/bin/lftp"
 
-PATH="$TMP_DIR/bin:$PATH" WP_REMOTE_CONFIG_FILE="$CONFIG_FILE" "$SCRIPT" >/dev/null
+PATH="$TMP_DIR/bin:$PATH" WP_REMOTE_CONFIG_FILE="$CONFIG_FILE" WP_FTP_INSECURE=0 "$SCRIPT" >/dev/null
 LFTP_COMMANDS=$(cat "$LFTP_CAPTURE")
 
 assert_contains "$LFTP_COMMANDS" "open --user \"ftp-user\" --password \"secret-value\" \"ftp://ftp.luciastuy.test\"" "lftp should authenticate through stdin commands"
@@ -71,5 +71,17 @@ assert_contains "$LFTP_COMMANDS" "mkdir -pf \"/public/wp-content/mu-plugins\"" "
 assert_contains "$LFTP_COMMANDS" "mirror -R --verbose --exclude-glob .DS_Store \"wordpress/wp-content/themes/luciastuy\" \"/public/wp-content/themes/luciastuy\"" "lftp should upload owned theme"
 assert_contains "$LFTP_COMMANDS" "mirror -R --verbose --exclude-glob .DS_Store \"wordpress/wp-content/mu-plugins\" \"/public/wp-content/mu-plugins\"" "lftp should upload mu-plugins"
 assert_not_contains "$LFTP_COMMANDS" "--delete" "ftp upload should not delete remote files by default"
+assert_not_contains "$LFTP_COMMANDS" "set ssl:verify-certificate no" "lftp should not disable cert verification by default"
+
+mkdir -p "$TMP_DIR/bin"
+cat > "$TMP_DIR/bin/lftp" <<SH
+#!/bin/sh
+cat > "$LFTP_CAPTURE"
+SH
+chmod +x "$TMP_DIR/bin/lftp"
+
+INSECURE_OUTPUT=$(PATH="$TMP_DIR/bin:$PATH" WP_REMOTE_CONFIG_FILE="$CONFIG_FILE" WP_FTP_INSECURE=1 "$SCRIPT" 2>/dev/null || true)
+INSECURE_COMMANDS=$(cat "$LFTP_CAPTURE")
+assert_contains "$INSECURE_COMMANDS" "set ssl:verify-certificate no" "lftp should disable cert verification when WP_FTP_INSECURE=1"
 
 echo "ok test scripts/wp-push-theme.test.sh"

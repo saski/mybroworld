@@ -39,10 +39,12 @@ TMP_DIR="$TMP_DIR" \
 FTP_HOST="$WP_FTP_HOST" \
 FTP_USER="$WP_FTP_USER" \
 FTP_PASSWORD="$WP_FTP_PASSWORD" \
+FTP_INSECURE="${WP_FTP_INSECURE:-0}" \
 python3 - <<'PY'
-from ftplib import FTP
+from ftplib import FTP, FTP_TLS
 from pathlib import Path
 import os
+import ssl
 
 host = os.environ["FTP_HOST"]
 user = os.environ["FTP_USER"]
@@ -50,9 +52,18 @@ password = os.environ["FTP_PASSWORD"]
 content_root = os.environ["WP_CONTENT_ROOT"].rstrip("/")
 subdirs = os.environ["SUBDIRS"].split()
 tmp_dir = Path(os.environ["TMP_DIR"])
+insecure = os.environ.get("FTP_INSECURE", "0") in ("1", "true", "yes", "on")
 
-ftp = FTP(host, timeout=30)
-ftp.login(user, password)
+if insecure:
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    ftp = FTP_TLS(host, timeout=30, context=ctx)
+    ftp.login(user, password)
+    ftp.prot_p()
+else:
+    ftp = FTP(host, timeout=30)
+    ftp.login(user, password)
 
 def download_tree(remote_root: str, local_root: Path) -> int:
     count = 0

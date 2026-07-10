@@ -113,10 +113,16 @@ if [ "$DEPLOY_TRANSPORT" = "ftp" ]; then
     exit 1
   fi
 
+  LFTP_SSL_VERIFY=""
+  if [ "${WP_FTP_INSECURE:-0}" = "1" ]; then
+    LFTP_SSL_VERIFY="set ssl:verify-certificate no"
+  fi
+
   echo "Uploading owned theme via FTP..."
   lftp <<LFTP
 set cmd:fail-exit true
 set ftp:ssl-allow true
+$LFTP_SSL_VERIFY
 open --user "$FTP_USER" --password "$FTP_PASSWORD" "ftp://$FTP_HOST"
 mkdir -pf "$REMOTE_THEME_DIR"
 mkdir -pf "$REMOTE_MU_PLUGIN_DIR"

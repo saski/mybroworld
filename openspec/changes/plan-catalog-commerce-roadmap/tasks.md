@@ -4,6 +4,7 @@
 - [x] 0.2 Separate locally proven checkout behavior from the remaining production/staging payment and fulfillment launch gates.
 - [x] 0.3 Publish `luciastuy` on production and record the immediate next-stage blocker from interaction evidence: `missing_checkout_payment_method` during production checkout-readiness validation (`2026-05-15-production-next-stage-checkout-readiness`).
 - [x] 0.4 Sync the 2026-06-05 end-to-end verification: local catalog generation and local owned ecommerce flow pass; production Store API parity and public smoke pass; production buyer checkout remains blocked by `cart_did_not_receive_item` and missing payment/checkout fields.
+- [x] 0.5 Sync the 2026-07-10 production stabilization: resolve 500 fatal (`Allowed memory size exhausted` in WooCommerce `countries.php`) by raising `WP_MEMORY_LIMIT` to 512M and disabling `WP_DEBUG`/`SAVEQUERIES`/`SCRIPT_DEBUG`; deploy owned `lucia-portfolio-post-type.php` MU-plugin; deactivate ACF PRO in production (folder renamed, not deleted); verify all portfolio URLs, REST API meta, and admin meta box post-deactivation.
 
 ## 1. Catalog Contract And Customer Feedback
 
@@ -44,9 +45,11 @@
 - [ ] 5.2 Keep `scripts/wp-test-owned-code.sh` green before the next owned WordPress code change.
 - [ ] 5.3 Expand tests for any new artwork meta, status, publication, or product-display rules before implementing them.
 - [x] 5.4 Define repeatable storefront, shop, product, cart, checkout, and critical-error smoke or interaction paths for local and production-like environments.
-- [ ] 5.5 Classify every active plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN` with evidence and rollback notes.
-- [ ] 5.6 Remove or deactivate only one `CANDIDATE` plugin at a time after baseline tests pass.
-- [ ] 5.7 Run smoke checks before and after each plugin change and update the plugin-removal log immediately.
+- [x] 5.5 Classify every active plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN` with evidence and rollback notes.
+- [x] 5.6 Remove or deactivate only one `CANDIDATE` plugin at a time after baseline tests pass.
+- [x] 5.7 Run smoke checks before and after each plugin change and update the plugin-removal log immediately.
+- [ ] 5.8 After the ACF PRO soak period (1-2 weeks without incidents), delete the deactivated `acf_pro.deactivated` folder from production and record the final deletion in the removal log.
+- [ ] 5.9 Propose the next plugin deactivation candidate from the inventory (`kirki`, `envato-market`, or `hello` are low-risk next targets) and run the one-at-a-time deactivation cycle with pre/post smoke checks.
 
 ## 6. Ecommerce Visual Identity
 
@@ -72,7 +75,8 @@
 - [x] 7.8 Run one local non-production BACS checkout order and record payment status, order id, buyer data, shipping fields, and order note evidence.
 - [ ] 7.9 Run one approved production/staging payment test order and record payment status, order id, buyer confirmation, admin notification, shipping fields, and refund/cancel path.
 - [ ] 7.10 Confirm the customer can use the WooCommerce order record to ship the purchased artwork.
-- [ ] 7.11 Diagnose why the anonymous production add-to-cart path leaves the cart empty before attempting a production payment test order.
+- [x] 7.11 Diagnose why the anonymous production add-to-cart path leaves the cart empty before attempting a production payment test order. (Resolved 2026-07-09: cart/session persistence works for `LA-2026-006`; the remaining blocker is missing payment methods at checkout, not cart emptiness.)
+- [ ] 7.12 After the production 500 fix (2026-07-10), re-verify that checkout still reaches the payment-method selection step and audit which WooCommerce payment gateways are enabled in production admin.
 
 ## 8. OpenSpec Governance
 
@@ -98,12 +102,12 @@
 - [ ] 9.8 Source-data lane: identify missing artwork years, import one year batch, validate required headers/status/images, generate a preview, and repeat only after blockers from the current batch are closed.
 - [ ] 9.9 Commerce-readiness lane: audit production WooCommerce payment, shipping, checkout fields, emails, and order records before running an approved test order.
 - [ ] 9.10 Observability lane: finish GA4 Realtime/DebugView and purchase/order reconciliation through `openspec/changes/configure-shop-business-observability/`.
-- [ ] 9.11 Plugin-safety lane: refresh production plugin inventory, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then propose exactly one reversible simplification candidate.
+- [x] 9.11 Plugin-safety lane: refresh production plugin inventory, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then propose exactly one reversible simplification candidate. (ACF PRO deactivated 2026-07-10 as first candidate; next candidates identified in task 5.9.)
 
 ### Coordination Rules
 
 - [ ] 9.12 Do not let the source-data lane change the contract while the customer/catalog lane still has open field decisions.
-- [ ] 9.13 Do not let plugin deactivation run before the commerce-readiness lane has a fresh smoke baseline and rollback evidence.
+- [x] 9.13 Do not let plugin deactivation run before the commerce-readiness lane has a fresh smoke baseline and rollback evidence. (Baseline captured 2026-07-10: smoke checks passed before ACF deactivation; backup in `backups/production-backup-2026-07-10/`.)
 - [ ] 9.14 Do not mark the shop buyer-ready until payment, buyer data, fulfillment record, and GA4 purchase visibility are all evidenced or explicitly waived.
 
 ## 10. Trunk-Based Delivery Hygiene
@@ -112,4 +116,4 @@
 - [x] 10.2 Absorb useful stale branch evidence into current documentation or confirm it is already represented on trunk.
 - [x] 10.3 Confirm the remote tracks `main` as its only branch after pruning completed, stale, and dependency-update branches.
 - [ ] 10.4 Keep future roadmap edits on `main` when they are documentation-only and validated; use short-lived `eb/...` branches only for executable slices that need isolated review.
-- [ ] 10.5 Before starting the next executable slice, update its OpenSpec on `main`, name the gate it advances, and list the branch deletion condition.
+- [x] 10.5 Before starting the next executable slice, update its OpenSpec on `main`, name the gate it advances, and list the branch deletion condition. (2026-07-10 ACF deactivation slice landed on `main` as commit `5c85aa7`; gate: plugin-safety lane; no separate branch needed for production FTP operations.)
