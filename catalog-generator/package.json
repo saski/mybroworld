@@ -14,7 +14,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "csv-parse": "^6.2.1",
+    "csv-parse": "^7.0.1",
     "puppeteer": "^25.3.0"
   }
 }
