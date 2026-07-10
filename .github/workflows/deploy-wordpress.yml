@@ -107,7 +107,7 @@ jobs:
         env:
           WP_SMOKE_INCLUDE_FIRST_PRODUCT: "1"
           WP_REQUIRE_PRODUCT_SMOKE: "1"
-          WP_SMOKE_PATHS: "/,/shop/,/cart/,/checkout/"
+          WP_SMOKE_PATHS: "/,/catalogo/,/shop/,/cart/,/checkout/"
         run: node scripts/wp-smoke-test.mjs
 
       - name: Assert production Store API inventory
