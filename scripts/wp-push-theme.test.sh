@@ -62,7 +62,7 @@ cat > "$LFTP_CAPTURE"
 SH
 chmod +x "$TMP_DIR/bin/lftp"
 
-PATH="$TMP_DIR/bin:$PATH" WP_REMOTE_CONFIG_FILE="$CONFIG_FILE" "$SCRIPT" >/dev/null
+PATH="$TMP_DIR/bin:$PATH" WP_REMOTE_CONFIG_FILE="$CONFIG_FILE" WP_FTP_INSECURE=0 "$SCRIPT" >/dev/null
 LFTP_COMMANDS=$(cat "$LFTP_CAPTURE")
 
 assert_contains "$LFTP_COMMANDS" "open --user \"ftp-user\" --password \"secret-value\" \"ftp://ftp.luciastuy.test\"" "lftp should authenticate through stdin commands"
