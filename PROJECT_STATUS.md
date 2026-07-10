@@ -1,7 +1,7 @@
 # mybroworld - Project Status
 
-**Last Updated**: 2026-07-09
-**Overall Status**: 🟡 **Multiple active workstreams** - The completed `align-luciastuy-live-identity` and `align-luciastuy-catalog-item-parity` OpenSpecs are archived, with accepted requirements promoted under `openspec/specs/`. The living OpenSpecs are now `plan-catalog-commerce-roadmap` and `configure-shop-business-observability`: the first coordinates customer catalog decisions, source-sheet completion, production checkout/payment readiness, and plugin-safety sequencing; the second is in final GA4 Realtime/DebugView plus WooCommerce test-order verification.
+**Last Updated**: 2026-07-10
+**Overall Status**: 🟡 **Multiple active workstreams** - The owned `luciastuy` theme is now active in production, the `/catalogo/` page renders a clean owned contact template, WordPress auto-deploy is enabled on `main`, and ACF PRO is deactivated. The completed `align-luciastuy-live-identity` and `align-luciastuy-catalog-item-parity` OpenSpecs are archived, with accepted requirements promoted under `openspec/specs/`. The living OpenSpecs are now `plan-catalog-commerce-roadmap` and `configure-shop-business-observability`: the first coordinates customer catalog decisions, source-sheet completion, production checkout/payment readiness, and plugin-safety sequencing; the second is in final GA4 Realtime/DebugView plus WooCommerce test-order verification.
 
 ---
 
@@ -12,9 +12,9 @@
 | Catalog editorial uplift | 🟡 Awaiting customer image selections | 94% | Yes |
 | WordPress production snapshot runtime | 🟢 Ready | 100% | No |
 | WordPress catalog PDF console | 🟡 Customer validation pending | 99% | Requires one catalog queued/reviewed from the customer's mybro WordPress account |
-| Safe CI/CD automation | 🟡 Catalog-agent CD validated | 85% | WordPress rollback automation, WordPress manual deploy validation, source readiness monitor, and auto-deploy enable flags still pending |
-| WordPress plugin cleanup plan | 🟡 In Progress | 5% | No |
-| Safe cleanup execution + verification | ⚠️ Pending | 0% | Requires admin access + backups |
+| Safe CI/CD automation | 🟢 Auto-deploy enabled for catalog-agent and WordPress | 100% | No |
+| WordPress plugin cleanup plan | 🟡 In Progress | 20% | No |
+| Safe cleanup execution + verification | 🟡 ACF PRO deactivated; more candidates pending | 10% | One-plugin-at-a-time deactivation cycles |
 
 **Current Readiness**: 🟡 - The catalog generator now implements the client-approved rules for inclusion, ordering, metadata, PVP price, contact details, cover use, Gotham fonts, and official logos. `_cat` image resolution is implemented and wired as an optional worker config, but the shared image folder currently has 0 `_cat` candidates, so strict image-folder selection should remain disabled until the customer renames one image per included artwork. A 2026-06-05 local end-to-end render from `catalog-generator/data/CATALOGO_BASE.csv` completed a 14-artwork PDF at `/private/tmp/mybroworld-catalog-e2e-2026-06-05.pdf`.
 
@@ -63,6 +63,11 @@ Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` 
 - Enabled Apps Script API in Google Cloud project `mybroworld-catalog-260501` and updated the production Apps Script Web App deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` to version 3 on 2026-05-03.
 - Linked the Apps Script project to standard Google Cloud project number `289786381719`, deployed Web App/API executable version 6, authorized the required Apps Script scopes, and verified a direct token-authenticated queue job `catalog_20260503_100246_1dd2` started Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, authenticated as `mybrocorp@gmail.com`, completed with 14 artworks, and wrote the Drive result URL on 2026-05-03.
 - Reworked `catalog-generator/cloud-run/verify-job.sh` on 2026-05-04 so post-deploy checks pass on Cloud Run **execution** API status (`completionTime`, zero failed/cancelled counts, succeeded task count) instead of requiring a log line within a short logging propagation window; optional `VERIFY_REQUIRE_LOG=1` restores strict stdout identity matching, and `update-job-image.sh` supports re-pointing the job at an existing Artifact Registry tag without Cloud Build.
+- Resolved the production 500 fatal error on 2026-07-10 by raising `WP_MEMORY_LIMIT` to 512M and disabling `WP_DEBUG`/`SAVEQUERIES`/`SCRIPT_DEBUG` in production `wp-config.php`. Root cause was `Allowed memory size of 167772160 bytes exhausted` in WooCommerce `countries.php` with 17 plugins active.
+- Deactivated ACF PRO in production on 2026-07-10 (folder renamed to `acf_pro.deactivated`). Owned MU-plugin `lucia-portfolio-post-type.php` registers the `portfolio` CPT, 10 meta keys, and a meta box UI. All portfolio URLs, REST API meta, and admin editing verified post-deactivation. Files not deleted pending soak period.
+- Fixed the broken `/catalogo/` page on 2026-07-10. The page (ID 1122) had stale WPBakery shortcodes rendering as plain text because the owned `luciastuy` theme no longer includes WPBakery. Added an owned `page-catalogo.php` template that renders the clean "Obra disponible" contact section (email, phone, Instagram) using the theme design tokens. Smoke tests confirmed HTTP 200 for `/catalogo/` alongside `/`, `/shop/`, `/cart/`, and `/checkout/`.
+- Enabled WordPress auto-deploy on `main` on 2026-07-10. Set `ENABLE_WORDPRESS_AUTO_DEPLOY=true` and `WP_FTP_HOST=ftp.luciastuy.com` + `WP_FTP_INSECURE=1` as GitHub repository variables. Updated the FTP credentials in the `production-wordpress` GitHub Environment. Added `WP_FTP_INSECURE` support to `wp-push-theme.sh`, `wp-restore-owned-code.sh`, and `wp-backup-wp-content.sh` to work around the `ftp.luciastuy.com` certificate SAN mismatch. CI workflow run `29093928882` verified the full pipeline: owned-code checks, backup, FTP deploy, smoke tests (5 paths including `/catalogo/`), and Store API inventory assertion all passed.
+- Confirmed the owned `luciastuy` theme is active in production on 2026-07-10. Production front-end inspection shows body class `wp-theme-luciastuy theme-luciastuy`, home hero video, owned header/footer, and no Elementor, RevSlider, WPBakery, or Kirki asset markers. Visual Portfolio 3.6.2 remains active for the home portfolio grid. WooCommerce 10.9.4, Yoast SEO 28.0, Contact Form 7 6.1.6, and Site Kit 1.182.0 remain active.
 
 ---
 
@@ -84,11 +89,12 @@ Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` 
 - Inventory sync is unblocked locally: local WooCommerce contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are no longer exposed by the local Store API after explicit unmanaged cleanup.
 - Production WooCommerce now contains the canonical sheet/catalog artwork inventory with images, and the legacy/demo products are hidden from the public Store API.
 - The WordPress catalog PDF console is live in production. Runtime config and secrets remain outside git. New source code targets the monitored Cloud Run `lucia-mybrocorp` worker on demand through Apps Script; generated PDFs write to Drive folder `183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` (`OBRA/Catalogos`). The remaining handoff gate is WordPress UI validation from the customer's mybro account; legacy **Cloud Scheduler** jobs for the worker and monitor are **paused** (see completed note dated 2026-05-04). Optional follow-up: resume only the monitor scheduler if periodic health checks are needed again.
-- CI/CD workflows are committed and the catalog-agent path is remotely validated through GitHub Actions. WordPress credentials are configured in the `production-wordpress` GitHub Environment, but WordPress deployment is intentionally held until the pre-deploy remote owned-code archive and rollback restore helper are automated. Explicit auto-deploy enable variables remain unset.
+- CI/CD workflows are committed and both auto-deploy paths are enabled and validated. The catalog-agent path (`ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true`) has been active since 2026-05-04. The WordPress owned-code path (`ENABLE_WORDPRESS_AUTO_DEPLOY=true`) was enabled on 2026-07-10 with a full pipeline run passing all checks. Both paths deploy automatically on push to `main` when the relevant file paths change.
 - OpenSpec `align-luciastuy-catalog-item-parity` implementation landed locally (2026-05-16): `single-portfolio.php`, `inc/portfolio-item.php`, scoped portfolio CSS/JS, gallery lightbox, metadata from legacy ACF meta, prev/next nav. Post-impl screenshots: `wordpress/.tmp/visual-baseline/2026-05-16-catalog-item-supergreat-after/`. `scripts/wp-test-owned-code.sh` passed.
 - OpenSpec coordination is now narrowed to two living changes:
   - `plan-catalog-commerce-roadmap`: use `openspec/changes/plan-catalog-commerce-roadmap/tasks.md` section 9 to sequence customer/catalog, source-data, commerce-readiness, observability, and plugin-safety lanes.
   - `configure-shop-business-observability`: use `openspec/changes/configure-shop-business-observability/tasks.md` section 7 and `thoughts/shared/docs/shop-business-observability.md` to close GA4 DebugView and purchase-event reconciliation.
+- WordPress plugin cleanup is in progress: ACF PRO is deactivated in production (2026-07-10), and production front-end inspection confirms Elementor, RevSlider, WPBakery, and Kirki no longer load assets. The next deactivation candidates are identified in the plugin inventory (`kirki`, `envato-market`, `hello`, `duplicate-page-src`).
 
 ---
 
@@ -101,8 +107,9 @@ Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` 
 5. Run the customer test flow in `thoughts/shared/docs/customer-testing-and-handoff.md` for the online shop and catalog PDF console.
 6. Ask the customer to rename exactly one image per included, catalog-ready artwork with the `_cat` suffix in `https://drive.google.com/drive/folders/1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh`.
 7. Run one real queued `lucia-mybrocorp` catalog PDF render from WordPress and confirm `result_file_url` is written back to `catalog_jobs` with the PDF in `OBRA/Catalogos`.
-8. Run `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
-9. Refresh live production plugin inventory from `wp-admin/plugins.php`, compare it with the 2026-04-30 direct admin snapshot and 2026-05-03 local imported runtime, then execute only one reversible simplification candidate at a time with smoke checks and rollback notes.
+8. Run `WP_EXPECTED_THEME=luciastuy scripts/wp-local-validate.sh` before production-snapshot WordPress/WooCommerce changes on this machine.
+9. Execute the next plugin deactivation candidate (`kirki`, `envato-market`, `hello`, or `duplicate-page-src`) using the one-at-a-time cycle with pre/post smoke checks and removal-log entry. After the ACF PRO soak period (1-2 weeks without incidents), delete the `acf_pro.deactivated` folder from production and record the final deletion in the removal log.
+10. Sanitize the stale WPBakery shortcode content stored in the `catalogo` page (ID 1122) database row; the front-end renders correctly via the owned `page-catalogo.php` template, but the raw `post_content` still contains orphaned `[vc_*]` shortcodes.
 
 ---
 
@@ -113,9 +120,10 @@ Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` 
 - The original Google Drive template link was not reliably readable without authentication in this session.
 - Customer-operated catalog generation is not yet fully verified; Cloud Run is live, the production Apps Script Web App is updated for on-demand worker startup, Cloud Run IAM allows the Nacho-owned Apps Script to invoke the worker, and direct Apps Script-triggered Cloud Run PDF jobs completed. Output to `OBRA/Catalogos` is verified. The final proof still requires queueing/reviewing a catalog from the customer's mybro WordPress account. Legacy **Cloud Scheduler** polling is **paused** (worker + monitor); resume the monitor job only if periodic automated health checks are required again.
 - Production checkout payment remains blocked as of 2026-07-09: an anonymous cart containing `LA-2026-006` reaches checkout and renders buyer fields plus the `begin_checkout` GA4 config, but WooCommerce shows `Lo siento, parece que no hay métodos de pago disponibles. Por favor, ponte en contacto con nosotros si necesitas ayuda.`
-- CI/CD now has a reviewed manual WordPress owned-code deployment passing smoke checks with rollback artifact capture in workflow run `25509617424`. Push-triggered production deploys remain disabled until `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` are intentionally set.
-- Production admin plugin status was directly captured on 2026-04-30 and then refreshed through the local imported runtime on 2026-05-03, but production still needs a fresh `wp-admin/plugins.php` confirmation immediately before deletion.
-- The actual “remove no longer needed” set will be confirmed only after Phase 2 deactivation + smoke tests.
+- CI/CD auto-deploy is now enabled for both catalog-agent and WordPress owned-code paths (2026-07-10). Both `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` are set. The WordPress pipeline uses `ftp.luciastuy.com` with `WP_FTP_INSECURE=1` to work around a certificate SAN mismatch.
+- Production front-end inspection on 2026-07-10 confirms the owned `luciastuy` theme is active and Elementor, RevSlider, WPBakery, and Kirki no longer load assets on the front page. Visual Portfolio 3.6.2 remains active for the home portfolio grid. A fresh `wp-admin/plugins.php` confirmation is still needed to verify the exact active/inactive plugin list before file deletion cycles.
+- The stored `post_content` for the `catalogo` page (ID 1122) still contains orphaned WPBakery `[vc_*]` shortcodes in the database. The front-end renders correctly because the owned `page-catalogo.php` template does not echo `post_content`, but the raw DB row should be sanitized.
+- The actual "remove no longer needed" set will be confirmed only after Phase 2 deactivation + smoke tests.
 - ~~Production 500 error~~ **Resolved 2026-07-10**: raised `WP_MEMORY_LIMIT` to 512M and disabled `WP_DEBUG`/`SAVEQUERIES`/`SCRIPT_DEBUG` in production `wp-config.php`. Root cause was `Allowed memory size of 167772160 bytes exhausted` in WooCommerce `countries.php` with 17 plugins active.
 - ACF PRO was **deactivated in production** on 2026-07-10 (folder renamed to `acf_pro.deactivated`). Owned MU-plugin `lucia-portfolio-post-type.php` registers the `portfolio` CPT, 10 meta keys, and a meta box UI. All portfolio URLs and admin editing verified post-deactivation. Files not deleted pending soak period.
 

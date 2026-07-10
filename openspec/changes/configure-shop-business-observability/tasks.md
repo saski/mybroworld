@@ -43,7 +43,7 @@
 
 ### Sequential Critical Path
 
-- [ ] 7.1 Confirm the operator has access to WordPress admin, GA4 Realtime or DebugView, and the approved non-production or production test-order path. (Unblocked 2026-07-10: production 500 error resolved, site stable for GA4 verification.)
+- [ ] 7.1 Confirm the operator has access to WordPress admin, GA4 Realtime or DebugView, and the approved non-production or production test-order path. (Unblocked 2026-07-10: production 500 error resolved, site stable, `luciastuy` theme active, `/catalogo/` page fixed, WordPress auto-deploy enabled and validated.)
 - [ ] 7.2 Open a public buyer session with analytics consent accepted and logged-in user tracking excluded.
 - [ ] 7.3 Trigger `page_view`, `view_item`, `add_to_cart`, and `begin_checkout` on one available artwork while recording timestamps and URLs.
 - [ ] 7.4 Confirm each triggered event appears in GA4 Realtime or DebugView with non-personal item parameters.

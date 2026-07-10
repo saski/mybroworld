@@ -40,17 +40,17 @@ Captured for OpenSpec change `align-luciastuy-live-identity` after baseline evid
 - this removal log
 - `wordpress/.tmp/identity-baseline/2026-05-15/glacier-home.html`
 
-This is a **candidate list only**. Nothing below is marked safe to delete yet.
+**Status as of 2026-07-10**: The `luciastuy` theme is now active in production. The candidates below have been updated with current production evidence.
 
-| Candidate | Why It Is A Candidate | Evidence | Blocker Before Any Deactivation | Rollback Note |
+| Candidate | Why It Is A Candidate | Evidence | Status (2026-07-10) | Rollback Note |
 |---|---|---|---|---|
-| `elementor` | Builder coupling for legacy runtime | Active in inventory; production assets loaded on home page | Confirm no production page depends on Elementor-only templates once owned theme is active | Reactivate plugin and clear caches if shop/content layout regresses |
-| `rev_slider` | Visual builder dependency for hero/slider path | Active in inventory; `rs6.css` loaded on home page | Confirm owned home hero fully replaces slider behavior on production | Reactivate plugin and restore old hero route if needed |
-| `js_composer` (WPBakery) | Legacy shortcode/builder dependency | Classified as blocked candidate in inventory and audit | Migrate any remaining `[vc_*]` content and verify frontend pages | Reactivate and restore shortcode-bearing content if failures appear |
-| `visual-portfolio` | Legacy portfolio/gallery runtime dependency | Visual Portfolio CSS assets loaded on production home | Confirm catalog/portfolio pages render with owned templates without plugin output | Reactivate plugin if portfolio/gallery pages break |
-| `acf_pro` | Glacier field dependency; owned CPT + meta-box now covers portfolio rendering and editing | Owned MU-plugin `lucia-portfolio-post-type.php` registers CPT + 10 meta keys + meta box (2026-07-10) | Backup, smoke checks, verify `/portfolio/*` resolves and meta box loads after deactivation | Restore plugin and field config if metadata display breaks |
-| `kirki` | Glacier customizer dependency | Classified as blocked candidate in inventory and audit | Glacier is no longer production runtime | Reactivate plugin if customizer-driven settings are still required |
-| `glacier` theme helpers/assets | Legacy theme coupling | Production home still loads `wp-content/themes/glacier/*` CSS/JS | Complete production switch to `luciastuy` and verify parity | Re-enable previous theme as rollback if replacement fails |
+| `elementor` | Builder coupling for legacy runtime | Active in inventory; production assets loaded on home page (pre-2026-07-10) | **No front-end assets on 2026-07-10 inspection.** Unblocked for deactivation. | Reactivate plugin and clear caches if shop/content layout regresses |
+| `rev_slider` | Visual builder dependency for hero/slider path | Active in inventory; `rs6.css` loaded on home page (pre-2026-07-10) | **No front-end assets on 2026-07-10 inspection.** Owned home hero replaces slider. Unblocked for deactivation. | Reactivate plugin and restore old hero route if needed |
+| `js_composer` (WPBakery) | Legacy shortcode/builder dependency | Classified as blocked candidate in inventory and audit | **No front-end assets on 2026-07-10 inspection.** Stale `[vc_*]` shortcodes remain in `catalogo` page DB row (ID 1122) but front-end renders correctly via owned template. Unblocked for deactivation after sanitizing stale DB content. | Reactivate and restore shortcode-bearing content if failures appear |
+| `visual-portfolio` | Legacy portfolio/gallery runtime dependency | Visual Portfolio CSS assets loaded on production home | **Still active and rendering** the home portfolio grid (`vp-id-864`). NOT unblocked. Migrate portfolio grid to owned code first. | Reactivate plugin if portfolio/gallery pages break |
+| `acf_pro` | Glacier field dependency; owned CPT + meta-box now covers portfolio rendering and editing | Owned MU-plugin `lucia-portfolio-post-type.php` registers CPT + 10 meta keys + meta box (2026-07-10) | **DEACTIVATED 2026-07-10.** Folder renamed to `acf_pro.deactivated`. Files not deleted pending soak period. | Restore plugin by renaming `acf_pro.deactivated` back to `acf_pro` |
+| `kirki` | Glacier customizer dependency | Classified as blocked candidate in inventory and audit | **No front-end assets on 2026-07-10 inspection.** `glacier` is no longer the production runtime. Unblocked for deactivation. | Reactivate plugin if customizer-driven settings are still required |
+| `glacier` theme helpers/assets | Legacy theme coupling | Production home previously loaded `wp-content/themes/glacier/*` CSS/JS | **No longer active.** `luciastuy` is the production theme. `glacier` theme files remain on disk but are not loaded. Candidate for file deletion after soak period. | Re-enable previous theme as rollback if replacement fails |
 
 ### Safety Rule (Reconfirmed 2026-05-15)
 
@@ -77,29 +77,29 @@ Do not deactivate these in a batch. Each candidate requires its own baseline, ro
 | 5 | Site Kit by Google | Analytics infrastructure. | Confirm analytics requirement and acceptable alternative if removed. |
 | 6 | Yoast SEO | SEO infrastructure. | Confirm SEO requirement and metadata coverage before removal. |
 
-## 2026-05-03 Dependency Audit Priority
+## 2026-07-10 Updated Deactivation Priority
 
-This order supersedes the UX-only order when the goal is dependency cleanup. Do not batch these changes; every item still needs backup, one change, post-change smoke checks, and a log entry.
+This order supersedes the 2026-05-03 priority now that the `luciastuy` theme is active in production and ACF PRO is deactivated. Elementor, RevSlider, WPBakery, and Kirki no longer load front-end assets. Do not batch these changes; every item still needs backup, one change, post-change smoke checks, and a log entry.
 
-| Order | Candidate | Decision | Required Precondition |
+| Order | Candidate | Decision | Status / Required Precondition |
 |---|---|---|---|
-| 1 | `hello-new.php` orphan file | Delete from filesystem | Remote `wp-content` backup; direct URL returns 404 after deletion. |
-| 2 | `duplicate-page-src` | Delete | Confirm product/post admin screens still work after removal. |
-| 3 | `all-in-one-wp-migration-src` | Delete files; already inactive locally | Confirm repo backup/import scripts are the rollback path. |
-| 4 | `hello` | Delete | Admin smoke check only. |
-| 5 | `wordpress-importer` | Delete | Confirm no WXR import task is pending. |
-| 6 | `one-click-demo-import` | Delete | Keep historical import log as evidence if needed. |
-| 7 | `envato-market` | Delete unless active Envato update workflow is confirmed | Confirm `glacier`/commercial plugin updates are no longer managed through Envato. |
-| 8 | `elementor` | Deactivate, then delete after soak | Baseline proves no live Elementor layouts. |
-| 9 | `rev_slider` | Replace then delete | Rebuild any live slider/hero with owned markup. |
-| 10 | `google-site-kit` | Replace then delete | GA/Search Console continuity through owned tag or external verification. |
-| 11 | `contact-form-7` | Replace then delete | Replace live shortcodes/forms and verify email delivery. |
-| 12 | `visual-portfolio` | Migrate then delete | Confirm/migrate live portfolio/gallery pages. |
-| 13 | `js_composer` | Migrate then delete | Remove or shim legacy `[vc_*]` shortcodes. |
-| 14 | `kirki` | Delete after `glacier` retirement | Production no longer uses `glacier` as runtime. |
-| 15 | `acf_pro` | Deactivate after backup + smoke checks | Owned MU-plugin `lucia-portfolio-post-type.php` registers CPT + meta + meta box (2026-07-10). Verify `/portfolio/*` resolves and meta box loads before deleting files. |
-| 16 | `wordpress-seo` | Optional later replacement | SEO parity captured for key pages. |
-| 17 | `akismet` | Optional later replacement/removal | Comments/reviews/form spam surface closed or replaced. |
+| 1 | `acf_pro` | Delete deactivated folder after soak | **Deactivated 2026-07-10.** Delete `acf_pro.deactivated` after 1-2 weeks without incidents. |
+| 2 | `kirki` | Deactivate then delete | No front-end assets; `glacier` is no longer the production runtime. |
+| 3 | `hello` + `hello-new.php` | Delete | Admin smoke check only. Delete orphan `hello-new.php` alongside. |
+| 4 | `duplicate-page-src` | Delete | Confirm product/post admin screens still work after removal. |
+| 5 | `all-in-one-wp-migration-src` | Delete files; already inactive locally | Confirm repo backup/import scripts are the rollback path. |
+| 6 | `wordpress-importer` | Delete | Confirm no WXR import task is pending. |
+| 7 | `one-click-demo-import` | Delete | Keep historical import log as evidence if needed. |
+| 8 | `envato-market` | Delete unless active Envato update workflow is confirmed | Confirm `glacier`/commercial plugin updates are no longer managed through Envato. |
+| 9 | `elementor` | Deactivate then delete | No front-end assets; owned theme does not use Elementor. |
+| 10 | `rev_slider` | Deactivate then delete | No front-end assets; owned home hero replaces slider. |
+| 11 | `js_composer` (WPBakery) | Deactivate then delete | No front-end assets; sanitize stale `[vc_*]` DB content first (catalogo page ID 1122). |
+| 12 | `google-site-kit` | Replace then delete | GA/Search Console continuity through owned tag or external verification. |
+| 13 | `contact-form-7` | Replace then delete | Replace live shortcodes/forms and verify email delivery. |
+| 14 | `visual-portfolio` | Migrate then delete | Migrate home portfolio grid to owned code; still actively rendering on production. |
+| 15 | `wordpress-seo` | Optional later replacement | SEO parity captured for key pages. |
+| 16 | `akismet` | Optional later replacement/removal | Comments/reviews/form spam surface closed or replaced. |
+| 17 | `glacier` theme | Delete after soak | No longer the production runtime; files remain on disk. |
 
 ## Prepared Cycle Records
 
@@ -121,7 +121,7 @@ This order supersedes the UX-only order when the goal is dependency cleanup. Do 
 - Post-change checks: pending.
 - Decision: revise; do not deactivate Slider Revolution while production still serves `glacier` and front-page impact is not approved.
 - Learning: plugin uncoupling is blocked by the production active theme, not by owned-code readiness. Activate or route the public shop to `luciastuy` first, then repeat the same baseline before one-plugin-at-a-time deactivation.
-- Next candidate: Slider Revolution remains first after the owned theme is healthy in production.
+- **Update 2026-07-10**: The `luciastuy` theme is now active in production. Slider Revolution no longer loads front-end assets. The blocker is resolved; Slider Revolution is now order #10 in the updated deactivation priority.
 
 ## Standard Verification Command
 

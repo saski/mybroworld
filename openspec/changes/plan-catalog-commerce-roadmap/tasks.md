@@ -5,6 +5,7 @@
 - [x] 0.3 Publish `luciastuy` on production and record the immediate next-stage blocker from interaction evidence: `missing_checkout_payment_method` during production checkout-readiness validation (`2026-05-15-production-next-stage-checkout-readiness`).
 - [x] 0.4 Sync the 2026-06-05 end-to-end verification: local catalog generation and local owned ecommerce flow pass; production Store API parity and public smoke pass; production buyer checkout remains blocked by `cart_did_not_receive_item` and missing payment/checkout fields.
 - [x] 0.5 Sync the 2026-07-10 production stabilization: resolve 500 fatal (`Allowed memory size exhausted` in WooCommerce `countries.php`) by raising `WP_MEMORY_LIMIT` to 512M and disabling `WP_DEBUG`/`SAVEQUERIES`/`SCRIPT_DEBUG`; deploy owned `lucia-portfolio-post-type.php` MU-plugin; deactivate ACF PRO in production (folder renamed, not deleted); verify all portfolio URLs, REST API meta, and admin meta box post-deactivation.
+- [x] 0.6 Sync the 2026-07-10 production catalogo page fix and auto-deploy enablement: fix broken `/catalogo/` page (stale WPBakery shortcodes rendering as plain text) with owned `page-catalogo.php` template; enable WordPress auto-deploy on `main` (`ENABLE_WORDPRESS_AUTO_DEPLOY=true`) with `ftp.luciastuy.com` + `WP_FTP_INSECURE=1`; verify full CI pipeline (owned-code checks, backup, FTP deploy, smoke tests including `/catalogo/`, Store API inventory) passes; confirm `luciastuy` theme is active in production with no Elementor/RevSlider/WPBakery/Kirki front-end assets.
 
 ## 1. Catalog Contract And Customer Feedback
 
@@ -49,7 +50,8 @@
 - [x] 5.6 Remove or deactivate only one `CANDIDATE` plugin at a time after baseline tests pass.
 - [x] 5.7 Run smoke checks before and after each plugin change and update the plugin-removal log immediately.
 - [ ] 5.8 After the ACF PRO soak period (1-2 weeks without incidents), delete the deactivated `acf_pro.deactivated` folder from production and record the final deletion in the removal log.
-- [ ] 5.9 Propose the next plugin deactivation candidate from the inventory (`kirki`, `envato-market`, or `hello` are low-risk next targets) and run the one-at-a-time deactivation cycle with pre/post smoke checks.
+- [ ] 5.9 Propose the next plugin deactivation candidate from the inventory (`kirki`, `envato-market`, `hello`, or `duplicate-page-src` are low-risk next targets — all confirmed no front-end asset markers on 2026-07-10 production inspection) and run the one-at-a-time deactivation cycle with pre/post smoke checks.
+- [x] 5.10 Confirm the owned `luciastuy` theme is active in production and Elementor, RevSlider, WPBakery, and Kirki no longer load front-end assets (2026-07-10 production front-end inspection). Update plugin inventory and removal log with current production evidence.
 
 ## 6. Ecommerce Visual Identity
 
@@ -102,7 +104,7 @@
 - [ ] 9.8 Source-data lane: identify missing artwork years, import one year batch, validate required headers/status/images, generate a preview, and repeat only after blockers from the current batch are closed.
 - [ ] 9.9 Commerce-readiness lane: audit production WooCommerce payment, shipping, checkout fields, emails, and order records before running an approved test order.
 - [ ] 9.10 Observability lane: finish GA4 Realtime/DebugView and purchase/order reconciliation through `openspec/changes/configure-shop-business-observability/`.
-- [x] 9.11 Plugin-safety lane: refresh production plugin inventory, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then propose exactly one reversible simplification candidate. (ACF PRO deactivated 2026-07-10 as first candidate; next candidates identified in task 5.9.)
+- [x] 9.11 Plugin-safety lane: refresh production plugin inventory, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then propose exactly one reversible simplification candidate. (ACF PRO deactivated 2026-07-10 as first candidate; production front-end inspection confirms `luciastuy` theme active with no Elementor/RevSlider/WPBakery/Kirki assets; next candidates identified in task 5.9; updated deactivation priority recorded in removal log.)
 
 ### Coordination Rules
 
