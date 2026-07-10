@@ -9,8 +9,8 @@ import {
 } from './wp-smoke-test.mjs';
 
 test('parseSmokePaths uses default commerce paths and trims overrides', () => {
-  assert.deepEqual(parseSmokePaths(''), ['/', '/shop/', '/cart/', '/checkout/']);
-  assert.deepEqual(parseSmokePaths(' , , '), ['/', '/shop/', '/cart/', '/checkout/']);
+  assert.deepEqual(parseSmokePaths(''), ['/', '/catalogo/', '/shop/', '/cart/', '/checkout/']);
+  assert.deepEqual(parseSmokePaths(' , , '), ['/', '/catalogo/', '/shop/', '/cart/', '/checkout/']);
   assert.deepEqual(parseSmokePaths(' /, /shop/ ,, /checkout/ '), ['/', '/shop/', '/checkout/']);
 });
 

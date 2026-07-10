@@ -1,6 +1,6 @@
 # mybroworld - Project Status
 
-**Last Updated**: 2026-06-05
+**Last Updated**: 2026-07-09
 **Overall Status**: 🟡 **Multiple active workstreams** - The completed `align-luciastuy-live-identity` and `align-luciastuy-catalog-item-parity` OpenSpecs are archived, with accepted requirements promoted under `openspec/specs/`. The living OpenSpecs are now `plan-catalog-commerce-roadmap` and `configure-shop-business-observability`: the first coordinates customer catalog decisions, source-sheet completion, production checkout/payment readiness, and plugin-safety sequencing; the second is in final GA4 Realtime/DebugView plus WooCommerce test-order verification.
 
 ---
@@ -20,7 +20,7 @@
 
 The WordPress catalog PDF console is deployed and operator-validated, and the `lucia-mybrocorp` Cloud Run worker is authorized as `mybrocorp@gmail.com`, updated with the latest PDF generator, and verified with direct 14-artwork PDF jobs (the optional catalog **monitor** Cloud Run job remains deployed; its **Scheduler** tick is paused until resumed). Apps Script Web App deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` now runs version 6, is linked to standard Cloud project `mybroworld-catalog-260501`, has Web App access for server-side WordPress calls, and successfully started Cloud Run on demand for jobs `catalog_20260503_100246_1dd2` and `catalog_20260503_102110_2c0d`. Production WordPress and `catalog_profiles` now target Drive folder `183-IMb93mqASyyKEMz3lTVG1S8GLrK_2` (`OBRA/Catalogos`), and the latest validation PDF landed there. Production still benefits from one WordPress UI queue/review validation from the customer's mybro account; the legacy worker **scheduler** is already paused in favor of Apps Script on-demand runs.
 
-Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` runtime passed add-to-cart, cart, checkout fields, shipping fields, and payment-method visibility through `scripts/woo-interaction-baseline.mjs`; production public Store API parity and smoke checks passed with `products=20 expected=20 missing=0 missing_images=0 unexpected=0` and HTTP 200 for `/`, `/shop/`, `/cart/`, `/checkout/`, and `/product/fanzimad-2026-yuju/`. Production is not buyer-ready yet: the anonymous production browser checkout probe did not persist a cart item and therefore reported `cart_did_not_receive_item`, `missing_checkout_link`, missing checkout buyer fields, and `missing_checkout_payment_method`.
+Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` runtime passed add-to-cart, cart, checkout fields, shipping fields, and payment-method visibility through `scripts/woo-interaction-baseline.mjs`; production public Store API parity and smoke checks passed with `products=20 expected=20 missing=0 missing_images=0 unexpected=0` and HTTP 200 for `/`, `/shop/`, `/cart/`, `/checkout/`, and `/product/fanzimad-2026-yuju/`. Production follow-up on 2026-07-09 confirmed current Store API parity still passes (`products=20 expected=20 missing=0 missing_images=0 unexpected=0`) and direct anonymous WooCommerce add-to-cart for `LA-2026-006` persists a cart session, exposes the cart line item, and reaches checkout buyer fields. Production is still not buyer-ready because checkout reports no available payment methods.
 
 ---
 
@@ -94,7 +94,7 @@ Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` 
 
 ## 📋 Next Steps
 
-1. Diagnose the production anonymous add-to-cart/cart blocker from the 2026-06-05 browser probe before attempting a production payment test order.
+1. Audit and configure the smallest approved production payment method; 2026-07-09 evidence shows cart/session persistence works for `LA-2026-006`, but checkout displays no available payment methods.
 2. Close `configure-shop-business-observability`: run GA4 Realtime/DebugView for `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, and one approved `purchase`; compare WooCommerce order id/value to GA4 before archiving.
 3. Choose the next buyer-readiness gate in `plan-catalog-commerce-roadmap` section 9 after the production checkout blocker is understood: customer/catalog decisions, source-data batch, production checkout/payment, observability closure, or plugin-safety inventory.
 4. Queue one on-demand production catalog from the WordPress UI as the customer's mybro account, verify Apps Script starts Cloud Run immediately, and save a review state (legacy worker and monitor **Cloud Scheduler** jobs are already paused as of 2026-05-04).
@@ -112,9 +112,12 @@ Ecommerce verification on 2026-06-05 split cleanly: the local owned `luciastuy` 
 - The imported historical tabs still need manual blocker review before catalog generation: 2025 has 30 blocker rows, 2024 has 3 blocker rows, and 2023 has 12 blocker rows. The 2023 import has four rows without deterministic image matches: `LA-2023-011`, `LA-2023-021`, `LA-2023-022`, and `LA-2023-034`.
 - The original Google Drive template link was not reliably readable without authentication in this session.
 - Customer-operated catalog generation is not yet fully verified; Cloud Run is live, the production Apps Script Web App is updated for on-demand worker startup, Cloud Run IAM allows the Nacho-owned Apps Script to invoke the worker, and direct Apps Script-triggered Cloud Run PDF jobs completed. Output to `OBRA/Catalogos` is verified. The final proof still requires queueing/reviewing a catalog from the customer's mybro WordPress account. Legacy **Cloud Scheduler** polling is **paused** (worker + monitor); resume the monitor job only if periodic automated health checks are required again.
+- Production checkout payment remains blocked as of 2026-07-09: an anonymous cart containing `LA-2026-006` reaches checkout and renders buyer fields plus the `begin_checkout` GA4 config, but WooCommerce shows `Lo siento, parece que no hay métodos de pago disponibles. Por favor, ponte en contacto con nosotros si necesitas ayuda.`
 - CI/CD now has a reviewed manual WordPress owned-code deployment passing smoke checks with rollback artifact capture in workflow run `25509617424`. Push-triggered production deploys remain disabled until `ENABLE_CATALOG_AGENT_AUTO_DEPLOY=true` and `ENABLE_WORDPRESS_AUTO_DEPLOY=true` are intentionally set.
 - Production admin plugin status was directly captured on 2026-04-30 and then refreshed through the local imported runtime on 2026-05-03, but production still needs a fresh `wp-admin/plugins.php` confirmation immediately before deletion.
 - The actual “remove no longer needed” set will be confirmed only after Phase 2 deactivation + smoke tests.
+- ~~Production 500 error~~ **Resolved 2026-07-10**: raised `WP_MEMORY_LIMIT` to 512M and disabled `WP_DEBUG`/`SAVEQUERIES`/`SCRIPT_DEBUG` in production `wp-config.php`. Root cause was `Allowed memory size of 167772160 bytes exhausted` in WooCommerce `countries.php` with 17 plugins active.
+- ACF PRO was **deactivated in production** on 2026-07-10 (folder renamed to `acf_pro.deactivated`). Owned MU-plugin `lucia-portfolio-post-type.php` registers the `portfolio` CPT, 10 meta keys, and a meta box UI. All portfolio URLs and admin editing verified post-deactivation. Files not deleted pending soak period.
 
 ---
 

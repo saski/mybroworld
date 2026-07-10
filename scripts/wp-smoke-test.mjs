@@ -2,7 +2,7 @@
 
 import { pathToFileURL } from 'node:url';
 
-export const DEFAULT_PATHS = ['/', '/shop/', '/cart/', '/checkout/'];
+export const DEFAULT_PATHS = ['/', '/catalogo/', '/shop/', '/cart/', '/checkout/'];
 const ERROR_PATTERNS = [
   /Fatal error/i,
   /Parse error/i,

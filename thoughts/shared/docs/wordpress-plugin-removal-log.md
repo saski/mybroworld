@@ -24,6 +24,7 @@ Track each plugin you consider removing so you can prove:
 | Date (local) | Plugin | Action | Evidence | Result |
 |---|---|---|---|---|
 | 2026-05-01 | `all-in-one-wp-migration-src` | local deactivated | Baseline and post-change `WP_EXPECTED_THEME=glacier scripts/wp-local-validate.sh` passed; WP-CLI inactive-state assertion passed after deactivation; smoke checks returned 200 for `/`, `/shop/`, `/cart/`, and `/checkout/`. | pass; keep inactive locally; production untouched; rollback with `wp plugin activate all-in-one-wp-migration-src` |
+| 2026-07-10 | `acf_pro` | production deactivated | Backup: `backups/production-backup-2026-07-10/` (DB sha256 `38db7254...`, wp-content.tar.gz sha256 `99845544...`). Deployed owned MU-plugin `lucia-portfolio-post-type.php` registering CPT `portfolio` + 10 meta keys + meta box. Also fixed production 500 error by raising `WP_MEMORY_LIMIT` to 512M and disabling `WP_DEBUG`/`SAVEQUERIES`/`SCRIPT_DEBUG` in `wp-config.php`. Pre-deactivation smoke: `WP_BASE_URL=https://www.luciastuy.com scripts/wp-plugin-removal-smoke.sh` passed (200 for `/`, `/shop/`, `/cart/`, `/checkout/`). Deactivation: renamed `/public/wp-content/plugins/acf_pro` to `acf_pro.deactivated` via FTP. Post-deactivation verification: HTTP 200 for `/`, `/shop/`, `/cart/`, `/portfolio/supergreat/`, `/portfolio/super-supergreat/`, `/portfolio/time/`; REST API `wp/v2/portfolio` returns 2 items with all 10 owned meta keys populated; admin edit page for post 2397 shows `lucia_portfolio_details` meta box in `normal` location; no error messages in page content. | pass; keep deactivated; files not deleted pending soak period; rollback by renaming `acf_pro.deactivated` back to `acf_pro` |
 
 ## Evidence Notes
 
@@ -47,7 +48,7 @@ This is a **candidate list only**. Nothing below is marked safe to delete yet.
 | `rev_slider` | Visual builder dependency for hero/slider path | Active in inventory; `rs6.css` loaded on home page | Confirm owned home hero fully replaces slider behavior on production | Reactivate plugin and restore old hero route if needed |
 | `js_composer` (WPBakery) | Legacy shortcode/builder dependency | Classified as blocked candidate in inventory and audit | Migrate any remaining `[vc_*]` content and verify frontend pages | Reactivate and restore shortcode-bearing content if failures appear |
 | `visual-portfolio` | Legacy portfolio/gallery runtime dependency | Visual Portfolio CSS assets loaded on production home | Confirm catalog/portfolio pages render with owned templates without plugin output | Reactivate plugin if portfolio/gallery pages break |
-| `acf_pro` | Glacier field dependency | Classified as blocked candidate in inventory and audit | Replace required field reads in owned runtime and verify data continuity | Restore plugin and field config if metadata display breaks |
+| `acf_pro` | Glacier field dependency; owned CPT + meta-box now covers portfolio rendering and editing | Owned MU-plugin `lucia-portfolio-post-type.php` registers CPT + 10 meta keys + meta box (2026-07-10) | Backup, smoke checks, verify `/portfolio/*` resolves and meta box loads after deactivation | Restore plugin and field config if metadata display breaks |
 | `kirki` | Glacier customizer dependency | Classified as blocked candidate in inventory and audit | Glacier is no longer production runtime | Reactivate plugin if customizer-driven settings are still required |
 | `glacier` theme helpers/assets | Legacy theme coupling | Production home still loads `wp-content/themes/glacier/*` CSS/JS | Complete production switch to `luciastuy` and verify parity | Re-enable previous theme as rollback if replacement fails |
 
@@ -96,7 +97,7 @@ This order supersedes the UX-only order when the goal is dependency cleanup. Do 
 | 12 | `visual-portfolio` | Migrate then delete | Confirm/migrate live portfolio/gallery pages. |
 | 13 | `js_composer` | Migrate then delete | Remove or shim legacy `[vc_*]` shortcodes. |
 | 14 | `kirki` | Delete after `glacier` retirement | Production no longer uses `glacier` as runtime. |
-| 15 | `acf_pro` | Delete after `glacier` retirement | Replace required field access with owned meta/templates. |
+| 15 | `acf_pro` | Deactivate after backup + smoke checks | Owned MU-plugin `lucia-portfolio-post-type.php` registers CPT + meta + meta box (2026-07-10). Verify `/portfolio/*` resolves and meta box loads before deleting files. |
 | 16 | `wordpress-seo` | Optional later replacement | SEO parity captured for key pages. |
 | 17 | `akismet` | Optional later replacement/removal | Comments/reviews/form spam surface closed or replaced. |
 

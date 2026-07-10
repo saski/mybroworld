@@ -135,9 +135,14 @@ if [ ! -d "$RESTORE_MU_PLUGIN_SOURCE" ]; then
 fi
 
 echo "Restoring owned WordPress code via FTP..."
+LFTP_SSL_VERIFY=""
+if [ "${WP_FTP_INSECURE:-0}" = "1" ]; then
+  LFTP_SSL_VERIFY="set ssl:verify-certificate no"
+fi
 lftp <<LFTP
 set cmd:fail-exit true
 set ftp:ssl-allow true
+$LFTP_SSL_VERIFY
 open --user "$FTP_USER" --password "$FTP_PASSWORD" "ftp://$FTP_HOST"
 mkdir -pf "$REMOTE_THEME_DIR"
 mkdir -pf "$REMOTE_MU_PLUGIN_DIR"

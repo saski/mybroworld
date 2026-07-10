@@ -20,7 +20,7 @@ Captured on `2026-05-03` with:
 | Plugin | Local Status | Type | Classification | Version | Notes |
 |---|---|---|---|---|---|
 | WooCommerce | active | required commerce | KEEP | 10.7.0 | Product, cart, checkout, order, REST, and Store API dependency. Do not replace with owned code while the site sells online. |
-| Advanced Custom Fields PRO (`acf_pro`) | active | legacy theme fields | BLOCKED CANDIDATE | 6.2.0 | Required by `glacier`; replace with registered meta/`get_post_meta()` after `luciastuy` migration. Verify plugin integrity before keeping any temporary copy. |
+| Advanced Custom Fields PRO (`acf_pro`) | active | legacy theme fields | DEACTIVATION CANDIDATE | 6.2.0 | Owned MU-plugin `lucia-portfolio-post-type.php` now registers the `portfolio` CPT, its meta keys, and a meta-box UI for the 10 fields the owned theme reads. ACF field group `group_581b98b1a9361` (`[Post] Portfolio Item`, 24 fields) provided the original admin UI; existing `wp_postmeta` data survives deactivation because the owned theme reads via `get_post_meta()`. Safe to deactivate after backup, smoke checks, and verifying `/portfolio/*` still resolves. The 14 ACF-only fields not covered by the owned meta box remain in the DB as raw meta but lose their admin editing UI. |
 | Akismet | active | spam protection | CONDITIONAL | 5.7 | Keep while comments/reviews/forms remain open; remove only after closing or replacing that surface. |
 | All-in-One WP Migration (`all-in-one-wp-migration-src`) | inactive | migration utility | DELETE FILES | 7.81 | Locally deactivated successfully on 2026-05-01. Files should be removed after backup; do not keep as runtime backup path. |
 | Contact Form 7 | active | forms | CONDITIONAL CANDIDATE | 6.1.5 | DB has `wpcf7_contact_form` posts and live shortcodes. Replace with owned shortcode/form before removal. |
@@ -76,6 +76,14 @@ These notices were visible on `wp-admin/plugins.php` or `wp-admin/themes.php` du
 ## 2026-05-15 Identity Parity Candidate Note
 
 OpenSpec change `align-luciastuy-live-identity` revalidated that production home still loads legacy `glacier`, `elementor`, `rev_slider`, and `visual-portfolio` assets. These are **deletion candidates only after** production `luciastuy` migration is accepted and one-plugin-at-a-time validation is complete. Detailed candidate evidence and rollback constraints are logged in `thoughts/shared/docs/wordpress-plugin-removal-log.md`.
+
+## 2026-07-10 Portfolio CPT Ownership Note
+
+- New MU-plugin `lucia-portfolio-post-type.php` registers the `portfolio` CPT on `init` with slug `/portfolio/{slug}`, `show_in_rest`, and supports `title`, `editor`, `thumbnail`, `page-attributes`, `custom-fields`.
+- The MU-plugin also registers 10 meta keys via `register_post_meta()`: `visible_details`, `author_title`, `author`, `client_name_title`, `client_name`, `project_date_title`, `project_date`, `project_location_title`, `project_location`, `gallery_projects`.
+- A lean meta box replaces the ACF field group admin UI for these 10 fields. The `gallery_projects` field accepts comma-separated attachment IDs.
+- This makes ACF PRO's CPT registration (if any) and field group `group_581b98b1a9361` redundant for the owned `luciastuy` runtime. Existing `wp_postmeta` data is read by the owned theme via `get_post_meta()` and survives ACF deactivation.
+- ACF PRO deactivation is now safe for rendering, but verify `/portfolio/*` still resolves and the meta box loads before deleting ACF files.
 
 ## Local Backup Evidence (For Staged Rollback in Development)
 

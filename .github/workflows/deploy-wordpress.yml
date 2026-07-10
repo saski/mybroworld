@@ -35,13 +35,14 @@ jobs:
       WP_BASE_URL: ${{ vars.WP_BASE_URL || 'https://www.luciastuy.com' }}
       WOO_BASE_URL: ${{ vars.WOO_BASE_URL || 'https://www.luciastuy.com' }}
       WP_FTP_HOST: ${{ vars.WP_FTP_HOST || 'ftp.dondominio.com' }}
+      WP_FTP_INSECURE: ${{ vars.WP_FTP_INSECURE || '0' }}
       WP_REMOTE_PATH: ${{ vars.WP_REMOTE_PATH || '/public' }}
       WP_REMOTE_THEME_DIR: ${{ vars.WP_REMOTE_THEME_DIR || '/public/wp-content/themes/luciastuy' }}
       WP_REMOTE_MU_PLUGIN_DIR: ${{ vars.WP_REMOTE_MU_PLUGIN_DIR || '/public/wp-content/mu-plugins' }}
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -83,6 +84,7 @@ jobs:
             printf 'WP_REMOTE_PATH=%s\n' "$WP_REMOTE_PATH"
             printf 'WP_REMOTE_THEME_DIR=%s\n' "$WP_REMOTE_THEME_DIR"
             printf 'WP_REMOTE_MU_PLUGIN_DIR=%s\n' "$WP_REMOTE_MU_PLUGIN_DIR"
+            printf 'WP_FTP_INSECURE=%s\n' "$WP_FTP_INSECURE"
           } > "$config_file"
           chmod 600 "$config_file"
           printf 'WP_REMOTE_CONFIG_FILE=%s\n' "$config_file" >> "$GITHUB_ENV"
@@ -107,7 +109,7 @@ jobs:
         env:
           WP_SMOKE_INCLUDE_FIRST_PRODUCT: "1"
           WP_REQUIRE_PRODUCT_SMOKE: "1"
-          WP_SMOKE_PATHS: "/,/shop/,/cart/,/checkout/"
+          WP_SMOKE_PATHS: "/,/catalogo/,/shop/,/cart/,/checkout/"
         run: node scripts/wp-smoke-test.mjs
 
       - name: Assert production Store API inventory
