@@ -8,7 +8,7 @@ Capture a stable inventory of the installed plugins so that "remove no longer ne
 - Production plugin versions and active status were re-captured from `wp-admin/plugins.php` and WooCommerce system status on `2026-04-30`; all 17 installed plugins were active in that snapshot.
 - Local imported production runtime captured with WP-CLI on `2026-05-03` from the Docker WordPress instance at `http://localhost:8080`.
 - Production front-end asset inspection on `2026-07-10` confirmed the owned `luciastuy` theme is active and Elementor, RevSlider, WPBakery, and Kirki no longer load assets on the front page. ACF PRO is deactivated (folder renamed to `acf_pro.deactivated`).
-- **Production plugin list re-captured on `2026-07-23` via FTP.** Client installed 7 new plugins since May (WooCommerce Payments, PayPal Payments, Klaviyo, Pinterest, Reddit, Packlink Pro, Google Listings & Ads, Jetpack). Total installed: 22 plugins (1 deactivated).
+- **Production plugin list re-captured on `2026-07-23` via FTP.** Client installed 7 new plugins since May. After memory exhaustion incidents, 5 plugins deactivated: `acf_pro`, `jetpack`, `google-site-kit`, `pinterest-for-woocommerce`, `reddit-for-woocommerce`, `google-listings-and-ads`. Total: 17 plugins (6 deactivated, 11 active).
 
 Primary reference page:
 - `https://www.luciastuy.com/wp-admin/plugins.php`
@@ -27,13 +27,13 @@ Captured on `2026-07-23` via FTP directory listing. Client-installed plugins mar
 | contact-form-7 | active | forms | KEEP | Contact form functionality. |
 | duplicate-page-src | active | content utility | CANDIDATE | One-click page duplication utility. Low risk to deactivate. |
 | envato-market | active | updates | CANDIDATE | Envato marketplace connection. Low risk to deactivate. |
-| google-site-kit | active | analytics | KEEP | GA4, Search Console integration. Required for shop observability lane. |
-| ⚠️ google-listings-and-ads | active | google shopping | CANDIDATE | Google Merchant Center integration. Client-installed. Requires verification. |
+| ⚠️ google-site-kit | **DEACTIVATED** (2026-07-23) | analytics | DEACTIVATED | Folder renamed to `google-site-kit.deactivated`. Triggers REST API preloading chain that exhausts memory. Keep deactivated. |
+| ⚠️ google-listings-and-ads | **DEACTIVATED** (2026-07-23) | google shopping | DEACTIVATED | Folder renamed to `google-listings-and-ads.deactivated`. Deactivated to reduce memory. Keep deactivated. |
 | ⚠️ jetpack | **DEACTIVATED** (2026-07-23) | wordpress.com connection | DEACTIVATED | Folder renamed to `jetpack.deactivated`. Client-installed. Caused fatal memory error on 2026-07-23. Keep deactivated. |
 | ⚠️ klaviyo | active | email marketing | CANDIDATE | Email marketing automation. Client-installed. Evaluate data sync overhead. |
 | ⚠️ packlink-pro-shipping | active | shipping | CANDIDATE | Shipping provider integration. Client-installed. |
-| ⚠️ pinterest-for-woocommerce | active | social commerce | **CAUSED FATAL** | **Caused fatal memory error on 2026-07-23.** Fixed via `.user.ini` memory_limit override. Consider deactivation. |
-| ⚠️ reddit-for-woocommerce | active | social commerce | CANDIDATE | Reddit integration. Client-installed. |
+| ⚠️ pinterest-for-woocommerce | **DEACTIVATED** (2026-07-23) | social commerce | DEACTIVATED | Folder renamed to `pinterest-for-woocommerce.deactivated`. Caused fatal memory error. Keep deactivated. |
+| ⚠️ reddit-for-woocommerce | **DEACTIVATED** (2026-07-23) | social commerce | DEACTIVATED | Folder renamed to `reddit-for-woocommerce.deactivated`. Deactivated to reduce memory. Keep deactivated. |
 | rev_slider | active | visual slider | CANDIDATE | Legacy slider. Deprecated PHP 8.x case statements. |
 | visual-portfolio | active | portfolio display | CANDIDATE | Portfolio gallery plugin. Owned theme may render natively. |
 | ⚠️ woocommerce-payments | active | payment gateway | KEEP | Primary payment gateway. Client-installed. Required for checkout. |
@@ -46,8 +46,9 @@ Captured on `2026-07-23` via FTP directory listing. Client-installed plugins mar
 
 1. **7 new plugins installed by client** (WooCommerce Payments, PayPal Payments, Klaviyo, Pinterest, Reddit, Packlink Pro, Google Listings & Ads, Jetpack)
 2. **ACF PRO deactivated** by owned MU-plugin (2026-07-10)
-3. **Pinterest for WooCommerce caused fatal memory error** (2026-07-23) — fixed via `.user.ini`
-4. **Memory limit enforcement**: WordPress `WP_MEMORY_LIMIT` constant does NOT work on DonDominio shared hosting (`ini_set()` is overridden). Must use `.user.ini` for PHP memory settings.
+3. **5 plugins deactivated** after memory exhaustion incidents (2026-07-23): `jetpack`, `google-site-kit`, `pinterest-for-woocommerce`, `reddit-for-woocommerce`, `google-listings-and-ads`
+4. **Memory limit**: DonDominio shared hosting has a hard 160MB PHP memory limit. `ini_set()`, `.user.ini`, and `WP_MEMORY_LIMIT` are all ignored. Plugin deactivation is the only reliable memory relief.
+5. **`.user.ini` created** with `memory_limit = 512M` (likely ignored by hosting, but kept as fallback)
 
 ## Backup State
 
