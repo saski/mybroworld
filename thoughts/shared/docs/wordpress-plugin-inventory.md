@@ -29,7 +29,7 @@ Captured on `2026-07-23` via FTP directory listing. Client-installed plugins mar
 | envato-market | active | updates | CANDIDATE | Envato marketplace connection. Low risk to deactivate. |
 | google-site-kit | active | analytics | KEEP | GA4, Search Console integration. Required for shop observability lane. |
 | ⚠️ google-listings-and-ads | active | google shopping | CANDIDATE | Google Merchant Center integration. Client-installed. Requires verification. |
-| ⚠️ jetpack | active | wordpress.com connection | CANDIDATE | Includes Jetpack Autoloader used by other plugins. Client-installed. |
+| ⚠️ jetpack | **DEACTIVATED** (2026-07-23) | wordpress.com connection | DEACTIVATED | Folder renamed to `jetpack.deactivated`. Client-installed. Caused fatal memory error on 2026-07-23. Keep deactivated. |
 | ⚠️ klaviyo | active | email marketing | CANDIDATE | Email marketing automation. Client-installed. Evaluate data sync overhead. |
 | ⚠️ packlink-pro-shipping | active | shipping | CANDIDATE | Shipping provider integration. Client-installed. |
 | ⚠️ pinterest-for-woocommerce | active | social commerce | **CAUSED FATAL** | **Caused fatal memory error on 2026-07-23.** Fixed via `.user.ini` memory_limit override. Consider deactivation. |
