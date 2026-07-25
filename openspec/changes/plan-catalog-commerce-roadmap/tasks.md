@@ -6,6 +6,7 @@
 - [x] 0.4 Sync the 2026-06-05 end-to-end verification: local catalog generation and local owned ecommerce flow pass; production Store API parity and public smoke pass; production buyer checkout remains blocked by `cart_did_not_receive_item` and missing payment/checkout fields.
 - [x] 0.5 Sync the 2026-07-10 production stabilization: resolve 500 fatal (`Allowed memory size exhausted` in WooCommerce `countries.php`) by raising `WP_MEMORY_LIMIT` to 512M and disabling `WP_DEBUG`/`SAVEQUERIES`/`SCRIPT_DEBUG`; deploy owned `lucia-portfolio-post-type.php` MU-plugin; deactivate ACF PRO in production (folder renamed, not deleted); verify all portfolio URLs, REST API meta, and admin meta box post-deactivation.
 - [x] 0.6 Sync the 2026-07-10 production catalogo page fix and auto-deploy enablement: fix broken `/catalogo/` page (stale WPBakery shortcodes rendering as plain text) with owned `page-catalogo.php` template; enable WordPress auto-deploy on `main` (`ENABLE_WORDPRESS_AUTO_DEPLOY=true`) with `ftp.luciastuy.com` + `WP_FTP_INSECURE=1`; verify full CI pipeline (owned-code checks, backup, FTP deploy, smoke tests including `/catalogo/`, Store API inventory) passes; confirm `luciastuy` theme is active in production with no Elementor/RevSlider/WPBakery/Kirki front-end assets.
+- [x] 0.7 Sync the 2026-07-23 production incident: `pinterest-for-woocommerce` (client-installed) triggered fatal memory exhaustion (`167772160 bytes` = 160MB limit). Root cause: DonDominio shared hosting overrides `ini_set('memory_limit')` — `WP_MEMORY_LIMIT=512M` in `wp-config.php` has no effect. Fix: created `/public/.user.ini` with `memory_limit = 512M`. Site restored to 200. Also discovered 7 new client-installed plugins (WooCommerce Payments, PayPal Payments, Klaviyo, Pinterest, Reddit, Packlink Pro, Google Listings & Ads, Jetpack) bringing total to 22 plugins. Updated `wordpress-plugin-inventory.md` and `wordpress-plugin-removal-log.md`.
 
 ## 1. Catalog Contract And Customer Feedback
 
@@ -26,7 +27,7 @@
 ## 3. Commerce Platform Decision
 
 - [x] 3.1 Capture the minimum launch-critical commerce flow from the 2026-05-06 customer-stage decision: owned shop theme replacement, direct payment readiness, and buyer data capture for artwork shipping.
-- [ ] 3.2 Document WooCommerce baseline strengths, risks, plugin dependencies, production payment needs, shipping needs, and maintenance costs.
+- [ ] 3.2 Document WooCommerce baseline strengths, risks, plugin dependencies, production payment needs, and maintenance costs. Note artwork shipping/packing only as follow-up context for later.
 - [ ] 3.3 Define one leaner alternative and the evidence it must produce to beat the WooCommerce baseline.
 - [ ] 3.4 If needed, run a bounded lean-commerce spike outside production commerce behavior.
 - [ ] 3.5 Record the platform decision in `thoughts/shared/docs/woocommerce-audit.md` or a successor OpenSpec change before production theme replacement starts.
@@ -68,15 +69,15 @@
 ## 7. Checkout, Payment, And Fulfillment Readiness
 
 - [x] 7.1 Audit and repair local WooCommerce currency, country, payment, shipping, and checkout-field readiness for buyer-flow validation.
-- [ ] 7.2 Audit production/staging WooCommerce currency, tax, payment, shipping, checkout field, email, and order settings.
+- [ ] 7.2 Audit production/staging WooCommerce currency, tax, payment, checkout field, email, and order settings.
 - [ ] 7.3 Choose the smallest production/staging payment configuration that satisfies customer needs and avoids paid add-ons.
 - [x] 7.4 Verify local checkout captures buyer name, email, phone, billing address, shipping address, and order notes.
-- [ ] 7.5 Verify production/staging checkout captures buyer name, email, phone when needed, billing address, shipping address, and order notes.
+- [ ] 7.5 Verify production/staging checkout captures buyer name, email, phone when needed, billing address, shipping address, delivery instructions, and order notes.
 - [x] 7.6 Verify local physical artwork checkout collects shipping data when fulfillment needs it.
-- [ ] 7.7 Verify production/staging physical artwork products require shipping data when fulfillment needs it.
+- [ ] 7.7 Verify production/staging physical artwork products require shipping data when fulfillment needs it, but keep the detailed shipping model out of the critical payment milestone.
 - [x] 7.8 Run one local non-production BACS checkout order and record payment status, order id, buyer data, shipping fields, and order note evidence.
-- [ ] 7.9 Run one approved production/staging payment test order and record payment status, order id, buyer confirmation, admin notification, shipping fields, and refund/cancel path.
-- [ ] 7.10 Confirm the customer can use the WooCommerce order record to ship the purchased artwork.
+- [ ] 7.9 Run one approved production/staging payment test order and record payment status, order id, buyer confirmation, admin notification, and refund/cancel path.
+- [ ] 7.10 Confirm the customer can use the WooCommerce order record for the first sale; shipping process definition can follow once payment is live.
 - [x] 7.11 Diagnose why the anonymous production add-to-cart path leaves the cart empty before attempting a production payment test order. (Resolved 2026-07-09: cart/session persistence works for `LA-2026-006`; the remaining blocker is missing payment methods at checkout, not cart emptiness.)
 - [ ] 7.12 After the production 500 fix (2026-07-10), re-verify that checkout still reaches the payment-method selection step and audit which WooCommerce payment gateways are enabled in production admin.
 
@@ -102,7 +103,7 @@
 
 - [ ] 9.7 Customer/catalog lane: identify the canonical feedback source, extract accepted/rejected/open decisions, update `thoughts/shared/docs/artwork-data-contract.md`, and translate approved visual/field decisions into the catalog-generator plan.
 - [ ] 9.8 Source-data lane: identify missing artwork years, import one year batch, validate required headers/status/images, generate a preview, and repeat only after blockers from the current batch are closed.
-- [ ] 9.9 Commerce-readiness lane: audit production WooCommerce payment, shipping, checkout fields, emails, and order records before running an approved test order.
+- [ ] 9.9 Commerce-readiness lane: audit production WooCommerce payment, checkout fields, emails, and order records before running an approved test order; shipping and courier handoff can wait until after the first paid sale.
 - [ ] 9.10 Observability lane: finish GA4 Realtime/DebugView and purchase/order reconciliation through `openspec/changes/configure-shop-business-observability/`.
 - [x] 9.11 Plugin-safety lane: refresh production plugin inventory, classify each plugin as `KEEP`, `CANDIDATE`, or `UNKNOWN`, then propose exactly one reversible simplification candidate. (ACF PRO deactivated 2026-07-10 as first candidate; production front-end inspection confirms `luciastuy` theme active with no Elementor/RevSlider/WPBakery/Kirki assets; next candidates identified in task 5.9; updated deactivation priority recorded in removal log.)
 
