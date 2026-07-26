@@ -2,6 +2,16 @@
 
 This document records the automated deployment surfaces for the Lucía Astuy production stack.
 
+## Infrastructure Account Rule
+
+**All infrastructure accounts must use `nacho.saski@gmail.com`.** This is the canonical identity for:
+- Google Cloud project billing and IAM
+- OAuth tokens for catalog agent (Cloud Run worker)
+- Apps Script Web App execution identity
+- Google Sheet and Drive access for catalog data
+
+Historical note: `mybrocorp@gmail.com` was used initially but was migrated to `nacho.saski@gmail.com` on 2026-07-25. The `catalog-agent-config` and `catalog-agent-oauth-token` secrets in Secret Manager were updated to reflect this.
+
 ## GitHub Environments
 
 Create these GitHub Environments before enabling unattended production deployments:
@@ -45,7 +55,7 @@ The deploy service account needs the minimum Google Cloud permissions to:
 
 Do not use a downloaded Google service account JSON key.
 
-Configured state on 2026-05-02:
+Configured state on 2026-07-25:
 
 - Workload Identity Pool: `github-actions`
 - OIDC provider: `mybroworld-github`
@@ -53,8 +63,8 @@ Configured state on 2026-05-02:
 - GitHub provider secret: `projects/289786381719/locations/global/workloadIdentityPools/github-actions/providers/mybroworld-github`
 - Deploy service account: `github-catalog-deployer@mybroworld-catalog-260501.iam.gserviceaccount.com`
 - Runtime service account remains `catalog-agent-runner@mybroworld-catalog-260501.iam.gserviceaccount.com`
-- The deployer has Cloud Build, Cloud Run Developer, Logging Viewer, Artifact Registry Reader, Service Usage Consumer, and Storage access needed for the default Cloud Build staging path.
-- The deployer can act as `catalog-agent-runner@...` for Cloud Run Job updates and `289786381719-compute@developer.gserviceaccount.com` for Cloud Build execution.
+- **Infrastructure identity: `nacho.saski@gmail.com`** (migrated from `mybrocorp@gmail.com` on 2026-07-25)
+- Cloud Run secrets: `catalog-agent-config`, `catalog-agent-oauth-client`, `catalog-agent-oauth-token` — all in Secret Manager, all use `nacho.saski@gmail.com` as identity
 
 ### `production-wordpress`
 
@@ -90,8 +100,7 @@ Checks:
 - high-confidence secret scan
 - WordPress owned-code PHP lint and tests
 - WordPress deploy/local-runtime script tests
-- catalog generator tests
-- Cloud Run deploy helper dry-run tests
+- catalog generator testsCloud Run deploy helper dry-run tests
 - `git diff --check`
 
 ### Catalog Agent Deployment
