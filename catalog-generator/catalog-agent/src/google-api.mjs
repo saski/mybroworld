@@ -181,7 +181,15 @@ export class GoogleApiClient {
         errorCode: 'drive_folder_list_failed',
         url: String(url),
       });
-      files.push(...(payload.files || []));
+
+      for (const file of (payload.files || [])) {
+        if (file.mimeType === 'application/vnd.google-apps.folder') {
+          const subFiles = await this.listDriveFolderFiles(file.id);
+          files.push(...subFiles);
+        } else {
+          files.push(file);
+        }
+      }
       pageToken = payload.nextPageToken || '';
     } while (pageToken);
 

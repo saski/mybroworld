@@ -500,3 +500,123 @@ test('runGenerateCli falls back to image_main when no _cat files exist in manife
   assert.equal(result.exitCode, 0);
   assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/manifest-fallback/);
 });
+
+test('runGenerateCli matches production Drive naming {num}_{title}_{dims}_CAT01 by substring', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'prod-cat01', mimeType: 'image/jpeg', name: '40_Esnupi Pocho_23 x 19_CAT01.jpg' },
+              { id: 'prod-cat02', mimeType: 'image/jpeg', name: '40_Esnupi Pocho_23 x 19_CAT02.jpg' },
+            ],
+          });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-040,Esnupi Pocho,2026,03/26,Acrylic,canvas,23 x 19 cm,available,https://drive.google.com/file/d/sheet-image/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/prod-cat01/);
+  assert.doesNotMatch(renderedJobs[0], /prod-cat02/);
+  assert.doesNotMatch(renderedJobs[0], /sheet-image/);
+});
+
+test('runGenerateCli matches production Drive naming without number prefix', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'mid-cat01', mimeType: 'image/jpeg', name: 'Mid-Century Gachas_90 x 90_CAT01.jpg' },
+            ],
+          });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-099,Mid-Century Gachas,2026,03/26,Acrylic,canvas,90 x 90 cm,available,https://drive.google.com/file/d/sheet-image/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/mid-cat01/);
+});
+
+test('runGenerateCli matches production Drive naming with dimensions substring in matchKey', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'tried-cat01', mimeType: 'image/jpeg', name: '51_Trying to convince a friend to join my plan_80 x 95_CAT01.jpg' },
+            ],
+          });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-051,Trying to convince a friend to join my plan,2026,03/26,Acrylic,canvas,80 x 95 cm,available,https://drive.google.com/file/d/sheet-image/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/tried-cat01/);
+});

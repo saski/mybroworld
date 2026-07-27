@@ -225,7 +225,7 @@ function parseCatalogImageManifest(manifestText) {
     });
   }
 
-  const byMatchKey = new Map();
+  const manifestFiles = [];
   for (const file of files) {
     const fileName = String(file?.name || '').trim();
     if (!file?.id) {
@@ -238,24 +238,23 @@ function parseCatalogImageManifest(manifestText) {
     }
 
     const baseName = catMatch[1];
-    const matchKey = normalizeMatchKey(baseName);
-    if (!matchKey) {
+    const normalizedKey = normalizeMatchKey(baseName);
+    if (!normalizedKey) {
       continue;
     }
 
     const catNumber = catMatch[2];
     const priority = catNumber === '01' ? 1 : 2;
 
-    const entries = byMatchKey.get(matchKey) || [];
-    entries.push({
+    manifestFiles.push({
       id: String(file.id).trim(),
       name: fileName,
+      normalizedKey,
       priority,
     });
-    byMatchKey.set(matchKey, entries);
   }
 
-  return byMatchKey;
+  return manifestFiles;
 }
 
 function resolveCatalogImageUrl(row, catalogImageManifest) {
@@ -268,10 +267,19 @@ function resolveCatalogImageUrl(row, catalogImageManifest) {
     normalizeMatchKey(row.title_clean),
     normalizeMatchKey(row.title_raw),
   ].filter(Boolean);
-  const matchingFiles = matchKeys
-    .flatMap((matchKey) => catalogImageManifest.get(matchKey) || []);
+
+  const matchedFiles = [];
+  for (const file of catalogImageManifest) {
+    for (const matchKey of matchKeys) {
+      if (file.normalizedKey.includes(matchKey) || matchKey.includes(file.normalizedKey)) {
+        matchedFiles.push(file);
+        break;
+      }
+    }
+  }
+
   const uniqueMatchingFiles = [
-    ...new Map(matchingFiles.map((file) => [file.id, file])).values(),
+    ...new Map(matchedFiles.map((file) => [file.id, file])).values(),
   ];
 
   if (uniqueMatchingFiles.length === 0) {
