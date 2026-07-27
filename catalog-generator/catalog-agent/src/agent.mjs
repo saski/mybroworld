@@ -59,14 +59,20 @@ export async function writeCatalogImageManifest({
   config,
   googleClient,
   workDirectory,
+  selectedImageFolderIds = [],
 }) {
-  if (!config.catalogImageFolderId) {
+  if (selectedImageFolderIds.length === 0) {
     return '';
   }
 
-  const files = await googleClient.listDriveFolderFiles(config.catalogImageFolderId);
+  const allFiles = [];
+  for (const folderId of selectedImageFolderIds) {
+    const files = await googleClient.listDriveFolderFiles(folderId);
+    allFiles.push(...files);
+  }
+
   const manifestPath = path.join(workDirectory, 'catalog-images.json');
-  await fs.writeFile(manifestPath, `${JSON.stringify({ files }, null, 2)}\n`, 'utf8');
+  await fs.writeFile(manifestPath, `${JSON.stringify({ files: allFiles }, null, 2)}\n`, 'utf8');
   return manifestPath;
 }
 
@@ -141,12 +147,17 @@ async function processClaimedJob({
     const mergedCsv = mergeCatalogSheetsToCsv(sheetPayloads);
     await fs.writeFile(mergedCsvPath, mergedCsv, 'utf8');
 
-    const useImageManifest = String(job.use_image_manifest || '').toLowerCase() === 'true';
-    const catalogImageManifestPath = useImageManifest
+    let selectedImageFolderIds = [];
+    try {
+      selectedImageFolderIds = JSON.parse(job.selected_image_folders_json || '[]');
+    } catch {}
+
+    const catalogImageManifestPath = selectedImageFolderIds.length > 0
       ? await writeCatalogImageManifest({
           config,
           googleClient,
           workDirectory,
+          selectedImageFolderIds,
         })
       : '';
 

@@ -145,8 +145,8 @@ test('buildQueuedJobRecord applies defaults and blocks missing folder configurat
 
 test('job contract includes blank review fields for WordPress catalog review', () => {
   assert.deepEqual(
-    JOB_HEADERS.slice(-5),
-    ['review_status', 'reviewed_at', 'reviewed_by', 'review_notes', 'use_image_manifest'],
+    JOB_HEADERS.slice(-6),
+    ['review_status', 'reviewed_at', 'reviewed_by', 'review_notes', 'use_image_manifest', 'selected_image_folders_json'],
   );
 
   const compatibleTabs = getCompatibleTabs({

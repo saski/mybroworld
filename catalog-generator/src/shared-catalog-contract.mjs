@@ -64,6 +64,7 @@ export const CATALOG_JOB_HEADERS = [
   'reviewed_by',
   'review_notes',
   'use_image_manifest',
+  'selected_image_folders_json',
 ];
 
 export const CATALOG_REVIEW_STATUS_VALUES = ['approved', 'needs_changes'];

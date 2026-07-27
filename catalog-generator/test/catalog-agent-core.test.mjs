@@ -171,9 +171,7 @@ test('writeCatalogImageManifest materializes configured Drive image candidates f
   const listedFolderIds = [];
 
   const manifestPath = await writeCatalogImageManifest({
-    config: {
-      catalogImageFolderId: 'folder-id',
-    },
+    config: {},
     googleClient: {
       listDriveFolderFiles: async (folderId) => {
         listedFolderIds.push(folderId);
@@ -187,12 +185,28 @@ test('writeCatalogImageManifest materializes configured Drive image candidates f
       },
     },
     workDirectory,
+    selectedImageFolderIds: ['folder-id'],
   });
 
   const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
   assert.deepEqual(listedFolderIds, ['folder-id']);
   assert.equal(path.basename(manifestPath), 'catalog-images.json');
   assert.equal(manifest.files[0].id, 'cat-image-1');
+});
+
+test('writeCatalogImageManifest returns empty when no folders selected', async () => {
+  const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-image-manifest-empty-'));
+
+  const manifestPath = await writeCatalogImageManifest({
+    config: {},
+    googleClient: {
+      listDriveFolderFiles: async () => [],
+    },
+    workDirectory,
+    selectedImageFolderIds: [],
+  });
+
+  assert.equal(manifestPath, '');
 });
 
 test('mergeCatalogSheetsToCsv rejects incompatible tabs with a precise error', () => {

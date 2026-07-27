@@ -12,6 +12,7 @@ const CATALOG_CLOUD_RUN_TRIGGER_DEFAULT_PROFILE_KEYS = 'lucia-mybrocorp';
 const CATALOG_CLOUD_RUN_DEFAULT_PROJECT_ID = 'mybroworld-catalog-260501';
 const CATALOG_CLOUD_RUN_DEFAULT_REGION = 'europe-west1';
 const CATALOG_CLOUD_RUN_DEFAULT_JOB_NAME = 'lucia-mybrocorp-catalog-agent';
+const CATALOG_IMAGE_FOLDER_ID_PROPERTY = 'CATALOG_IMAGE_FOLDER_ID';
 const CATALOG_REQUIRED_HEADERS = [
   'artwork_id',
   'title_clean',
@@ -68,6 +69,7 @@ const CATALOG_JOB_HEADERS = [
   'reviewed_by',
   'review_notes',
   'use_image_manifest',
+  'selected_image_folders_json',
 ];
 const CATALOG_INITIAL_PROFILES = [
   ['lucia-mybrocorp', 'Lucia / mybrocorp', true, 'mybrocorp@gmail.com', 'luciaastuy', '', 'Production operator'],
@@ -115,6 +117,13 @@ function handleCatalogApiRequest_(event) {
       return catalogJsonResponse_({
         ok: true,
         result: recordCatalogReviewApi_(data),
+      });
+    }
+
+    if (action === 'list_catalog_image_folders') {
+      return catalogJsonResponse_({
+        ok: true,
+        result: listCatalogImageFoldersApi_(data),
       });
     }
 
@@ -181,6 +190,7 @@ function configureProductionCatalogCloudRunTrigger() {
     [CATALOG_CLOUD_RUN_PROJECT_ID_PROPERTY]: CATALOG_CLOUD_RUN_DEFAULT_PROJECT_ID,
     [CATALOG_CLOUD_RUN_REGION_PROPERTY]: CATALOG_CLOUD_RUN_DEFAULT_REGION,
     [CATALOG_CLOUD_RUN_JOB_NAME_PROPERTY]: CATALOG_CLOUD_RUN_DEFAULT_JOB_NAME,
+    [CATALOG_IMAGE_FOLDER_ID_PROPERTY]: '1ONBDh19aW9p9p_g1oSFmwbMxloTHxxOh',
   });
 
   SpreadsheetApp.getActive().toast('Cloud Run catalog trigger is configured.', CATALOG_MENU_TITLE, 5);
@@ -285,6 +295,7 @@ function createCatalogJob_(formData, options) {
     reviewed_at: '',
     reviewed_by: '',
     use_image_manifest: payload.useImageManifest === true || payload.useImageManifest === 'true',
+    selected_image_folders_json: JSON.stringify(payload.selectedImageFolderIds || []),
     scope_mode: scopeMode,
     sheet_ids_json: JSON.stringify(selection.map((tab) => tab.sheetId)),
     sheet_titles_json: JSON.stringify(selection.map((tab) => tab.title)),
@@ -714,6 +725,47 @@ function buildCatalogReviewUpdates_(payload) {
 
 function normalizeCatalogReviewStatus_(value) {
   return normalizeCatalogText_(value).toLowerCase().replace(/[-\s]+/g, '_');
+}
+
+function listCatalogImageFoldersApi_() {
+  const folderId = normalizeCatalogText_(
+    PropertiesService.getScriptProperties().getProperty(CATALOG_IMAGE_FOLDER_ID_PROPERTY),
+  );
+  if (!folderId) {
+    throw new Error('Catalog image folder not configured.');
+  }
+
+  const rootFolder = DriveApp.getFolderById(folderId);
+  if (!rootFolder) {
+    throw new Error('Catalog image folder not found.');
+  }
+
+  const subfolders = rootFolder.getFolders();
+  const result = [];
+  while (subfolders.hasNext()) {
+    const folder = subfolders.next();
+    const files = folder.getFiles();
+    let fileCount = 0;
+    while (files.hasNext()) {
+      files.next();
+      fileCount++;
+    }
+    result.push({
+      id: folder.getId(),
+      name: folder.getName(),
+      fileCount: fileCount,
+    });
+  }
+
+  result.sort(function (a, b) {
+    return a.name.localeCompare(b.name);
+  });
+
+  return {
+    folders: result,
+    rootFolderId: folderId,
+    rootFolderName: rootFolder.getName(),
+  };
 }
 
 function readCatalogJobRecords_(jobsSheet) {
