@@ -345,7 +345,7 @@ test('runGenerateCli selects _CAT01 image when multiple _cat variants exist', as
   assert.doesNotMatch(renderedJobs[0], /file-base/);
 });
 
-test('runGenerateCli falls back to base image when no _cat variants exist', async () => {
+test('runGenerateCli falls back to spreadsheet image_main when no _cat file exists', async () => {
   const { logger } = createLogger();
   const renderedJobs = [];
 
@@ -364,7 +364,7 @@ test('runGenerateCli falls back to base image when no _cat variants exist', asyn
         if (inputPath === '/virtual/cat-images.json') {
           return JSON.stringify({
             files: [
-              { id: 'file-base', mimeType: 'image/jpeg', name: 'LA-2026-001.jpg' },
+              { id: 'file-other', mimeType: 'image/jpeg', name: 'OTHER-ART_CAT01.jpg' },
             ],
           });
         }
@@ -381,10 +381,10 @@ test('runGenerateCli falls back to base image when no _cat variants exist', asyn
   });
 
   assert.equal(result.exitCode, 0);
-  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/file-base/);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/original/);
 });
 
-test('runGenerateCli selects _CAT01 over base image when both exist', async () => {
+test('runGenerateCli selects _CAT01 over spreadsheet image_main when both exist', async () => {
   const { logger } = createLogger();
   const renderedJobs = [];
 
@@ -466,8 +466,9 @@ test('runGenerateCli falls back to non-CAT01 _cat when no _CAT01 exists', async 
   assert.doesNotMatch(renderedJobs[0], /file-base/);
 });
 
-test('runGenerateCli throws when no images found for artwork', async () => {
+test('runGenerateCli falls back to image_main when no _cat files exist in manifest', async () => {
   const { logger, errors } = createLogger();
+  const renderedJobs = [];
 
   const result = await runGenerateCli({
     argv: [
@@ -486,16 +487,16 @@ test('runGenerateCli throws when no images found for artwork', async () => {
         }
         return [
           'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
-          'LA-2026-001,No Image,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
+          'LA-2026-001,No Manifest Image,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/manifest-fallback/view,TRUE,TRUE,300 €',
         ].join('\n');
       },
-      renderPdf: async () => {},
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
       writeTextFile: async () => {},
     },
     env: {},
     logger,
   });
 
-  assert.notEqual(result.exitCode, 0);
-  assert.match(errors.join(' ') + ' ' + (result.stderr || ''), /No image found/i);
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/manifest-fallback/);
 });

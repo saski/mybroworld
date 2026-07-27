@@ -233,19 +233,18 @@ function parseCatalogImageManifest(manifestText) {
     }
 
     const catMatch = fileName.match(/^(.*)_cat(\d*)(?:\.[^.]+)?$/i);
-    const baseName = catMatch ? catMatch[1] : fileName.replace(/\.[^.]+$/, '');
+    if (!catMatch) {
+      continue;
+    }
+
+    const baseName = catMatch[1];
     const matchKey = normalizeMatchKey(baseName);
     if (!matchKey) {
       continue;
     }
 
-    let priority;
-    if (catMatch) {
-      const catNumber = catMatch[2];
-      priority = catNumber === '01' ? 1 : 2;
-    } else {
-      priority = 3;
-    }
+    const catNumber = catMatch[2];
+    const priority = catNumber === '01' ? 1 : 2;
 
     const entries = byMatchKey.get(matchKey) || [];
     entries.push({
@@ -276,11 +275,7 @@ function resolveCatalogImageUrl(row, catalogImageManifest) {
   ];
 
   if (uniqueMatchingFiles.length === 0) {
-    throw new CatalogCliError({
-      code: 'catalog_image_selection_blocked',
-      exitCode: 3,
-      message: `No image found for artwork ${row.artwork_id || row.title_clean || row.title_raw}.`,
-    });
+    return normalizeDriveImageUrl(row.image_main);
   }
 
   uniqueMatchingFiles.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
