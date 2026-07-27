@@ -301,3 +301,201 @@ test('waitForCatalogImageElements uses a bounded page-context image wait', async
   assert.equal(typeof calls[0].pageFunction, 'function');
   assert.equal(calls[0].timeoutMs, 1234);
 });
+
+test('runGenerateCli selects _CAT01 image when multiple _cat variants exist', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'file-cat01', mimeType: 'image/jpeg', name: 'LA-2026-001_CAT01.jpg' },
+              { id: 'file-cat02', mimeType: 'image/jpeg', name: 'LA-2026-001_CAT02.jpg' },
+              { id: 'file-base', mimeType: 'image/jpeg', name: 'LA-2026-001.jpg' },
+            ],
+          });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-001,Priority Test,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/file-cat01/);
+  assert.doesNotMatch(renderedJobs[0], /file-cat02/);
+  assert.doesNotMatch(renderedJobs[0], /file-base/);
+});
+
+test('runGenerateCli falls back to base image when no _cat variants exist', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'file-base', mimeType: 'image/jpeg', name: 'LA-2026-001.jpg' },
+            ],
+          });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-001,Fallback Test,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/file-base/);
+});
+
+test('runGenerateCli selects _CAT01 over base image when both exist', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'file-base', mimeType: 'image/jpeg', name: 'LA-2026-001.jpg' },
+              { id: 'file-cat01', mimeType: 'image/jpeg', name: 'LA-2026-001_CAT01.jpg' },
+            ],
+          });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-001,Priority Over Base,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/file-cat01/);
+  assert.doesNotMatch(renderedJobs[0], /file-base/);
+});
+
+test('runGenerateCli falls back to non-CAT01 _cat when no _CAT01 exists', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'file-cat02', mimeType: 'image/jpeg', name: 'LA-2026-001_CAT02.jpg' },
+              { id: 'file-base', mimeType: 'image/jpeg', name: 'LA-2026-001.jpg' },
+            ],
+          });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-001,Fallback Cat,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/file-cat02/);
+  assert.doesNotMatch(renderedJobs[0], /file-base/);
+});
+
+test('runGenerateCli throws when no images found for artwork', async () => {
+  const { logger, errors } = createLogger();
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({ files: [] });
+        }
+        return [
+          'artwork_id,title_clean,year,date_label,medium_clean,support_clean,dimensions_clean,status_normalized,image_main,include_in_catalog,catalog_ready,price_display_clean',
+          'LA-2026-001,No Image,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
+        ].join('\n');
+      },
+      renderPdf: async () => {},
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.notEqual(result.exitCode, 0);
+  assert.match(errors.join(' ') + ' ' + (result.stderr || ''), /No image found/i);
+});

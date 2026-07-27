@@ -228,20 +228,30 @@ function parseCatalogImageManifest(manifestText) {
   const byMatchKey = new Map();
   for (const file of files) {
     const fileName = String(file?.name || '').trim();
-    const match = fileName.match(/^(.*)_cat(?:\.[^.]+)?$/i);
-    if (!match || !file?.id) {
+    if (!file?.id) {
       continue;
     }
 
-    const matchKey = normalizeMatchKey(match[1]);
+    const catMatch = fileName.match(/^(.*)_cat(\d*)(?:\.[^.]+)?$/i);
+    const baseName = catMatch ? catMatch[1] : fileName.replace(/\.[^.]+$/, '');
+    const matchKey = normalizeMatchKey(baseName);
     if (!matchKey) {
       continue;
+    }
+
+    let priority;
+    if (catMatch) {
+      const catNumber = catMatch[2];
+      priority = catNumber === '01' ? 1 : 2;
+    } else {
+      priority = 3;
     }
 
     const entries = byMatchKey.get(matchKey) || [];
     entries.push({
       id: String(file.id).trim(),
       name: fileName,
+      priority,
     });
     byMatchKey.set(matchKey, entries);
   }
@@ -265,15 +275,15 @@ function resolveCatalogImageUrl(row, catalogImageManifest) {
     ...new Map(matchingFiles.map((file) => [file.id, file])).values(),
   ];
 
-  if (uniqueMatchingFiles.length !== 1) {
+  if (uniqueMatchingFiles.length === 0) {
     throw new CatalogCliError({
       code: 'catalog_image_selection_blocked',
       exitCode: 3,
-      message: uniqueMatchingFiles.length === 0
-        ? `No _cat image found for artwork ${row.artwork_id || row.title_clean || row.title_raw}.`
-        : `Multiple _cat images found for artwork ${row.artwork_id || row.title_clean || row.title_raw}.`,
+      message: `No image found for artwork ${row.artwork_id || row.title_clean || row.title_raw}.`,
     });
   }
+
+  uniqueMatchingFiles.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
 
   return normalizeDriveImageUrl(`https://drive.google.com/file/d/${uniqueMatchingFiles[0].id}/view`);
 }
