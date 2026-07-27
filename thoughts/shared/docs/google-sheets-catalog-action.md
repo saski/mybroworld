@@ -97,8 +97,7 @@ completed through Cloud Run, produced a 14-artwork PDF, and wrote the Drive
 result URL back to `catalog_jobs`. Apps Script now supports starting the worker
 on demand when a `lucia-mybrocorp` catalog is queued. The production Apps Script
 project is linked to standard Cloud project `mybroworld-catalog-260501`; Web App
-deployment `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ`
-runs version 6 with server-side WordPress access and an owner-only API executable
+deployment `AKfycbxejdh4ap_FloIlAoT0X3QogmxiHkffxNQLq_Mnh0EKZbAiMyL9BsKPzuS4zPKHEAli` (rotated 2026-07-28 from `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` after the `drive.readonly` scope fix) runs version 10 with server-side WordPress access and an owner-only API executable
 scope bootstrap. Direct token-authenticated job `catalog_20260503_100246_1dd2`
 started Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, authenticated
 as `mybrocorp@gmail.com`, completed with 14 artworks, and wrote the Drive result

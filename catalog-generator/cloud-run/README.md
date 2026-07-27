@@ -229,9 +229,7 @@ gcloud scheduler jobs resume lucia-mybrocorp-catalog-monitor-every-10m \
 Delete the agent scheduler job only if you are sure you will never return to
 polling; pausing is usually enough.
 
-Production evidence as of 2026-05-03: Apps Script Web App deployment
-`AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ`
-runs version 6. Direct token-authenticated job `catalog_20260503_100246_1dd2`
+Production evidence as of 2026-05-03: Apps Script Web App deployment `AKfycbxejdh4ap_FloIlAoT0X3QogmxiHkffxNQLq_Mnh0EKZbAiMyL9BsKPzuS4zPKHEAli` (rotated from `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ` on 2026-07-28 after adding `drive.readonly` scope; see OpenSpec `fix-catalog-webapp-drive-scope`) runs version 10. Direct token-authenticated job `catalog_20260503_100246_1dd2`
 created Cloud Run execution `lucia-mybrocorp-catalog-agent-s22ln`, which
 authenticated as `mybrocorp@gmail.com`, completed successfully, and wrote a
 14-artwork Drive PDF result back to `catalog_jobs`.

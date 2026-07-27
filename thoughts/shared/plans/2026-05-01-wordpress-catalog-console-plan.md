@@ -152,7 +152,7 @@ Deployment notes:
 
 - Apps Script project: `MyBroworld Catalog Action`
 - Script id: `1C0BfkhSDExiq7Ik4jvxoeGzMtNqQsAolMpBzpCqd81iuB5datD43bkot`
-- Web App URL: `https://script.google.com/macros/s/AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ/exec`
+- Web App URL: `https://script.google.com/macros/s/AKfycbxejdh4ap_FloIlAoT0X3QogmxiHkffxNQLq_Mnh0EKZbAiMyL9BsKPzuS4zPKHEAli/exec` (rotated 2026-07-28; prior `AKfycbz9C2jMtj42LWgWFl1duHEFUiGqs0b6svz0zgcOJjeSQtBUl-8j_iTH7S2iAUIAKVBJ`)
 - Deployment access: `Anyone`, with `CATALOG_API_TOKEN` enforced by Apps Script.
 - `setupCatalogInfrastructure` completed from the Apps Script editor on 2026-05-01.
 - Token-authenticated `list_recent_catalog_jobs` returned HTTP 200 with `ok: true`.
