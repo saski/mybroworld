@@ -35,9 +35,14 @@ The catalog generator SHALL select a base image (no `_cat` suffix) when no `_cat
 - **THEN** it selects `ART001.jpg`
 
 ### Requirement: Error when no images found
-The catalog generator SHALL throw an error with code `catalog_image_selection_blocked` when no image files match an artwork.
+The catalog generator SHALL fall back to the spreadsheet `image_main` when no `_cat` file matches an artwork in the manifest.
 
-#### Scenario: No files match artwork
-- **GIVEN** an artwork has no matching files in the Drive folder
+#### Scenario: No _cat files match an artwork
+- **GIVEN** the manifest exists but no `_cat` files match the current artwork
 - **WHEN** the catalog generator resolves the image
-- **THEN** it throws an error indicating no image was found
+- **THEN** it uses the `image_main` URL from the spreadsheet row
+
+#### Scenario: No _cat files in manifest at all
+- **GIVEN** the manifest is empty (no `_cat` files in the Drive folder)
+- **WHEN** the catalog generator resolves the image
+- **THEN** it uses the `image_main` URL from the spreadsheet row for every artwork
