@@ -140,11 +140,15 @@ async function processClaimedJob({
 
     const mergedCsv = mergeCatalogSheetsToCsv(sheetPayloads);
     await fs.writeFile(mergedCsvPath, mergedCsv, 'utf8');
-    const catalogImageManifestPath = await writeCatalogImageManifest({
-      config,
-      googleClient,
-      workDirectory,
-    });
+
+    const useImageManifest = String(job.use_image_manifest || '').toLowerCase() === 'true';
+    const catalogImageManifestPath = useImageManifest
+      ? await writeCatalogImageManifest({
+          config,
+          googleClient,
+          workDirectory,
+        })
+      : '';
 
     await updateJobFieldsOrThrow({
       googleClient,

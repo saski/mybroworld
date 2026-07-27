@@ -228,5 +228,6 @@ export function buildQueuedJobRecord({
     sheet_ids_json: JSON.stringify(selectedTabs.map((tab) => tab.sheetId)),
     sheet_titles_json: JSON.stringify(selectedTabs.map((tab) => tab.title)),
     status: 'queued',
+    use_image_manifest: false,
   };
 }

@@ -175,6 +175,7 @@ function lucia_catalog_console_build_queue_payload(array $input, array $config):
         'outputFolderId' => $outputFolderId,
         'scopeMode' => lucia_catalog_console_scope_mode($input['scope_mode'] ?? '', $config),
         'selectedSheetIds' => lucia_catalog_console_selected_sheet_ids($input['selected_sheet_ids'] ?? []),
+        'useImageManifest' => ! empty($input['use_image_manifest']),
     ];
 }
 
@@ -605,6 +606,11 @@ function lucia_catalog_console_render_admin_page(): void
         echo '<option value="' . esc_attr($scopeMode) . '"' . $selected . '>' . esc_html($label) . '</option>';
     }
     echo '</select></td>';
+    echo '</tr>';
+    echo '<tr>';
+    echo '<th scope="row"><label for="lucia-catalog-use-images">Image folder</label></th>';
+    echo '<td><label><input type="checkbox" id="lucia-catalog-use-images" name="use_image_manifest" value="1" checked> Include _CAT01 images from Drive folder</label>';
+    echo '<p class="description">Match artwork titles against _CAT01 files in the catalog image folder for higher-quality images.</p></td>';
     echo '</tr>';
     echo '</tbody></table>';
     echo '<p class="submit"><button class="button button-primary" id="lucia-catalog-generate-button" type="submit">Generate PDF</button></p>';

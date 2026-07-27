@@ -67,6 +67,7 @@ const CATALOG_JOB_HEADERS = [
   'reviewed_at',
   'reviewed_by',
   'review_notes',
+  'use_image_manifest',
 ];
 const CATALOG_INITIAL_PROFILES = [
   ['lucia-mybrocorp', 'Lucia / mybrocorp', true, 'mybrocorp@gmail.com', 'luciaastuy', '', 'Production operator'],
@@ -283,6 +284,7 @@ function createCatalogJob_(formData, options) {
     review_status: '',
     reviewed_at: '',
     reviewed_by: '',
+    use_image_manifest: payload.useImageManifest === true || payload.useImageManifest === 'true',
     scope_mode: scopeMode,
     sheet_ids_json: JSON.stringify(selection.map((tab) => tab.sheetId)),
     sheet_titles_json: JSON.stringify(selection.map((tab) => tab.title)),
