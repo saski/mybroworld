@@ -85,14 +85,15 @@ test('Apps Script queue triggers the production Cloud Run job on demand', async 
   }));
 
   assert.equal(queued.ok, true);
-  assert.equal(fetchCalls.length, 1);
+  const cloudRunCalls = fetchCalls.filter(({ url }) => url.includes('run.googleapis.com'));
+  assert.equal(cloudRunCalls.length, 1);
   assert.equal(
-    fetchCalls[0].url,
+    cloudRunCalls[0].url,
     'https://run.googleapis.com/v2/projects/mybroworld-catalog-260501/locations/europe-west1/jobs/lucia-mybrocorp-catalog-agent:run',
   );
-  assert.equal(fetchCalls[0].options.method, 'post');
-  assert.equal(fetchCalls[0].options.headers.Authorization, 'Bearer test-oauth-token');
-  assert.equal(fetchCalls[0].options.payload, '{}');
+  assert.equal(cloudRunCalls[0].options.method, 'post');
+  assert.equal(cloudRunCalls[0].options.headers.Authorization, 'Bearer test-oauth-token');
+  assert.equal(cloudRunCalls[0].options.payload, '{}');
 });
 
 test('Apps Script queue marks the job failed when the Cloud Run trigger is rejected', async () => {
@@ -146,7 +147,7 @@ test('Apps Script queue blocks profiles without an output folder', async () => {
   assert.match(response.error.message, /output folder/i);
 });
 
-test('Apps Script queue requires selected Drive image folders', async () => {
+test('Apps Script queue automatically records every configured Drive image folder', async () => {
   const { callApi } = await buildHarness();
 
   const response = callApi(request('queue_catalog_job', {
@@ -156,8 +157,9 @@ test('Apps Script queue requires selected Drive image folders', async () => {
     scopeMode: 'current_tab',
   }));
 
-  assert.equal(response.ok, false);
-  assert.match(response.error.message, /Drive image folder/i);
+  assert.equal(response.ok, true);
+  assert.equal(response.result.use_image_manifest, true);
+  assert.equal(response.result.selected_image_folders_json, '["folder-images-2026"]');
 });
 
 test('Apps Script queue blocks incompatible current tabs', async () => {

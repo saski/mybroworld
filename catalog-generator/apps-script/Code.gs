@@ -275,13 +275,15 @@ function createCatalogJob_(formData, options) {
     throw new Error('Enter a catalog title before queueing a job.');
   }
 
-  const selectedImageFolderIds = Array.isArray(payload.selectedImageFolderIds)
-    ? payload.selectedImageFolderIds.filter(function (folderId) {
-      return normalizeCatalogText_(folderId) !== '';
+  const selectedImageFolderIds = listCatalogImageFoldersApi_().folders
+    .map(function (folder) {
+      return normalizeCatalogText_(folder.id);
     })
-    : [];
+    .filter(function (folderId) {
+      return folderId !== '';
+    });
   if (selectedImageFolderIds.length === 0) {
-    throw new Error('Select at least one Drive image folder before queueing a job.');
+    throw new Error('No catalog image folders are configured.');
   }
 
   const outputFilename = sanitizeCatalogOutputFilename_({
@@ -304,7 +306,7 @@ function createCatalogJob_(formData, options) {
     review_status: '',
     reviewed_at: '',
     reviewed_by: '',
-    use_image_manifest: payload.useImageManifest === true || payload.useImageManifest === 'true',
+    use_image_manifest: true,
     selected_image_folders_json: JSON.stringify(selectedImageFolderIds),
     scope_mode: scopeMode,
     sheet_ids_json: JSON.stringify(selection.map((tab) => tab.sheetId)),

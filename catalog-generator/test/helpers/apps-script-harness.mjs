@@ -188,6 +188,7 @@ export async function loadAppsScriptCatalogApi({
   activeSheetId,
   apiToken,
   fetchResponse = { responseCode: 200, text: '{}' },
+  imageFolders = [{ id: 'folder-images-2026', name: '2026', fileCount: 1 }],
   scriptProperties = {},
   sheets,
 }) {
@@ -197,11 +198,44 @@ export async function loadAppsScriptCatalogApi({
   const fetchRequests = [];
   const propertyValues = {
     CATALOG_API_TOKEN: apiToken,
+    CATALOG_IMAGE_FOLDER_ID: 'catalog-image-root',
     ...scriptProperties,
   };
   const context = {
     ContentService: createContentService(),
     Date,
+    DriveApp: {
+      getFolderById(folderId) {
+        if (folderId !== 'catalog-image-root') {
+          throw new Error(`Unknown Drive folder ${folderId}`);
+        }
+
+        let folderIndex = 0;
+        return {
+          getFolders() {
+            return {
+              hasNext() {
+                return folderIndex < imageFolders.length;
+              },
+              next() {
+                const folder = imageFolders[folderIndex++];
+                return {
+                  getId() {
+                    return folder.id;
+                  },
+                  getName() {
+                    return folder.name;
+                  },
+                };
+              },
+            };
+          },
+          getName() {
+            return 'Catalog images';
+          },
+        };
+      },
+    },
     HtmlService: {},
     JSON,
     Math,
@@ -246,6 +280,16 @@ export async function loadAppsScriptCatalogApi({
     UrlFetchApp: {
       fetch(url, options = {}) {
         fetchCalls.push({ options, url });
+        if (url.startsWith('https://www.googleapis.com/drive/v3/files?')) {
+          return {
+            getContentText() {
+              return JSON.stringify({ files: [{}] });
+            },
+            getResponseCode() {
+              return 200;
+            },
+          };
+        }
         return {
           getContentText() {
             return fetchResponse.text;

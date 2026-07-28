@@ -195,7 +195,8 @@ Do not expose `LUCIA_CATALOG_API_TOKEN` in browser JavaScript. Browser requests 
 
 After login, shop operators can open `wp-admin/admin.php?page=lucia-catalog-console` or the `Catalog PDFs` admin menu item. The workflow is:
 - enter or accept the catalog title
-- keep the default scope unless a multi-year catalog is needed
+- choose the works to include: the current sheet or all compatible sheets
+- catalog images are searched automatically across every configured Drive subfolder
 - click `Generate PDF`
 - keep the configured catalog worker running so it can claim the queued job, render the PDF, and upload it to Drive
 - use the `Open PDF`, `Approve`, and `Needs changes` controls from the recent jobs table

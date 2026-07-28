@@ -128,27 +128,6 @@ function lucia_catalog_console_selected_sheet_ids(mixed $value): array
     return array_values(array_unique($ids));
 }
 
-function lucia_catalog_console_selected_image_folder_ids(mixed $value): array
-{
-    if (is_string($value)) {
-        $value = explode(',', $value);
-    }
-
-    if (! is_array($value)) {
-        return [];
-    }
-
-    $ids = [];
-    foreach ($value as $candidate) {
-        $id = lucia_catalog_console_sanitize_text($candidate);
-        if ($id !== '') {
-            $ids[] = $id;
-        }
-    }
-
-    return array_values(array_unique($ids));
-}
-
 function lucia_catalog_console_scope_mode(mixed $value, array $config): string
 {
     $allowedScopeModes = ['current_tab', 'selected_tabs', 'all_compatible_tabs'];
@@ -196,7 +175,6 @@ function lucia_catalog_console_build_queue_payload(array $input, array $config):
         'outputFolderId' => $outputFolderId,
         'scopeMode' => lucia_catalog_console_scope_mode($input['scope_mode'] ?? '', $config),
         'selectedSheetIds' => lucia_catalog_console_selected_sheet_ids($input['selected_sheet_ids'] ?? []),
-        'selectedImageFolderIds' => lucia_catalog_console_selected_image_folder_ids($input['selected_image_folder_ids'] ?? []),
     ];
 }
 
@@ -555,20 +533,6 @@ function lucia_catalog_console_handle_review(): void
     }
 }
 
-function lucia_catalog_console_handle_list_image_folders(): void
-{
-    $config = lucia_catalog_console_config();
-    if (! lucia_catalog_console_verify_ajax_request($config)) {
-        return;
-    }
-
-    try {
-        lucia_catalog_console_send_success(lucia_catalog_console_call_api('list_catalog_image_folders', [], $config));
-    } catch (Throwable $error) {
-        lucia_catalog_console_send_error($error->getMessage());
-    }
-}
-
 function lucia_catalog_console_register_admin_page(): void
 {
     if (! function_exists('add_menu_page')) {
@@ -631,11 +595,11 @@ function lucia_catalog_console_render_admin_page(): void
     echo '<td><input class="regular-text" id="lucia-catalog-title" name="catalog_title" type="text" value="' . esc_attr(lucia_catalog_console_default_catalog_title()) . '" required></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="lucia-catalog-scope">Scope</label></th>';
+    echo '<th scope="row"><label for="lucia-catalog-scope">Obras a incluir</label></th>';
     echo '<td><select id="lucia-catalog-scope" name="scope_mode">';
     foreach ([
-        'current_tab' => 'Current year',
-        'all_compatible_tabs' => 'All compatible years',
+        'current_tab' => 'Current sheet',
+        'all_compatible_tabs' => 'All compatible sheets',
     ] as $scopeMode => $label) {
         $selected = $scopeMode === $settings['defaultScopeMode'] ? ' selected' : '';
         echo '<option value="' . esc_attr($scopeMode) . '"' . $selected . '>' . esc_html($label) . '</option>';
@@ -643,9 +607,8 @@ function lucia_catalog_console_render_admin_page(): void
     echo '</select></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row">Image folders</th>';
-    echo '<td><div id="lucia-catalog-image-folders"><em>Loading Drive folders...</em></div>';
-    echo '<p class="description">Select which Drive folders to scan for _CAT01 images.</p></td>';
+    echo '<th scope="row">Catalog images</th>';
+    echo '<td><p class="description">Images are searched automatically across all catalog Drive folders.</p></td>';
     echo '</tr>';
     echo '</tbody></table>';
     echo '<p class="submit"><button class="button button-primary" id="lucia-catalog-generate-button" type="submit">Generate PDF</button></p>';
@@ -706,27 +669,6 @@ function lucia_catalog_console_render_admin_page(): void
     function clearStatus() {
         statusBox.className = "notice notice-info hidden";
         statusBox.textContent = "";
-    }
-
-    async function loadImageFolders() {
-        const container = document.getElementById("lucia-catalog-image-folders");
-        if (!container) return;
-        try {
-            const result = await postCatalogAction("lucia_catalog_console_list_image_folders");
-            const folders = result.folders || [];
-            if (folders.length === 0) {
-                container.innerHTML = "<em>No image folders found.</em>";
-                return;
-            }
-            container.innerHTML = folders.map((folder) =>
-                `<label style="display:block;margin-bottom:4px;">` +
-                `<input type="checkbox" name="selected_image_folder_ids[]" value="${escapeText(folder.id)}" checked> ` +
-                `${escapeText(folder.name)} <span style="color:#666;">(${folder.fileCount} files)</span>` +
-                `</label>`
-            ).join("");
-        } catch (error) {
-            container.innerHTML = `<em style="color:#d63638;">Failed to load folders: ${escapeText(error.message)}</em>`;
-        }
     }
 
     async function postCatalogAction(action, fields = {}) {
@@ -854,10 +796,6 @@ function lucia_catalog_console_render_admin_page(): void
         const formData = new FormData(form);
         try {
             const fields = Object.fromEntries(formData.entries());
-            fields.selected_image_folder_ids = formData.getAll("selected_image_folder_ids[]");
-            if (fields.selected_image_folder_ids.length === 0) {
-                throw new Error("Select at least one Drive image folder.");
-            }
             const job = await postCatalogAction("lucia_catalog_console_queue", fields);
             activeJobId = job.job_id || "";
             setStatus("Catalog job queued.", "success");
@@ -900,7 +838,6 @@ function lucia_catalog_console_render_admin_page(): void
         setStatus(error.message, "error");
         jobsBody.innerHTML = `<tr><td colspan="6">Unable to load catalog jobs.</td></tr>`;
     });
-    loadImageFolders().catch(() => {});
 })();
     </script>';
 
@@ -918,7 +855,6 @@ function lucia_catalog_console_register_hooks(): void
     add_action('wp_ajax_lucia_catalog_console_get_job', 'lucia_catalog_console_handle_get_job');
     add_action('wp_ajax_lucia_catalog_console_recent_jobs', 'lucia_catalog_console_handle_recent_jobs');
     add_action('wp_ajax_lucia_catalog_console_review', 'lucia_catalog_console_handle_review');
-    add_action('wp_ajax_lucia_catalog_console_list_image_folders', 'lucia_catalog_console_handle_list_image_folders');
 }
 
 lucia_catalog_console_register_hooks();
