@@ -208,6 +208,15 @@ function authorizeCatalogWebAppScopes() {
   };
 }
 
+function authorizeCatalogDriveScopes() {
+  const folders = listCatalogImageFoldersApi_();
+
+  return {
+    folderCount: folders.folders.length,
+    ok: true,
+  };
+}
+
 function getCatalogSidebarModel(prefill) {
   return buildCatalogSidebarModel_(prefill || {});
 }
@@ -745,16 +754,10 @@ function listCatalogImageFoldersApi_() {
   const result = [];
   while (subfolders.hasNext()) {
     const folder = subfolders.next();
-    const files = folder.getFiles();
-    let fileCount = 0;
-    while (files.hasNext()) {
-      files.next();
-      fileCount++;
-    }
     result.push({
       id: folder.getId(),
       name: folder.getName(),
-      fileCount: fileCount,
+      fileCount: countCatalogFolderFiles_(folder.getId()),
     });
   }
 
@@ -767,6 +770,40 @@ function listCatalogImageFoldersApi_() {
     rootFolderId: folderId,
     rootFolderName: rootFolder.getName(),
   };
+}
+
+function countCatalogFolderFiles_(folderId) {
+  let fileCount = 0;
+  let pageToken = '';
+
+  do {
+    const query = [
+      "'" + folderId + "' in parents",
+      'trashed = false',
+    ].join(' and ');
+    const url = 'https://www.googleapis.com/drive/v3/files?'
+      + 'q=' + encodeURIComponent(query)
+      + '&pageSize=1000'
+      + '&fields=' + encodeURIComponent('nextPageToken,files(id)')
+      + '&supportsAllDrives=true&includeItemsFromAllDrives=true'
+      + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
+    const response = UrlFetchApp.fetch(url, {
+      headers: {
+        Authorization: 'Bearer ' + ScriptApp.getOAuthToken(),
+      },
+      muteHttpExceptions: true,
+    });
+    const status = response.getResponseCode();
+    if (status < 200 || status >= 300) {
+      throw new Error('Unable to count catalog Drive folder files (HTTP ' + status + ').');
+    }
+
+    const payload = JSON.parse(response.getContentText());
+    fileCount += Array.isArray(payload.files) ? payload.files.length : 0;
+    pageToken = normalizeCatalogText_(payload.nextPageToken);
+  } while (pageToken);
+
+  return fileCount;
 }
 
 function readCatalogJobRecords_(jobsSheet) {
