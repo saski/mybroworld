@@ -54,6 +54,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 - For commerce inventory work, treat sheet/catalog/WooCommerce parity as a review concern. Before writing product data, compare the canonical sheet rows, generated catalog scope, and WooCommerce products, then report missing, unexpected, and ambiguous records separately. WooCommerce inventory scope is all canonical sheet artworks; status controls visibility and purchasability.
 - For PDF catalog selection, treat `include_in_catalog` as the customer-owned editorial inclusion gate. Do not infer catalog inclusion from `status_normalized`, availability wording, or price presence.
 - For PDF catalog image review, treat one existing Drive image whose filename ends in `_cat` as the customer-selected catalog image. Missing or multiple `_cat` candidates for the same artwork are blockers; do not generate or copy `_cat` files automatically.
+- When a catalog job fails because selected rows lack required source data, report the exact sheet header and the original spreadsheet row numbers for every affected row. Do not make operators infer the field from an artwork title alone.
 
 ## Manual Review Mode
 

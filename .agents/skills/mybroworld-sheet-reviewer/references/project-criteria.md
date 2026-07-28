@@ -59,6 +59,7 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - For PDF catalog selection, `include_in_catalog = TRUE` is the only inclusion gate. Do not use or maintain a `catalog_ready` column.
 - For PDF catalog image selection, use the client-provided `image_main` Drive file name to resolve the matching `_CAT01` image in the selected folders. When that link is absent, use a unique normalized title match; missing or ambiguous matches must fail the job with the affected work names.
 - Do not generate a partial PDF when any selected artwork lacks a resolvable `_CAT01` image.
+- Catalog job failures caused by missing or invalid source data must name the exact sheet header and original spreadsheet rows in the job result. Example: `image_main is missing: 2026 rows 12, 19`; an existing but unmatched Drive reference should say `image_main does not resolve to a _CAT01 image` with the same row references.
 - The PDF catalog should sort newest works first and display only title, year, dimensions, technique, and PVP price for each artwork.
 - For PDF catalog output-folder changes, resolve the provided Drive folder metadata before assuming the link is a parent folder. If the linked folder already has the requested destination name, use that folder as the target instead of creating a same-named child.
 - Before marking a PDF catalog output route ready, verify all write sources: WordPress runtime config, `catalog_profiles.default_drive_folder_id`, worker identity permissions, and one completed job whose Drive file parent is the expected folder.

@@ -342,6 +342,44 @@ function resolveCatalogImageUrl(row, catalogImageManifest) {
   return normalizeDriveImageUrl(`https://drive.google.com/file/d/${uniqueMatchingFiles[0].id}/view`);
 }
 
+function catalogSourceLocation(row, fallbackRowNumber) {
+  const sheet = String(row.catalog_source_sheet || row.source_year || 'sheet').trim();
+  const rowNumber = Number(row.catalog_source_row);
+
+  return {
+    rowNumber: Number.isInteger(rowNumber) && rowNumber > 0 ? rowNumber : fallbackRowNumber,
+    sheet,
+  };
+}
+
+function formatCatalogDataIssues(issues) {
+  const grouped = new Map();
+
+  issues.forEach((issue) => {
+    const key = `${issue.header}\u0000${issue.reason}`;
+    const locations = grouped.get(key) || [];
+    locations.push(issue.location);
+    grouped.set(key, locations);
+  });
+
+  return [...grouped.entries()]
+    .map(([key, locations]) => {
+      const [header, reason] = key.split('\u0000');
+      const bySheet = new Map();
+      locations.forEach((location) => {
+        const rows = bySheet.get(location.sheet) || [];
+        rows.push(location.rowNumber);
+        bySheet.set(location.sheet, rows);
+      });
+      const references = [...bySheet.entries()]
+        .map(([sheet, rows]) => `${sheet} rows ${[...new Set(rows)].sort((a, b) => a - b).join(', ')}`)
+        .join('; ');
+
+      return `${header} ${reason}: ${references}`;
+    })
+    .join(' | ');
+}
+
 function parseLimit(value) {
   if (value === undefined || value === null || value === '') {
     return null;
@@ -417,7 +455,7 @@ async function defaultReadCsvText({ inputPath, inputUrl }) {
 }
 
 export function buildCatalogArtworks(records, { catalogImageManifest = null, limit }) {
-  const unresolved = [];
+  const unresolvedIssues = [];
   const artworks = records
     .filter((row) => normalizeBoolean(row.include_in_catalog))
     .map((row, index) => {
@@ -426,8 +464,22 @@ export function buildCatalogArtworks(records, { catalogImageManifest = null, lim
       const title = String(row.title_clean || row.title_raw || '').trim();
       const imageUrl = resolveCatalogImageUrl(row, catalogImageManifest);
 
-      if (!title || !imageUrl) {
-        unresolved.push(title || `row ${index + 2}`);
+      const sourceLocation = catalogSourceLocation(row, index + 2);
+      if (!title) {
+        unresolvedIssues.push({
+          header: 'title_raw',
+          location: sourceLocation,
+          reason: 'is missing',
+        });
+      }
+      if (!imageUrl) {
+        unresolvedIssues.push({
+          header: 'image_main',
+          location: sourceLocation,
+          reason: String(row.image_main || '').trim() === ''
+            ? 'is missing'
+            : 'does not resolve to a _CAT01 image',
+        });
       }
 
       return {
@@ -462,11 +514,11 @@ export function buildCatalogArtworks(records, { catalogImageManifest = null, lim
       return left.title.localeCompare(right.title);
     });
 
-  if (unresolved.length > 0) {
+  if (unresolvedIssues.length > 0) {
     throw new CatalogCliError({
       code: 'catalog_image_unresolved',
       exitCode: 4,
-      message: `Selected catalog works need a resolvable catalog image: ${unresolved.join(', ')}`,
+      message: `Catalog data issues: ${formatCatalogDataIssues(unresolvedIssues)}`,
     });
   }
 

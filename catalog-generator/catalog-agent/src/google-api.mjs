@@ -102,8 +102,16 @@ export class GoogleApiClient {
     const headers = values[0].map((header) => String(header || '').trim());
     const rows = values
       .slice(1)
-      .filter((rowValues) => rowValues.some((value) => String(value || '').trim() !== ''))
-      .map((rowValues) => mapValuesRow(headers, rowValues));
+      .map((rowValues, index) => ({
+        rowNumber: index + 2,
+        rowValues,
+      }))
+      .filter(({ rowValues }) => rowValues.some((value) => String(value || '').trim() !== ''))
+      .map(({ rowNumber, rowValues }) => ({
+        ...mapValuesRow(headers, rowValues),
+        catalog_source_row: String(rowNumber),
+        catalog_source_sheet: sheetTitle,
+      }));
 
     return {
       headers,

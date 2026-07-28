@@ -388,7 +388,7 @@ test('runGenerateCli resolves the selected catalog image from the client source 
   assert.match(renderedJobs[0], /Acrílico sobre lienzo/);
 });
 
-test('runGenerateCli fails instead of silently excluding a selected work with no resolvable image', async () => {
+test('runGenerateCli reports missing catalog columns and source rows instead of silently excluding works', async () => {
   const { logger, errors } = createLogger();
 
   const result = await runGenerateCli({
@@ -405,8 +405,9 @@ test('runGenerateCli fails instead of silently excluding a selected work with no
       readCsvText: async ({ inputPath }) => inputPath === '/virtual/cat-images.json'
         ? JSON.stringify({ files: [] })
         : [
-          'title_raw,include_in_catalog',
-          'Selected but missing image,TRUE',
+          'title_raw,image_main,include_in_catalog,catalog_source_sheet,catalog_source_row',
+          'Selected but missing image,,TRUE,2026,12',
+          ',https://drive.google.com/file/d/unmatched/view,TRUE,2025,9',
         ].join('\n'),
       renderPdf: async () => {},
       writeTextFile: async () => {},
@@ -417,7 +418,9 @@ test('runGenerateCli fails instead of silently excluding a selected work with no
 
   assert.equal(result.exitCode, 4);
   assert.match(errors.join('\n'), /catalog_image_unresolved/);
-  assert.match(errors.join('\n'), /Selected but missing image/);
+  assert.match(errors.join('\n'), /image_main is missing: 2026 rows 12/);
+  assert.match(errors.join('\n'), /title_raw is missing: 2025 rows 9/);
+  assert.match(errors.join('\n'), /image_main does not resolve to a _CAT01 image: 2025 rows 9/);
 });
 
 test('runGenerateCli rejects an ambiguous title-only catalog image match', async () => {

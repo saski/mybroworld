@@ -49,3 +49,35 @@ test('GoogleApiClient lists Drive folder files with pagination and shared-drive 
   assert.match(requestedUrls[0], /includeItemsFromAllDrives=true/);
   assert.match(requestedUrls[1], /pageToken=next-page/);
 });
+
+test('GoogleApiClient preserves original sheet row numbers for catalog errors', async () => {
+  const client = new GoogleApiClient({
+    oauthSession: {
+      authorizedFetch: async () => new Response(JSON.stringify({
+        values: [
+          ['title_raw', 'include_in_catalog'],
+          ['First work', 'TRUE'],
+          ['', ''],
+          ['Second work', 'TRUE'],
+        ],
+      }), { status: 200 }),
+    },
+  });
+
+  const result = await client.getSheetRows('spreadsheet-id', '2026');
+
+  assert.deepEqual(result.rows, [
+    {
+      catalog_source_row: '2',
+      catalog_source_sheet: '2026',
+      include_in_catalog: 'TRUE',
+      title_raw: 'First work',
+    },
+    {
+      catalog_source_row: '4',
+      catalog_source_sheet: '2026',
+      include_in_catalog: 'TRUE',
+      title_raw: 'Second work',
+    },
+  ]);
+});
