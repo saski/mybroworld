@@ -225,6 +225,7 @@ test('embedCatalogArtworkImages materializes Drive images locally with worker cr
       },
     },
     imageDirectory,
+    resizeImage: async ({ inputPath, outputPath }) => fs.rename(inputPath, outputPath),
   });
 
   assert.equal(artworks[0].imageUrl, `file://${path.join(imageDirectory, 'drive-image-1.jpg')}`);

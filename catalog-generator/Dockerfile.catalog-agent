@@ -11,6 +11,7 @@ RUN apt-get update \
     chromium \
     fonts-dejavu-core \
     fonts-liberation \
+    imagemagick \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

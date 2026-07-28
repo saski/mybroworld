@@ -2,6 +2,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { execFile as execFileCallback } from 'node:child_process';
+import { promisify } from 'node:util';
 
 import { generateCatalog } from '../../src/catalog-generator.mjs';
 import { DEFAULT_ARTIST_NAME } from '../../src/catalog-action-contract.mjs';
@@ -12,6 +14,8 @@ import { findOldestQueuedJob, mergeCatalogSheetsToCsv } from './job-queue.mjs';
 import { loadOAuthSession } from './oauth-session.mjs';
 import { resolveQueuedSheetsForProcessing } from './queued-sheets.mjs';
 import { sleep, truncateText } from './utils.mjs';
+
+const execFile = promisify(execFileCallback);
 
 function nowIso() {
   return new Date().toISOString();
@@ -80,11 +84,27 @@ function imageFileExtension(mimeType) {
   return mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
 }
 
-export async function embedCatalogArtworkImages({ artworks, googleClient, imageDirectory }) {
+export async function embedCatalogArtworkImages({
+  artworks,
+  googleClient,
+  imageDirectory,
+  resizeImage = async ({ inputPath, outputPath }) => {
+    await execFile('convert', [
+      inputPath,
+      '-auto-orient',
+      '-resize', '1800x1800>',
+      '-strip',
+      '-quality', '85',
+      outputPath,
+    ]);
+  },
+}) {
   await fs.mkdir(imageDirectory, { recursive: true });
-  return Promise.all(artworks.map(async (artwork) => {
+  const embeddedArtworks = [];
+  for (const artwork of artworks) {
     if (!artwork.driveFileId) {
-      return artwork;
+      embeddedArtworks.push(artwork);
+      continue;
     }
 
     const { content, mimeType } = await googleClient.downloadDriveFile(artwork.driveFileId);
@@ -95,13 +115,17 @@ export async function embedCatalogArtworkImages({ artworks, googleClient, imageD
       });
     }
 
+    const sourcePath = path.join(imageDirectory, `${artwork.driveFileId}.source`);
     const imagePath = path.join(imageDirectory, `${artwork.driveFileId}.${imageFileExtension(mimeType)}`);
-    await fs.writeFile(imagePath, content);
-    return {
+    await fs.writeFile(sourcePath, content);
+    await resizeImage({ inputPath: sourcePath, outputPath: imagePath });
+    await fs.rm(sourcePath, { force: true });
+    embeddedArtworks.push({
       ...artwork,
       imageUrl: `file://${imagePath}`,
-    };
-  }));
+    });
+  }
+  return embeddedArtworks;
 }
 
 async function processClaimedJob({
