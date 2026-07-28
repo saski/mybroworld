@@ -201,6 +201,8 @@ After login, shop operators can open `wp-admin/admin.php?page=lucia-catalog-cons
 - keep the configured catalog worker running so it can claim the queued job, render the PDF, and upload it to Drive
 - use the `Open PDF`, `Approve`, and `Needs changes` controls from the recent jobs table
 
+The generator prefers `_CAT01` images. If it can make only a safe similar-name match, or must use the client-provided `image_main` instead, it still generates the PDF and displays the affected sheet rows as a warning next to `Open PDF`. An artwork with no usable image is omitted and reported; the job fails only when no selected artwork can be rendered.
+
 Current production deployment now defaults new catalog jobs to the scheduled Cloud Run `lucia-mybrocorp` worker in `mybroworld-catalog-260501`, authorized as `mybrocorp@gmail.com`. Customer-operated production is not complete until a job queued from the customer's mybro WordPress account completes and the customer can open/review the resulting Drive PDF without depending on the current operator Mac or Nacho's OAuth token.
 
 The Apps Script Web App redirects successful responses through `script.googleusercontent.com`. The MU plugin handles that redirect server-side with an allowlisted Google GET follow-up, because WordPress automatic POST redirect handling can otherwise return a Google HTTP 400 response.

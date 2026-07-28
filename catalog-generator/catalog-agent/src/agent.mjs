@@ -206,10 +206,12 @@ async function processClaimedJob({
       spreadsheetId,
       updates: {
         completed_at: nowIso(),
-        error_code: '',
-        error_message: '',
+        error_code: generationResult.warningMessage ? 'catalog_data_warnings' : '',
+        error_message: generationResult.warningMessage || '',
         heartbeat_at: nowIso(),
-        log_excerpt: `completed ${generationResult.artworkCount} artworks`,
+        log_excerpt: generationResult.warningMessage
+          ? `completed ${generationResult.artworkCount} artworks with warnings: ${generationResult.warningMessage}`
+          : `completed ${generationResult.artworkCount} artworks`,
         result_artwork_count: String(generationResult.artworkCount),
         result_file_id: uploadResult.fileId,
         result_file_url: uploadResult.fileUrl,

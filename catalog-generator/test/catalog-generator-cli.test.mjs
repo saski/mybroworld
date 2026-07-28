@@ -388,7 +388,7 @@ test('runGenerateCli resolves the selected catalog image from the client source 
   assert.match(renderedJobs[0], /Acrílico sobre lienzo/);
 });
 
-test('runGenerateCli reports missing catalog columns and source rows instead of silently excluding works', async () => {
+test('runGenerateCli fails only when every selected artwork lacks a renderable title and image', async () => {
   const { logger, errors } = createLogger();
 
   const result = await runGenerateCli({
@@ -417,13 +417,12 @@ test('runGenerateCli reports missing catalog columns and source rows instead of 
   });
 
   assert.equal(result.exitCode, 4);
-  assert.match(errors.join('\n'), /catalog_image_unresolved/);
-  assert.match(errors.join('\n'), /image_main is missing: 2026 rows 12/);
-  assert.match(errors.join('\n'), /title_raw is missing: 2025 rows 9/);
-  assert.match(errors.join('\n'), /image_main does not resolve to a _CAT01 image: 2025 rows 9/);
+  assert.match(errors.join('\n'), /catalog_no_renderable_artworks/);
+  assert.match(errors.join('\n'), /image_main is missing and the artwork was omitted: 2026 rows 12/);
+  assert.match(errors.join('\n'), /title_raw is missing and the artwork was omitted: 2025 rows 9/);
 });
 
-test('runGenerateCli rejects an ambiguous title-only catalog image match', async () => {
+test('runGenerateCli does not choose an ambiguous title-only catalog image match', async () => {
   const { logger, errors } = createLogger();
 
   const result = await runGenerateCli({
@@ -456,11 +455,13 @@ test('runGenerateCli rejects an ambiguous title-only catalog image match', async
   });
 
   assert.equal(result.exitCode, 4);
-  assert.match(errors.join('\n'), /catalog_image_unresolved/);
+  assert.match(errors.join('\n'), /catalog_no_renderable_artworks/);
+  assert.match(errors.join('\n'), /image_main is missing and the artwork was omitted/);
 });
 
-test('runGenerateCli rejects a selected folder manifest without a matching catalog image', async () => {
-  const { logger, errors } = createLogger();
+test('runGenerateCli falls back to image_main and records a warning when no catalog image matches', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
 
   const result = await runGenerateCli({
     argv: [
@@ -486,15 +487,16 @@ test('runGenerateCli rejects a selected folder manifest without a matching catal
           'LA-2026-001,Fallback Test,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
         ].join('\n');
       },
-      renderPdf: async () => {},
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
       writeTextFile: async () => {},
     },
     env: {},
     logger,
   });
 
-  assert.equal(result.exitCode, 4);
-  assert.match(errors.join('\n'), /catalog_image_unresolved/);
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/original/);
+  assert.match(result.result.warningMessage, /fell back to image_main because no unique _CAT01 image was found/);
 });
 
 test('runGenerateCli selects _CAT01 over spreadsheet image_main when both exist', async () => {
@@ -579,8 +581,8 @@ test('runGenerateCli falls back to non-CAT01 _cat when no _CAT01 exists', async 
   assert.doesNotMatch(renderedJobs[0], /file-base/);
 });
 
-test('runGenerateCli rejects an empty selected folder manifest', async () => {
-  const { logger, errors } = createLogger();
+test('runGenerateCli falls back to image_main when the selected folder manifest is empty', async () => {
+  const { logger } = createLogger();
   const renderedJobs = [];
 
   const result = await runGenerateCli({
@@ -610,8 +612,38 @@ test('runGenerateCli rejects an empty selected folder manifest', async () => {
     logger,
   });
 
-  assert.equal(result.exitCode, 4);
-  assert.match(errors.join('\n'), /catalog_image_unresolved/);
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/manifest-fallback/);
+  assert.match(result.result.warningMessage, /fell back to image_main because no unique _CAT01 image was found/);
+});
+
+test('runGenerateCli resolves a unique similar _CAT01 filename and warns about the inference', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input', '/virtual/catalog.csv', '--output', '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest', '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => inputPath === '/virtual/cat-images.json'
+        ? JSON.stringify({ files: [{ id: 'similar-cat01', name: '2026_Luna roja grande_CAT01.jpg' }] })
+        : [
+          'title_raw,image_main,include_in_catalog',
+          'Luna roja 2026,https://drive.google.com/file/d/original/view,TRUE',
+        ].join('\n'),
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/similar-cat01/);
+  assert.match(result.result.warningMessage, /was resolved to a similar _CAT01 filename/);
 });
 
 test('runGenerateCli matches production Drive naming {num}_{title}_{dims}_CAT01 by substring', async () => {

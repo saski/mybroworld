@@ -223,6 +223,11 @@ assertSameValue(
 );
 assertSameValue(
     true,
+    str_contains($html, 'lucia-catalog-warning'),
+    'Completed catalog jobs should display generation warnings next to the PDF link.',
+);
+assertSameValue(
+    true,
     str_contains($html, 'Needs changes'),
     'Admin page should include the review action labels.',
 );

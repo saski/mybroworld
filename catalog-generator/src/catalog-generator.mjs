@@ -291,9 +291,76 @@ function parseCatalogImageManifest(manifestText) {
   return { catalogFiles, filesById };
 }
 
-function resolveCatalogImageUrl(row, catalogImageManifest) {
+function catalogImageUrl(fileId) {
+  return normalizeDriveImageUrl(`https://drive.google.com/file/d/${fileId}/view`);
+}
+
+function imageMatchKeys(row) {
+  return [
+    normalizeMatchKey(row.artwork_id),
+    normalizeMatchKey(row.title_clean),
+    normalizeMatchKey(row.title_raw),
+  ].filter(Boolean);
+}
+
+function findSingleCatalogMatch(files, matchKeys) {
+  const matchedFiles = files.filter((file) => matchKeys.some(
+    (matchKey) => file.normalizedKey.includes(matchKey) || matchKey.includes(file.normalizedKey),
+  ));
+  const uniqueMatchingFiles = [
+    ...new Map(matchedFiles.map((file) => [file.id, file])).values(),
+  ];
+  const matchingCatalogKeys = new Set(uniqueMatchingFiles.map((file) => file.normalizedKey));
+
+  if (matchingCatalogKeys.size !== 1) {
+    return null;
+  }
+
+  uniqueMatchingFiles.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
+  return uniqueMatchingFiles[0] || null;
+}
+
+function normalizeFilenameTokens(value) {
+  return stripFileExtension(value)
+    .replace(/[_\s-]+cat\d*(?:[_\s-]*)?$/iu, '')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .match(/[a-z0-9]+/gu) || [];
+}
+
+function findUniqueSimilarCatalogMatch(files, queryValues) {
+  const queryTokenSets = queryValues
+    .map(normalizeFilenameTokens)
+    .filter((tokens) => tokens.length >= 2);
+  const candidates = new Map();
+
+  for (const file of files) {
+    const fileTokens = new Set(normalizeFilenameTokens(file.name));
+    for (const queryTokens of queryTokenSets) {
+      const overlap = queryTokens.filter((token) => fileTokens.has(token)).length;
+      const score = overlap / queryTokens.length;
+      if (overlap < 2 || score < 0.75) {
+        continue;
+      }
+      const existing = candidates.get(file.id);
+      if (!existing || score > existing.score) {
+        candidates.set(file.id, { file, score });
+      }
+    }
+  }
+
+  const ranked = [...candidates.values()]
+    .sort((left, right) => right.score - left.score || left.file.name.localeCompare(right.file.name));
+  const best = ranked[0];
+  const runnerUpScore = ranked[1]?.score || 0;
+  return best && best.score - runnerUpScore >= 0.15 ? best.file : null;
+}
+
+function resolveCatalogImage(row, catalogImageManifest) {
+  const sourceUrl = normalizeDriveImageUrl(row.image_main);
   if (!catalogImageManifest) {
-    return normalizeDriveImageUrl(row.image_main);
+    return { imageUrl: sourceUrl, warning: '' };
   }
 
   const sourceImageId = extractDriveImageFileId(row.image_main);
@@ -304,42 +371,39 @@ function resolveCatalogImageUrl(row, catalogImageManifest) {
     );
     if (sourceMatches.length > 0) {
       sourceMatches.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
-      return normalizeDriveImageUrl(`https://drive.google.com/file/d/${sourceMatches[0].id}/view`);
+      return { imageUrl: catalogImageUrl(sourceMatches[0].id), warning: '' };
     }
   }
 
-  const matchKeys = [
-    normalizeMatchKey(row.artwork_id),
-    normalizeMatchKey(row.title_clean),
-    normalizeMatchKey(row.title_raw),
-  ].filter(Boolean);
-
-  const matchedFiles = [];
-  for (const file of catalogImageManifest.catalogFiles) {
-    for (const matchKey of matchKeys) {
-      if (file.normalizedKey.includes(matchKey) || matchKey.includes(file.normalizedKey)) {
-        matchedFiles.push(file);
-        break;
-      }
-    }
+  const matchKeys = imageMatchKeys(row);
+  const directMatch = findSingleCatalogMatch(catalogImageManifest.catalogFiles, matchKeys);
+  if (directMatch) {
+    return { imageUrl: catalogImageUrl(directMatch.id), warning: '' };
   }
 
-  const uniqueMatchingFiles = [
-    ...new Map(matchedFiles.map((file) => [file.id, file])).values(),
-  ];
-
-  if (uniqueMatchingFiles.length === 0) {
-    return '';
+  const similarMatch = findUniqueSimilarCatalogMatch(catalogImageManifest.catalogFiles, [
+    sourceImage?.name,
+    row.title_clean,
+    row.title_raw,
+  ].filter(Boolean));
+  if (similarMatch) {
+    return {
+      imageUrl: catalogImageUrl(similarMatch.id),
+      warning: 'was resolved to a similar _CAT01 filename',
+    };
   }
 
-  const matchingCatalogKeys = new Set(uniqueMatchingFiles.map((file) => file.normalizedKey));
-  if (matchingCatalogKeys.size !== 1) {
-    return '';
+  if (sourceUrl) {
+    return {
+      imageUrl: sourceUrl,
+      warning: 'fell back to image_main because no unique _CAT01 image was found',
+    };
   }
 
-  uniqueMatchingFiles.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
-
-  return normalizeDriveImageUrl(`https://drive.google.com/file/d/${uniqueMatchingFiles[0].id}/view`);
+  return {
+    imageUrl: '',
+    warning: 'is missing and the artwork was omitted',
+  };
 }
 
 function catalogSourceLocation(row, fallbackRowNumber) {
@@ -454,31 +518,29 @@ async function defaultReadCsvText({ inputPath, inputUrl }) {
   }
 }
 
-export function buildCatalogArtworks(records, { catalogImageManifest = null, limit }) {
-  const unresolvedIssues = [];
+function buildCatalogArtworkResult(records, { catalogImageManifest = null, limit }) {
+  const warnings = [];
   const artworks = records
     .filter((row) => normalizeBoolean(row.include_in_catalog))
     .map((row, index) => {
       const status = normalizeArtworkStatus(row.status_normalized);
       const price = resolvePvpPrice(row);
       const title = String(row.title_clean || row.title_raw || '').trim();
-      const imageUrl = resolveCatalogImageUrl(row, catalogImageManifest);
+      const image = resolveCatalogImage(row, catalogImageManifest);
 
       const sourceLocation = catalogSourceLocation(row, index + 2);
       if (!title) {
-        unresolvedIssues.push({
+        warnings.push({
           header: 'title_raw',
           location: sourceLocation,
-          reason: 'is missing',
+          reason: 'is missing and the artwork was omitted',
         });
       }
-      if (!imageUrl) {
-        unresolvedIssues.push({
+      if (image.warning && title) {
+        warnings.push({
           header: 'image_main',
           location: sourceLocation,
-          reason: String(row.image_main || '').trim() === ''
-            ? 'is missing'
-            : 'does not resolve to a _CAT01 image',
+          reason: image.warning,
         });
       }
 
@@ -486,7 +548,7 @@ export function buildCatalogArtworks(records, { catalogImageManifest = null, lim
         artworkId: String(row.artwork_id || '').trim(),
         dateLabel: String(row.date_label || '').trim(),
         dimensions: String(row.dimensions_clean || row.dimensions_raw || '').trim(),
-        imageUrl,
+        imageUrl: image.imageUrl,
         order: toSortableNumber(row.catalog_order, 999999),
         price,
         recencyKey: buildArtworkRecencyKey(row),
@@ -514,15 +576,21 @@ export function buildCatalogArtworks(records, { catalogImageManifest = null, lim
       return left.title.localeCompare(right.title);
     });
 
-  if (unresolvedIssues.length > 0) {
+  const limitedArtworks = Number.isFinite(limit) ? artworks.slice(0, limit) : artworks;
+  const warningMessage = formatCatalogDataIssues(warnings);
+  if (limitedArtworks.length === 0) {
     throw new CatalogCliError({
-      code: 'catalog_image_unresolved',
+      code: 'catalog_no_renderable_artworks',
       exitCode: 4,
-      message: `Catalog data issues: ${formatCatalogDataIssues(unresolvedIssues)}`,
+      message: `No selected artworks can be rendered. Catalog data issues: ${warningMessage || 'No usable title and image_main values were found.'}`,
     });
   }
 
-  return Number.isFinite(limit) ? artworks.slice(0, limit) : artworks;
+  return { artworks: limitedArtworks, warningMessage };
+}
+
+export function buildCatalogArtworks(records, options) {
+  return buildCatalogArtworkResult(records, options).artworks;
 }
 
 async function defaultRenderPdf({ html, outputPath, puppeteerExecutablePath }) {
@@ -583,7 +651,7 @@ export async function generateCatalog(options, dependencies = {}) {
     skip_empty_lines: true,
   });
 
-  const artworks = buildCatalogArtworks(records, { catalogImageManifest, limit });
+  const { artworks, warningMessage } = buildCatalogArtworkResult(records, { catalogImageManifest, limit });
   const html = renderCatalogHtml(artworks, {
     artistName,
     catalogTitle,
@@ -614,6 +682,7 @@ export async function generateCatalog(options, dependencies = {}) {
     catalogTitle,
     htmlPath,
     outputPath,
+    warningMessage,
   };
 }
 
@@ -628,7 +697,7 @@ export async function runGenerateCli({
     const result = await generateCatalog(options, dependencies);
 
     logger.log(
-      `completed code=catalog_generation_completed output=${result.outputPath} preview=${result.htmlPath} artworks=${result.artworkCount}`,
+      `completed code=catalog_generation_completed output=${result.outputPath} preview=${result.htmlPath} artworks=${result.artworkCount}${result.warningMessage ? ` warnings=${result.warningMessage}` : ''}`,
     );
 
     return {

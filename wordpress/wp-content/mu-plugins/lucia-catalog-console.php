@@ -716,7 +716,10 @@ function lucia_catalog_console_render_admin_page(): void
 
     function resultCell(job) {
         if (job.status === "completed" && job.result_file_url) {
-            return `<a href="${escapeText(job.result_file_url)}" target="_blank" rel="noopener">Open PDF</a>`;
+            const warning = job.error_message
+                ? `<br><span class="lucia-catalog-warning">Warnings: ${escapeText(job.error_message)}</span>`
+                : "";
+            return `<a href="${escapeText(job.result_file_url)}" target="_blank" rel="noopener">Open PDF</a>${warning}`;
         }
         if (job.status === "failed") {
             return escapeText(job.error_message || job.error_code || "Generation failed");
