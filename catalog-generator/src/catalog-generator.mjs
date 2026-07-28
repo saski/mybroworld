@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { parse } from 'csv-parse/sync';
 
@@ -17,7 +18,7 @@ const DEFAULT_OUTPUT_PATH = 'output/catalogo.pdf';
 const PDF_RENDER_TIMEOUT_MS = 120_000;
 const PDF_IMAGE_LOAD_TIMEOUT_MS = 60_000;
 const MACOS_GOOGLE_CHROME_EXECUTABLE_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const ROOT_CHROMIUM_SANDBOX_ARGS = ['--no-sandbox', '--disable-setuid-sandbox'];
+const ROOT_CHROMIUM_SANDBOX_ARGS = ['--no-sandbox', '--disable-setuid-sandbox', '--allow-file-access-from-files'];
 
 class CatalogCliError extends Error {
   constructor({ code, exitCode, message, cause }) {
@@ -597,7 +598,7 @@ export function buildCatalogArtworks(records, options) {
   return buildCatalogArtworkResult(records, options).artworks;
 }
 
-async function defaultRenderPdf({ html, outputPath, puppeteerExecutablePath }) {
+async function defaultRenderPdf({ html, htmlPath, outputPath, puppeteerExecutablePath }) {
   const puppeteer = await import('puppeteer');
   const browser = await puppeteer.default.launch(
     await resolvePuppeteerLaunchOptions({
@@ -609,7 +610,7 @@ async function defaultRenderPdf({ html, outputPath, puppeteerExecutablePath }) {
     const page = await browser.newPage();
     page.setDefaultTimeout(PDF_RENDER_TIMEOUT_MS);
     page.setDefaultNavigationTimeout(PDF_RENDER_TIMEOUT_MS);
-    await page.setContent(html, {
+    await page.goto(pathToFileURL(htmlPath).href, {
       timeout: PDF_RENDER_TIMEOUT_MS,
       waitUntil: 'load',
     });
@@ -669,7 +670,7 @@ export async function generateCatalog(options, dependencies = {}) {
   await writeTextFile(htmlPath, html);
 
   try {
-    await renderPdf({ html, outputPath, puppeteerExecutablePath });
+    await renderPdf({ html, htmlPath, outputPath, puppeteerExecutablePath });
   } catch (error) {
     if (error instanceof CatalogCliError) {
       throw error;

@@ -211,7 +211,8 @@ test('writeCatalogImageManifest returns empty when no folders selected', async (
   assert.equal(manifestPath, '');
 });
 
-test('embedCatalogArtworkImages uses the worker Drive credentials instead of public image URLs', async () => {
+test('embedCatalogArtworkImages materializes Drive images locally with worker credentials', async () => {
+  const imageDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-local-images-'));
   const artworks = await embedCatalogArtworkImages({
     artworks: [
       { driveFileId: 'drive-image-1', imageUrl: 'https://lh3.googleusercontent.com/d/drive-image-1' },
@@ -223,9 +224,11 @@ test('embedCatalogArtworkImages uses the worker Drive credentials instead of pub
         return { content: Buffer.from('image-bytes'), mimeType: 'image/jpeg' };
       },
     },
+    imageDirectory,
   });
 
-  assert.equal(artworks[0].imageUrl, 'data:image/jpeg;base64,aW1hZ2UtYnl0ZXM=');
+  assert.equal(artworks[0].imageUrl, `file://${path.join(imageDirectory, 'drive-image-1.jpg')}`);
+  assert.equal(await fs.readFile(path.join(imageDirectory, 'drive-image-1.jpg'), 'utf8'), 'image-bytes');
   assert.equal(artworks[1].imageUrl, 'https://example.test/image.jpg');
 });
 

@@ -76,7 +76,12 @@ export async function writeCatalogImageManifest({
   return manifestPath;
 }
 
-export async function embedCatalogArtworkImages({ artworks, googleClient }) {
+function imageFileExtension(mimeType) {
+  return mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+}
+
+export async function embedCatalogArtworkImages({ artworks, googleClient, imageDirectory }) {
+  await fs.mkdir(imageDirectory, { recursive: true });
   return Promise.all(artworks.map(async (artwork) => {
     if (!artwork.driveFileId) {
       return artwork;
@@ -90,9 +95,11 @@ export async function embedCatalogArtworkImages({ artworks, googleClient }) {
       });
     }
 
+    const imagePath = path.join(imageDirectory, `${artwork.driveFileId}.${imageFileExtension(mimeType)}`);
+    await fs.writeFile(imagePath, content);
     return {
       ...artwork,
-      imageUrl: `data:${mimeType};base64,${content.toString('base64')}`,
+      imageUrl: `file://${imagePath}`,
     };
   }));
 }
@@ -202,7 +209,11 @@ async function processClaimedJob({
       limit: null,
       outputPath: outputPdfPath,
     }, {
-      resolveArtworkImages: (artworks) => embedCatalogArtworkImages({ artworks, googleClient }),
+      resolveArtworkImages: (artworks) => embedCatalogArtworkImages({
+        artworks,
+        googleClient,
+        imageDirectory: path.join(workDirectory, 'images'),
+      }),
     });
 
     await updateJobFieldsOrThrow({

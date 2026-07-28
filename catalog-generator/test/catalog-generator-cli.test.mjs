@@ -286,7 +286,11 @@ test('resolvePuppeteerLaunchOptions disables the Chromium sandbox when running a
   });
 
   assert.equal(launchOptions.executablePath, '/usr/bin/chromium');
-  assert.deepEqual(launchOptions.args, ['--no-sandbox', '--disable-setuid-sandbox']);
+  assert.deepEqual(launchOptions.args, [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--allow-file-access-from-files',
+  ]);
 });
 
 test('waitForCatalogImageElements uses a bounded page-context image wait', async () => {
