@@ -360,7 +360,7 @@ function findUniqueSimilarCatalogMatch(files, queryValues) {
 function resolveCatalogImage(row, catalogImageManifest) {
   const sourceUrl = normalizeDriveImageUrl(row.image_main);
   if (!catalogImageManifest) {
-    return { imageUrl: sourceUrl, warning: '' };
+    return { driveFileId: extractDriveImageFileId(row.image_main), imageUrl: sourceUrl, warning: '' };
   }
 
   const sourceImageId = extractDriveImageFileId(row.image_main);
@@ -371,14 +371,14 @@ function resolveCatalogImage(row, catalogImageManifest) {
     );
     if (sourceMatches.length > 0) {
       sourceMatches.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
-      return { imageUrl: catalogImageUrl(sourceMatches[0].id), warning: '' };
+      return { driveFileId: sourceMatches[0].id, imageUrl: catalogImageUrl(sourceMatches[0].id), warning: '' };
     }
   }
 
   const matchKeys = imageMatchKeys(row);
   const directMatch = findSingleCatalogMatch(catalogImageManifest.catalogFiles, matchKeys);
   if (directMatch) {
-    return { imageUrl: catalogImageUrl(directMatch.id), warning: '' };
+    return { driveFileId: directMatch.id, imageUrl: catalogImageUrl(directMatch.id), warning: '' };
   }
 
   const similarMatch = findUniqueSimilarCatalogMatch(catalogImageManifest.catalogFiles, [
@@ -388,6 +388,7 @@ function resolveCatalogImage(row, catalogImageManifest) {
   ].filter(Boolean));
   if (similarMatch) {
     return {
+      driveFileId: similarMatch.id,
       imageUrl: catalogImageUrl(similarMatch.id),
       warning: 'was resolved to a similar _CAT01 filename',
     };
@@ -395,12 +396,14 @@ function resolveCatalogImage(row, catalogImageManifest) {
 
   if (sourceUrl) {
     return {
+      driveFileId: sourceImageId,
       imageUrl: sourceUrl,
       warning: 'fell back to image_main because no unique _CAT01 image was found',
     };
   }
 
   return {
+    driveFileId: '',
     imageUrl: '',
     warning: 'is missing and the artwork was omitted',
   };
@@ -548,6 +551,7 @@ function buildCatalogArtworkResult(records, { catalogImageManifest = null, limit
         artworkId: String(row.artwork_id || '').trim(),
         dateLabel: String(row.date_label || '').trim(),
         dimensions: String(row.dimensions_clean || row.dimensions_raw || '').trim(),
+        driveFileId: image.driveFileId,
         imageUrl: image.imageUrl,
         order: toSortableNumber(row.catalog_order, 999999),
         price,
@@ -636,6 +640,7 @@ export async function generateCatalog(options, dependencies = {}) {
   const readCsvText = dependencies.readCsvText || defaultReadCsvText;
   const ensureDir = dependencies.ensureDir || ((directoryPath) => fs.mkdir(directoryPath, { recursive: true }));
   const renderPdf = dependencies.renderPdf || defaultRenderPdf;
+  const resolveArtworkImages = dependencies.resolveArtworkImages || (async (artworks) => artworks);
   const writeTextFile = dependencies.writeTextFile || ((filePath, contents) => fs.writeFile(filePath, contents, 'utf8'));
 
   const csvText = await readCsvText({ inputPath, inputUrl });
@@ -652,7 +657,8 @@ export async function generateCatalog(options, dependencies = {}) {
   });
 
   const { artworks, warningMessage } = buildCatalogArtworkResult(records, { catalogImageManifest, limit });
-  const html = renderCatalogHtml(artworks, {
+  const renderedArtworks = await resolveArtworkImages(artworks);
+  const html = renderCatalogHtml(renderedArtworks, {
     artistName,
     catalogTitle,
   });

@@ -646,6 +646,33 @@ test('runGenerateCli resolves a unique similar _CAT01 filename and warns about t
   assert.match(result.result.warningMessage, /was resolved to a similar _CAT01 filename/);
 });
 
+test('runGenerateCli renders image URLs supplied by the authenticated worker resolver', async () => {
+  const { logger } = createLogger();
+  const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: ['--input', '/virtual/catalog.csv', '--output', '/virtual/output/catalog.pdf'],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async () => [
+        'title_raw,image_main,include_in_catalog',
+        'Embedded image,https://drive.google.com/file/d/source-file/view,TRUE',
+      ].join('\n'),
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      resolveArtworkImages: async (artworks) => artworks.map((artwork) => ({
+        ...artwork,
+        imageUrl: 'data:image/jpeg;base64,aW1hZ2U=',
+      })),
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /data:image\/jpeg;base64,aW1hZ2U=/);
+});
+
 test('runGenerateCli matches production Drive naming {num}_{title}_{dims}_CAT01 by substring', async () => {
   const { logger } = createLogger();
   const renderedJobs = [];

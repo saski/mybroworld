@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { writeCatalogImageManifest } from '../catalog-agent/src/agent.mjs';
+import { embedCatalogArtworkImages, writeCatalogImageManifest } from '../catalog-agent/src/agent.mjs';
 import {
   formatAgentErrorForLog,
   normalizeAgentError,
@@ -209,6 +209,24 @@ test('writeCatalogImageManifest returns empty when no folders selected', async (
   });
 
   assert.equal(manifestPath, '');
+});
+
+test('embedCatalogArtworkImages uses the worker Drive credentials instead of public image URLs', async () => {
+  const artworks = await embedCatalogArtworkImages({
+    artworks: [
+      { driveFileId: 'drive-image-1', imageUrl: 'https://lh3.googleusercontent.com/d/drive-image-1' },
+      { driveFileId: '', imageUrl: 'https://example.test/image.jpg' },
+    ],
+    googleClient: {
+      downloadDriveFile: async (fileId) => {
+        assert.equal(fileId, 'drive-image-1');
+        return { content: Buffer.from('image-bytes'), mimeType: 'image/jpeg' };
+      },
+    },
+  });
+
+  assert.equal(artworks[0].imageUrl, 'data:image/jpeg;base64,aW1hZ2UtYnl0ZXM=');
+  assert.equal(artworks[1].imageUrl, 'https://example.test/image.jpg');
 });
 
 test('mergeCatalogSheetsToCsv rejects incompatible tabs with a precise error', () => {

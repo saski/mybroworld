@@ -204,6 +204,26 @@ export class GoogleApiClient {
     return files;
   }
 
+  async downloadDriveFile(fileId) {
+    const url = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
+    url.searchParams.set('alt', 'media');
+    url.searchParams.set('supportsAllDrives', 'true');
+    const response = await this.oauthSession.authorizedFetch(String(url));
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      throw new CatalogAgentError({
+        code: 'drive_file_download_failed',
+        message: `Unable to download Drive image ${fileId}: ${responseText || response.status}.`,
+      });
+    }
+
+    return {
+      content: Buffer.from(await response.arrayBuffer()),
+      mimeType: response.headers.get('content-type') || 'application/octet-stream',
+    };
+  }
+
   async uploadPdfToDrive({ fileName, filePath, folderId }) {
     const fileContents = await fs.readFile(filePath);
     const boundary = `catalog-agent-${Date.now()}`;

@@ -76,6 +76,27 @@ export async function writeCatalogImageManifest({
   return manifestPath;
 }
 
+export async function embedCatalogArtworkImages({ artworks, googleClient }) {
+  return Promise.all(artworks.map(async (artwork) => {
+    if (!artwork.driveFileId) {
+      return artwork;
+    }
+
+    const { content, mimeType } = await googleClient.downloadDriveFile(artwork.driveFileId);
+    if (!mimeType.startsWith('image/') || content.length === 0) {
+      throw new CatalogAgentError({
+        code: 'catalog_image_download_invalid',
+        message: `Drive file ${artwork.driveFileId} is not a usable image.`,
+      });
+    }
+
+    return {
+      ...artwork,
+      imageUrl: `data:${mimeType};base64,${content.toString('base64')}`,
+    };
+  }));
+}
+
 async function processClaimedJob({
   config,
   googleClient,
@@ -180,6 +201,8 @@ async function processClaimedJob({
       inputUrl: '',
       limit: null,
       outputPath: outputPdfPath,
+    }, {
+      resolveArtworkImages: (artworks) => embedCatalogArtworkImages({ artworks, googleClient }),
     });
 
     await updateJobFieldsOrThrow({
