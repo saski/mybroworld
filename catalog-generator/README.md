@@ -41,7 +41,6 @@ Minimum columns:
 - `price_display_clean`
 - `image_main`
 - `include_in_catalog`
-- `catalog_ready`
 - `catalog_section`
 - `catalog_order`
 - `show_price`
@@ -61,13 +60,11 @@ example:
 
 ## Included Rules
 
-- An artwork is included only when:
-  - `include_in_catalog = TRUE`
-  - `catalog_ready = TRUE`
+- An artwork is included only when `include_in_catalog = TRUE`.
 - Included artworks are sorted newest first from `date_label`, then `year`, then `catalog_order`, then title.
 - Artwork pages show only title, production year, dimensions, technique, and the PVP price.
 - The PDF does not show availability labels, public notes, location/history, section labels, or non-PVP price variants.
-- If a catalog image manifest is configured, filenames ending in `_cat` are matched by `artwork_id` first and title slug second. Missing or duplicate matches fail the render instead of falling back to another image.
+- If a catalog image manifest is configured, `_CAT01` files are matched from the client-selected Drive image filename first and then the work title. Missing matches fail the render instead of creating a partial PDF.
 
 ## Google Sheets Action
 

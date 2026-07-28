@@ -141,7 +141,7 @@ test('runGenerateCli applies customer catalog feedback to artwork order and copy
           'LA-2026-001,Older Available,2026,01/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/aaa111/view,TRUE,TRUE,300 €,1,Keep this internal note out.',
           'LA-2026-002,Newest Historical,2026,03/26,Ink,paper,20 x 30 cm,sold,https://drive.google.com/file/d/bbb222/view,TRUE,TRUE,700 €,9,Do not print historical note.',
           'LA-2026-003,Excluded Newest,2026,04/26,Oil,wood,10 x 10 cm,available,https://drive.google.com/file/d/ccc333/view,FALSE,TRUE,900 €,0,',
-          'LA-2026-004,Not Ready,2026,05/26,Oil,wood,10 x 10 cm,available,https://drive.google.com/file/d/ddd444/view,TRUE,FALSE,1000 €,0,',
+          'LA-2026-004,Included Without Legacy Gate,2026,05/26,Oil,wood,10 x 10 cm,available,https://drive.google.com/file/d/ddd444/view,TRUE,FALSE,1000 €,0,',
         ].join('\n');
       },
       renderPdf: async ({ html }) => {
@@ -155,7 +155,8 @@ test('runGenerateCli applies customer catalog feedback to artwork order and copy
 
   const html = renderedJobs[0];
   assert.ok(html.indexOf('Newest Historical') < html.indexOf('Older Available'));
-  assert.doesNotMatch(html, /Excluded Newest|Not Ready/);
+  assert.doesNotMatch(html, /Excluded Newest/);
+  assert.match(html, /Included Without Legacy Gate/);
   assert.match(html, /700 €/);
   assert.doesNotMatch(html, /Obra no disponible|Obra disponible|Keep this internal note out|Do not print historical note/);
   assert.match(html, /IG: @luciastuy/);
@@ -345,9 +346,118 @@ test('runGenerateCli selects _CAT01 image when multiple _cat variants exist', as
   assert.doesNotMatch(renderedJobs[0], /file-base/);
 });
 
-test('runGenerateCli falls back to spreadsheet image_main when no _cat file exists', async () => {
+test('runGenerateCli resolves the selected catalog image from the client source image filename', async () => {
   const { logger } = createLogger();
   const renderedJobs = [];
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => {
+        if (inputPath === '/virtual/cat-images.json') {
+          return JSON.stringify({
+            files: [
+              { id: 'client-source', name: '21_Por donde se sale de esta_20x20_0.jpg' },
+              { id: 'catalog-cat01', name: '21_Por donde se sale de esta_20x20_CAT01_.jpg' },
+            ],
+          });
+        }
+        return [
+          'title_raw,date_label,dimensions_raw,medium_raw,price_raw,status_normalized,image_main,include_in_catalog',
+          '¿Por dónde se salía de esta?,05/26,20x20,Acrílico sobre lienzo,300 €,available,https://drive.google.com/file/d/client-source/view,TRUE',
+        ].join('\n');
+      },
+      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/catalog-cat01/);
+  assert.match(renderedJobs[0], /20x20/);
+  assert.match(renderedJobs[0], /Acrílico sobre lienzo/);
+});
+
+test('runGenerateCli fails instead of silently excluding a selected work with no resolvable image', async () => {
+  const { logger, errors } = createLogger();
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => inputPath === '/virtual/cat-images.json'
+        ? JSON.stringify({ files: [] })
+        : [
+          'title_raw,include_in_catalog',
+          'Selected but missing image,TRUE',
+        ].join('\n'),
+      renderPdf: async () => {},
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 4);
+  assert.match(errors.join('\n'), /catalog_image_unresolved/);
+  assert.match(errors.join('\n'), /Selected but missing image/);
+});
+
+test('runGenerateCli rejects an ambiguous title-only catalog image match', async () => {
+  const { logger, errors } = createLogger();
+
+  const result = await runGenerateCli({
+    argv: [
+      '--input',
+      '/virtual/catalog.csv',
+      '--output',
+      '/virtual/output/catalog.pdf',
+      '--catalog-image-manifest',
+      '/virtual/cat-images.json',
+    ],
+    dependencies: {
+      ensureDir: async () => {},
+      readCsvText: async ({ inputPath }) => inputPath === '/virtual/cat-images.json'
+        ? JSON.stringify({
+          files: [
+            { id: 'cat-a', name: '01_Blue dog_small_CAT01.jpg' },
+            { id: 'cat-b', name: '02_Blue dog_large_CAT01.jpg' },
+          ],
+        })
+        : [
+          'title_raw,include_in_catalog',
+          'Blue dog,TRUE',
+        ].join('\n'),
+      renderPdf: async () => {},
+      writeTextFile: async () => {},
+    },
+    env: {},
+    logger,
+  });
+
+  assert.equal(result.exitCode, 4);
+  assert.match(errors.join('\n'), /catalog_image_unresolved/);
+});
+
+test('runGenerateCli rejects a selected folder manifest without a matching catalog image', async () => {
+  const { logger, errors } = createLogger();
 
   const result = await runGenerateCli({
     argv: [
@@ -373,15 +483,15 @@ test('runGenerateCli falls back to spreadsheet image_main when no _cat file exis
           'LA-2026-001,Fallback Test,2026,03/26,Acrylic,canvas,30 x 40 cm,available,https://drive.google.com/file/d/original/view,TRUE,TRUE,300 €',
         ].join('\n');
       },
-      renderPdf: async ({ html }) => { renderedJobs.push(html); },
+      renderPdf: async () => {},
       writeTextFile: async () => {},
     },
     env: {},
     logger,
   });
 
-  assert.equal(result.exitCode, 0);
-  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/original/);
+  assert.equal(result.exitCode, 4);
+  assert.match(errors.join('\n'), /catalog_image_unresolved/);
 });
 
 test('runGenerateCli selects _CAT01 over spreadsheet image_main when both exist', async () => {
@@ -466,7 +576,7 @@ test('runGenerateCli falls back to non-CAT01 _cat when no _CAT01 exists', async 
   assert.doesNotMatch(renderedJobs[0], /file-base/);
 });
 
-test('runGenerateCli falls back to image_main when no _cat files exist in manifest', async () => {
+test('runGenerateCli rejects an empty selected folder manifest', async () => {
   const { logger, errors } = createLogger();
   const renderedJobs = [];
 
@@ -497,8 +607,8 @@ test('runGenerateCli falls back to image_main when no _cat files exist in manife
     logger,
   });
 
-  assert.equal(result.exitCode, 0);
-  assert.match(renderedJobs[0], /https:\/\/lh3\.googleusercontent\.com\/d\/manifest-fallback/);
+  assert.equal(result.exitCode, 4);
+  assert.match(errors.join('\n'), /catalog_image_unresolved/);
 });
 
 test('runGenerateCli matches production Drive naming {num}_{title}_{dims}_CAT01 by substring', async () => {

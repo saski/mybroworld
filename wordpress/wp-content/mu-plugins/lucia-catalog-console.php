@@ -730,10 +730,13 @@ function lucia_catalog_console_render_admin_page(): void
     }
 
     async function postCatalogAction(action, fields = {}) {
-        const body = new URLSearchParams({
-            action,
-            nonce: settings.nonce,
-            ...fields,
+        const body = new URLSearchParams({ action, nonce: settings.nonce });
+        Object.entries(fields).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach((item) => body.append(`${key}[]`, String(item)));
+                return;
+            }
+            body.set(key, String(value ?? ""));
         });
         const response = await fetch(settings.ajaxUrl, {
             credentials: "same-origin",
@@ -850,7 +853,12 @@ function lucia_catalog_console_render_admin_page(): void
         generateButton.disabled = true;
         const formData = new FormData(form);
         try {
-            const job = await postCatalogAction("lucia_catalog_console_queue", Object.fromEntries(formData.entries()));
+            const fields = Object.fromEntries(formData.entries());
+            fields.selected_image_folder_ids = formData.getAll("selected_image_folder_ids[]");
+            if (fields.selected_image_folder_ids.length === 0) {
+                throw new Error("Select at least one Drive image folder.");
+            }
+            const job = await postCatalogAction("lucia_catalog_console_queue", fields);
             activeJobId = job.job_id || "";
             setStatus("Catalog job queued.", "success");
             await loadRecentJobs();

@@ -36,8 +36,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 ## Review Criteria
 
 - Fill a cleaned column from its raw column only when the transformation is already demonstrated elsewhere in the sheet.
-- Extract stable IDs from stable URL patterns, such as a Drive file ID from an `image_main` link into `image_id_manual`.
-- Fill the sheet-only `preview` helper with an in-cell `IMAGE(...)` formula derived from `image_id_manual`; leave the rendered image blank when the image id is blank.
+- Keep the client-provided `image_main` Drive link as the source-image signal. Do not require a duplicate image-ID helper column for catalog generation.
 - Normalize dimensions only when the raw text already contains the full information, for example `23x16` to `23 x 16 cm`.
 - Split medium and support only when the grammar is consistent across rows, for example `... sobre lienzo` to `medium_clean` plus `support_clean`.
 - Normalize prices only when one numeric value is clearly intended. If a cell contains multiple prices or conflicting numbers, do not invent a canonical value unless the sheet already shows the rule.
@@ -93,7 +92,7 @@ Use this skill to review project spreadsheets as living operational data, not ju
 
 ## Example Judgments
 
-- `image_id_manual` blank while `image_main` contains a Drive file URL: fill the ID.
+- `image_main` contains a Drive file URL: preserve it as the source-image signal for catalog image matching.
 - `dimensions_clean` blank while `dimensions_raw` contains `23x16`: fill `23 x 16 cm`.
 - `dimensions_raw` and `dimensions_clean` both blank: flag the cells instead of guessing from title, price, or nearby works.
 - `location_clean` blank for a commissioned work: fill it only if the notes clearly identify the current holder/location and the sheet already uses that same mapping elsewhere.

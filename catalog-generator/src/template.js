@@ -102,7 +102,7 @@ function renderArtworkPage(artwork, { artistName }) {
       <div class="artwork-shell">
         <div class="artwork-stage">
           <div class="artwork-stage-frame">
-            <img class="artwork-image" src="${escapeHtml(artwork.imageUrl)}" alt="${escapeHtml(artwork.title)}" />
+            <img class="artwork-image" data-catalog-artwork-image="true" src="${escapeHtml(artwork.imageUrl)}" alt="${escapeHtml(artwork.title)}" />
           </div>
         </div>
         <div class="artwork-meta-block">

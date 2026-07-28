@@ -71,15 +71,14 @@ export function parseSheetInventoryCsv(csvText, { scope = 'all' } = {}) {
   return parseCsvRecords(csvText)
     .map((row) => ({
       artworkId: String(row.artwork_id || '').trim(),
-      catalogReady: normalizeBoolean(row.catalog_ready),
       includeInCatalog: normalizeBoolean(row.include_in_catalog),
       status: normalizeStatus(row.status_normalized),
       title: String(row.title_clean || row.title_raw || '').trim(),
     }))
     .filter((row) => /^LA-\d{4}-\d+$/u.test(row.artworkId) && row.title)
     .filter((row) => {
-      if (scope === 'catalog_ready') {
-        return row.includeInCatalog && row.catalogReady;
+      if (scope === 'included') {
+        return row.includeInCatalog;
       }
 
       if (scope === 'available') {

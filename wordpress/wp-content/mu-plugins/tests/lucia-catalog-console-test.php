@@ -148,6 +148,7 @@ $payload = lucia_catalog_console_build_queue_payload(
         'output_folder_id' => '',
         'scope_mode' => ' selected_tabs ',
         'selected_sheet_ids' => ['102593401', 'bad', '7'],
+        'selected_image_folder_ids' => ['folder-images-2026', 'folder-images-archive', 'folder-images-2026'],
     ],
     $config,
 );
@@ -176,6 +177,7 @@ assertSameValue(
         'outputFolderId' => 'folder-123',
         'scopeMode' => 'selected_tabs',
         'selectedSheetIds' => [102593401, 7],
+        'selectedImageFolderIds' => ['folder-images-2026', 'folder-images-archive'],
     ],
     $payload,
     'Queue payload should be sanitized and use configured profile/folder defaults.',

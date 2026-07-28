@@ -14,16 +14,8 @@ const CATALOG_CLOUD_RUN_DEFAULT_REGION = 'europe-west1';
 const CATALOG_CLOUD_RUN_DEFAULT_JOB_NAME = 'lucia-mybrocorp-catalog-agent';
 const CATALOG_IMAGE_FOLDER_ID_PROPERTY = 'CATALOG_IMAGE_FOLDER_ID';
 const CATALOG_REQUIRED_HEADERS = [
-  'artwork_id',
-  'title_clean',
-  'year',
-  'medium_clean',
-  'support_clean',
-  'dimensions_clean',
-  'status_normalized',
-  'image_main',
   'include_in_catalog',
-  'catalog_ready',
+  'title_raw',
 ];
 const CATALOG_HELPER_TITLES = ['catalog_jobs', 'catalog_profiles', 'validation_lists', 'nvscriptsproperties'];
 const CATALOG_PROFILE_HEADERS = [
@@ -274,6 +266,15 @@ function createCatalogJob_(formData, options) {
     throw new Error('Enter a catalog title before queueing a job.');
   }
 
+  const selectedImageFolderIds = Array.isArray(payload.selectedImageFolderIds)
+    ? payload.selectedImageFolderIds.filter(function (folderId) {
+      return normalizeCatalogText_(folderId) !== '';
+    })
+    : [];
+  if (selectedImageFolderIds.length === 0) {
+    throw new Error('Select at least one Drive image folder before queueing a job.');
+  }
+
   const outputFilename = sanitizeCatalogOutputFilename_({
     catalogTitle: catalogTitle,
     outputFilename: payload.outputFilename,
@@ -295,7 +296,7 @@ function createCatalogJob_(formData, options) {
     reviewed_at: '',
     reviewed_by: '',
     use_image_manifest: payload.useImageManifest === true || payload.useImageManifest === 'true',
-    selected_image_folders_json: JSON.stringify(payload.selectedImageFolderIds || []),
+    selected_image_folders_json: JSON.stringify(selectedImageFolderIds),
     scope_mode: scopeMode,
     sheet_ids_json: JSON.stringify(selection.map((tab) => tab.sheetId)),
     sheet_titles_json: JSON.stringify(selection.map((tab) => tab.title)),

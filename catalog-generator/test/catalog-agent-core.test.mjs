@@ -21,6 +21,7 @@ test('mergeCatalogSheetsToCsv combines compatible yearly tabs into one CSV', () 
       rows: [
         {
           artwork_id: 'LA-2025-001',
+          title_raw: 'Alpha',
           title_clean: 'Alpha',
           year: '2025',
           medium_clean: 'Acrylic',
@@ -40,6 +41,7 @@ test('mergeCatalogSheetsToCsv combines compatible yearly tabs into one CSV', () 
       rows: [
         {
           artwork_id: 'LA-2026-001',
+          title_raw: 'Beta',
           title_clean: 'Beta',
           year: '2026',
           medium_clean: 'Ink',
@@ -58,7 +60,7 @@ test('mergeCatalogSheetsToCsv combines compatible yearly tabs into one CSV', () 
     },
   ]);
 
-  assert.match(csvText, /^artwork_id,title_clean,year,/);
+  assert.match(csvText, /^include_in_catalog,title_raw,artwork_id,title_clean,year,/);
   assert.match(csvText, /LA-2025-001,Alpha,2025/);
   assert.match(csvText, /LA-2026-001,Beta,2026/);
   assert.match(csvText, /catalog_notes_public/);
@@ -223,7 +225,7 @@ test('mergeCatalogSheetsToCsv rejects incompatible tabs with a precise error', (
           title: 'Draft',
         },
     ]),
-    /Draft.*artwork_id/i,
+    /Draft.*include_in_catalog/i,
   );
 });
 
@@ -240,7 +242,7 @@ test('mergeCatalogSheetsToCsv accepts a compatible tab with headers and zero row
         'status_normalized',
         'image_main',
         'include_in_catalog',
-        'catalog_ready',
+        'title_raw',
       ],
       rows: [],
       sheetId: 77,
@@ -248,6 +250,6 @@ test('mergeCatalogSheetsToCsv accepts a compatible tab with headers and zero row
     },
   ]);
 
-  assert.match(csvText, /^artwork_id,title_clean,year,/);
+  assert.match(csvText, /^include_in_catalog,title_raw,artwork_id,title_clean,year,/);
   assert.equal(csvText.trim().split('\n').length, 1);
 });

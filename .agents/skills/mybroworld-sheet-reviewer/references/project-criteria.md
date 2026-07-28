@@ -10,9 +10,7 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 
 ### Deterministic fills
 
-- Extract `image_id_manual` from a stable Drive file URL in `image_main`.
-- Fill `preview` with an in-cell image formula derived from `image_id_manual` on every populated canonical year-tab row. The formula should stay blank when `image_id_manual` is blank.
-- Example: in an `es_ES` spreadsheet where `image_id_manual` is column `R`, row 24 uses `=IF($R24="";"";IMAGE("https://lh3.googleusercontent.com/d/"&$R24;1))`.
+- Preserve the client-provided `image_main` Drive URL as the source-image signal. Catalog generation must not require a duplicate image-ID helper column.
 - Normalize `dimensions_clean` from `dimensions_raw` when the raw cell already contains the full dimensional data.
 - Fill `location_clean` from notes only when the mapping is explicit in the notes and already evidenced by comparable rows.
 - Keep `location_clean` for the current location only. When the row needs to preserve previous stops as well, add and fill a dedicated `location_history` field instead of storing multiple values in `location_clean`.
@@ -39,7 +37,7 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - Distinguish between a missing value and an inconsistent value. The reviewer must handle both.
 - Treat commerce inventory parity as part of catalog data quality. When a task involves WooCommerce inventory, compare canonical sheet rows, generated catalog scope, and WooCommerce products before recommending or applying product writes.
 - Example: if the sheet contains `LA-2026-002` with `title_clean = Perrete en tablillas 01` but local WooCommerce only contains demo products such as `Armchair`, report `LA-2026-002` as missing from WooCommerce and `Armchair` as unexpected instead of treating the systems as synced.
-- WooCommerce inventory scope is all canonical sheet artworks, not only `include_in_catalog` or `catalog_ready` rows. `status_normalized` should control storefront visibility and purchasability.
+- WooCommerce inventory scope is all canonical sheet artworks, not only catalog-selected rows. `status_normalized` should control storefront visibility and purchasability.
 - Example: an `available` row should be visible and purchasable, a `sold` row should remain visible but not purchasable, and an `archived` row should remain in WooCommerce but be hidden and not purchasable.
 - Do not expand project rules from a single anecdotal row unless the user explicitly states it is a recurring criterion.
 - Do not assume the canonical catalog data lives in one fixed tab name. Multi-year workbooks may expose one canonical tab per year, such as `2026`, `2025`, or `2024`, with the same header contract.
@@ -48,7 +46,7 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - When importing legacy year tabs into the consolidated catalog workbook, inspect whether the source tab actually has canonical headers before using row 1 as headers. If the source year tab is positional legacy data, row 1 is artwork data and must be imported.
 - Example: the original `2023`, `2024`, and `2025` tabs in `Obra TODO - Lucia Astuy` are positional artwork rows, not canonical-header tables; import their non-empty artwork rows into year tabs that use the consolidated `2026` header contract.
 - For legacy image imports, use the corresponding Drive year folder and deterministic evidence from filename/title or a row-number prefix. Missing or ambiguous matches should remain blank and be marked in `catalog_blocker`.
-- Example: if a 2023 artwork title has no deterministic image match in the `2023` Drive folder, leave `image_main` and `image_id_manual` blank and mark `Missing deterministic image match.` instead of choosing a nearby filename.
+- Example: if a 2023 artwork title has no deterministic image match in the `2023` Drive folder, leave `image_main` blank and mark `Missing deterministic image match.` instead of choosing a nearby filename.
 - When importing historical rows, do not infer `include_in_catalog` from the legacy availability flag or normalized status. Leave the editorial inclusion gate unset unless the source explicitly provides that decision.
 - Treat range-backed enum fields such as `status_normalized` as shared contract fields. When a new canonical value is approved, update the hidden validation list, header note, and matching conditional-format rules together.
 - Example: when `reserved` is added to `status_normalized`, extend `validation_lists`, update the `status_normalized` header note, and add the corresponding status color rule in column `I`.
@@ -58,9 +56,9 @@ Use this file to accumulate reusable MyBroworld spreadsheet review criteria disc
 - Example: if `notes_raw`, `dimensions_clean`, `catalog_blocker`, or `price_eur` keep an old orange highlight after the underlying review point has been resolved or the column has no color rule, reset the cell to the neutral background.
 - For PDF catalog selection, `include_in_catalog` is the explicit editorial inclusion gate. Do not infer inclusion from `status_normalized`, availability labels, price, or whether a work is purchasable.
 - Example: if `status_normalized = available` but `include_in_catalog = FALSE`, exclude the work from the PDF catalog; if `status_normalized = sold` but `include_in_catalog = TRUE`, include it unless another technical blocker such as missing title, image, or dimensions prevents rendering.
-- Keep `catalog_ready` as the technical render-readiness gate after editorial selection. A row with `include_in_catalog = TRUE` and `catalog_ready = FALSE` should remain out of generated PDFs until its blockers are resolved.
-- For PDF catalog image selection, the customer will manually identify the catalog image by keeping one existing Drive file per artwork whose filename ends in `_cat`. Missing or duplicate `_cat` images are blockers; do not auto-create, copy, or infer the `_cat` file.
-- Do not enable strict production `_cat` image-folder selection until the shared folder contains one `_cat` file for every included, catalog-ready artwork.
+- For PDF catalog selection, `include_in_catalog = TRUE` is the only inclusion gate. Do not use or maintain a `catalog_ready` column.
+- For PDF catalog image selection, use the client-provided `image_main` Drive file name to resolve the matching `_CAT01` image in the selected folders. When that link is absent, use a unique normalized title match; missing or ambiguous matches must fail the job with the affected work names.
+- Do not generate a partial PDF when any selected artwork lacks a resolvable `_CAT01` image.
 - The PDF catalog should sort newest works first and display only title, year, dimensions, technique, and PVP price for each artwork.
 - For PDF catalog output-folder changes, resolve the provided Drive folder metadata before assuming the link is a parent folder. If the linked folder already has the requested destination name, use that folder as the target instead of creating a same-named child.
 - Before marking a PDF catalog output route ready, verify all write sources: WordPress runtime config, `catalog_profiles.default_drive_folder_id`, worker identity permissions, and one completed job whose Drive file parent is the expected folder.

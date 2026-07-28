@@ -8,7 +8,7 @@ import {
   catalogStatusLabel,
   normalizeCatalogStatus,
 } from './shared-catalog-contract.mjs';
-import { normalizeDriveImageUrl } from './drive-image-url.mjs';
+import { extractDriveImageFileId, normalizeDriveImageUrl } from './drive-image-url.mjs';
 import { renderCatalogHtml } from './template.js';
 
 const DEFAULT_ARTIST_NAME = CATALOG_DEFAULT_ARTIST_NAME;
@@ -74,12 +74,16 @@ export async function resolvePuppeteerLaunchOptions({
 }
 
 export async function waitForCatalogImageElements(page, timeoutMs = PDF_IMAGE_LOAD_TIMEOUT_MS) {
-  await page.evaluate(async (maxWaitMs) => {
-    const pendingImages = Array.from(document.images)
+  const failedImages = await page.evaluate(async (maxWaitMs) => {
+    const catalogImages = Array.from(document.images)
+      .filter((image) => image.dataset.catalogArtworkImage === 'true');
+    const pendingImages = catalogImages
       .filter((image) => !image.complete);
 
     if (pendingImages.length === 0) {
-      return;
+      return catalogImages
+        .filter((image) => image.naturalWidth === 0)
+        .map((image) => image.currentSrc || image.src);
     }
 
     await Promise.race([
@@ -91,7 +95,19 @@ export async function waitForCatalogImageElements(page, timeoutMs = PDF_IMAGE_LO
         setTimeout(resolve, maxWaitMs);
       }),
     ]);
+
+    return catalogImages
+      .filter((image) => !image.complete || image.naturalWidth === 0)
+      .map((image) => image.currentSrc || image.src);
   }, timeoutMs);
+
+  if (Array.isArray(failedImages) && failedImages.length > 0) {
+    throw new CatalogCliError({
+      code: 'catalog_image_load_failed',
+      exitCode: 5,
+      message: `Catalog image loading failed: ${failedImages.join(', ')}`,
+    });
+  }
 }
 
 function parseArgs(argv) {
@@ -141,7 +157,7 @@ function statusLabel(status) {
 }
 
 function buildTechnique(row) {
-  const medium = String(row.medium_clean || '').trim();
+  const medium = String(row.medium_clean || row.medium_raw || '').trim();
   const support = String(row.support_clean || '').trim();
   if (medium && support) {
     return `${medium} sobre ${support}`;
@@ -167,7 +183,7 @@ function formatEuroPrice(value) {
 }
 
 function resolvePvpPrice(row) {
-  return String(row.price_display_clean || '').trim() || formatEuroPrice(row.price_eur);
+  return String(row.price_display_clean || row.price_raw || '').trim() || formatEuroPrice(row.price_eur);
 }
 
 function parseCatalogDateLabel(value) {
@@ -203,6 +219,16 @@ function buildArtworkRecencyKey(row) {
   return Number.isFinite(year) ? year * 100 : 0;
 }
 
+function stripFileExtension(fileName) {
+  return String(fileName || '').replace(/\.[^.]+$/u, '');
+}
+
+function normalizeSourceImageKey(fileName) {
+  return normalizeMatchKey(
+    stripFileExtension(fileName).replace(/[_\s-]+(?:cat)?\d+[_\s-]*$/iu, ''),
+  );
+}
+
 function parseCatalogImageManifest(manifestText) {
   let payload;
   try {
@@ -225,14 +251,22 @@ function parseCatalogImageManifest(manifestText) {
     });
   }
 
-  const manifestFiles = [];
+  const catalogFiles = [];
+  const filesById = new Map();
   for (const file of files) {
     const fileName = String(file?.name || '').trim();
     if (!file?.id) {
       continue;
     }
 
-    const catMatch = fileName.match(/^(.*)_cat(\d*)(?:\.[^.]+)?$/i);
+    const id = String(file.id).trim();
+    filesById.set(id, {
+      id,
+      name: fileName,
+      normalizedSourceKey: normalizeSourceImageKey(fileName),
+    });
+
+    const catMatch = fileName.match(/^(.*)_cat(\d*)(?:[_\s-]*)?(?:\.[^.]+)?$/i);
     if (!catMatch) {
       continue;
     }
@@ -246,20 +280,32 @@ function parseCatalogImageManifest(manifestText) {
     const catNumber = catMatch[2];
     const priority = catNumber === '01' ? 1 : 2;
 
-    manifestFiles.push({
-      id: String(file.id).trim(),
+    catalogFiles.push({
+      id,
       name: fileName,
       normalizedKey,
       priority,
     });
   }
 
-  return manifestFiles;
+  return { catalogFiles, filesById };
 }
 
 function resolveCatalogImageUrl(row, catalogImageManifest) {
   if (!catalogImageManifest) {
     return normalizeDriveImageUrl(row.image_main);
+  }
+
+  const sourceImageId = extractDriveImageFileId(row.image_main);
+  const sourceImage = catalogImageManifest.filesById.get(sourceImageId);
+  if (sourceImage?.normalizedSourceKey) {
+    const sourceMatches = catalogImageManifest.catalogFiles.filter(
+      (file) => file.normalizedKey === sourceImage.normalizedSourceKey,
+    );
+    if (sourceMatches.length > 0) {
+      sourceMatches.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
+      return normalizeDriveImageUrl(`https://drive.google.com/file/d/${sourceMatches[0].id}/view`);
+    }
   }
 
   const matchKeys = [
@@ -269,7 +315,7 @@ function resolveCatalogImageUrl(row, catalogImageManifest) {
   ].filter(Boolean);
 
   const matchedFiles = [];
-  for (const file of catalogImageManifest) {
+  for (const file of catalogImageManifest.catalogFiles) {
     for (const matchKey of matchKeys) {
       if (file.normalizedKey.includes(matchKey) || matchKey.includes(file.normalizedKey)) {
         matchedFiles.push(file);
@@ -283,7 +329,12 @@ function resolveCatalogImageUrl(row, catalogImageManifest) {
   ];
 
   if (uniqueMatchingFiles.length === 0) {
-    return normalizeDriveImageUrl(row.image_main);
+    return '';
+  }
+
+  const matchingCatalogKeys = new Set(uniqueMatchingFiles.map((file) => file.normalizedKey));
+  if (matchingCatalogKeys.size !== 1) {
+    return '';
   }
 
   uniqueMatchingFiles.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
@@ -366,17 +417,24 @@ async function defaultReadCsvText({ inputPath, inputUrl }) {
 }
 
 export function buildCatalogArtworks(records, { catalogImageManifest = null, limit }) {
+  const unresolved = [];
   const artworks = records
-    .filter((row) => normalizeBoolean(row.include_in_catalog) && normalizeBoolean(row.catalog_ready))
-    .map((row) => {
+    .filter((row) => normalizeBoolean(row.include_in_catalog))
+    .map((row, index) => {
       const status = normalizeArtworkStatus(row.status_normalized);
       const price = resolvePvpPrice(row);
+      const title = String(row.title_clean || row.title_raw || '').trim();
+      const imageUrl = resolveCatalogImageUrl(row, catalogImageManifest);
+
+      if (!title || !imageUrl) {
+        unresolved.push(title || `row ${index + 2}`);
+      }
 
       return {
         artworkId: String(row.artwork_id || '').trim(),
         dateLabel: String(row.date_label || '').trim(),
-        dimensions: String(row.dimensions_clean || '').trim(),
-        imageUrl: resolveCatalogImageUrl(row, catalogImageManifest),
+        dimensions: String(row.dimensions_clean || row.dimensions_raw || '').trim(),
+        imageUrl,
         order: toSortableNumber(row.catalog_order, 999999),
         price,
         recencyKey: buildArtworkRecencyKey(row),
@@ -385,8 +443,8 @@ export function buildCatalogArtworks(records, { catalogImageManifest = null, lim
         status,
         statusLabel: statusLabel(status),
         technique: buildTechnique(row),
-        title: String(row.title_clean || row.title_raw || '').trim(),
-        year: String(row.year || '').trim(),
+        title,
+        year: String(row.year || row.source_year || parseCatalogDateLabel(row.date_label)?.year || '').trim(),
       };
     })
     .filter((row) => row.title && row.imageUrl)
@@ -403,6 +461,14 @@ export function buildCatalogArtworks(records, { catalogImageManifest = null, lim
 
       return left.title.localeCompare(right.title);
     });
+
+  if (unresolved.length > 0) {
+    throw new CatalogCliError({
+      code: 'catalog_image_unresolved',
+      exitCode: 4,
+      message: `Selected catalog works need a resolvable catalog image: ${unresolved.join(', ')}`,
+    });
+  }
 
   return Number.isFinite(limit) ? artworks.slice(0, limit) : artworks;
 }
@@ -479,6 +545,9 @@ export async function generateCatalog(options, dependencies = {}) {
   try {
     await renderPdf({ html, outputPath, puppeteerExecutablePath });
   } catch (error) {
+    if (error instanceof CatalogCliError) {
+      throw error;
+    }
     throw new CatalogCliError({
       code: 'pdf_render_failed',
       exitCode: 5,

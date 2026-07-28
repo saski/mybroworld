@@ -9,16 +9,8 @@ import { loadAppsScriptCatalogApi } from './helpers/apps-script-harness.mjs';
 
 function compatibleHeaders() {
   return [
-    'artwork_id',
-    'title_clean',
-    'year',
-    'medium_clean',
-    'support_clean',
-    'dimensions_clean',
-    'status_normalized',
-    'image_main',
     'include_in_catalog',
-    'catalog_ready',
+    'title_raw',
   ];
 }
 
@@ -89,6 +81,7 @@ test('Apps Script queue triggers the production Cloud Run job on demand', async 
     catalogTitle: 'Catalog 2026',
     executionProfileKey: 'lucia-mybrocorp',
     scopeMode: 'current_tab',
+    selectedImageFolderIds: ['folder-images-2026'],
   }));
 
   assert.equal(queued.ok, true);
@@ -115,6 +108,7 @@ test('Apps Script queue marks the job failed when the Cloud Run trigger is rejec
     catalogTitle: 'Catalog 2026',
     executionProfileKey: 'lucia-mybrocorp',
     scopeMode: 'current_tab',
+    selectedImageFolderIds: ['folder-images-2026'],
   }));
 
   assert.equal(queued.ok, false);
@@ -152,6 +146,20 @@ test('Apps Script queue blocks profiles without an output folder', async () => {
   assert.match(response.error.message, /output folder/i);
 });
 
+test('Apps Script queue requires selected Drive image folders', async () => {
+  const { callApi } = await buildHarness();
+
+  const response = callApi(request('queue_catalog_job', {
+    activeSheetId: 102593401,
+    catalogTitle: 'Catalog 2026',
+    executionProfileKey: 'nacho-saski',
+    scopeMode: 'current_tab',
+  }));
+
+  assert.equal(response.ok, false);
+  assert.match(response.error.message, /Drive image folder/i);
+});
+
 test('Apps Script queue blocks incompatible current tabs', async () => {
   const { callApi } = await buildHarness();
 
@@ -160,6 +168,7 @@ test('Apps Script queue blocks incompatible current tabs', async () => {
     catalogTitle: 'Catalog 2026',
     executionProfileKey: 'nacho-saski',
     scopeMode: 'current_tab',
+    selectedImageFolderIds: ['folder-images-2026'],
   }));
 
   assert.equal(response.ok, false);
@@ -174,6 +183,7 @@ test('Apps Script review API validates review status and serializes recent jobs'
     catalogTitle: 'Catalog 2026',
     executionProfileKey: 'nacho-saski',
     scopeMode: 'current_tab',
+    selectedImageFolderIds: ['folder-images-2026'],
   }));
 
   assert.equal(queued.ok, true);

@@ -19,14 +19,12 @@ availability_flag_raw,status_normalized,boolean_flag,location_clean
   assert.deepEqual(records, [
     {
       artworkId: 'LA-2026-001',
-      catalogReady: true,
       includeInCatalog: true,
       status: 'available',
       title: 'Perrete en tablillas 01',
     },
     {
       artworkId: 'LA-2026-002',
-      catalogReady: true,
       includeInCatalog: true,
       status: 'gifted',
       title: 'La chica sonríe porque pinta',

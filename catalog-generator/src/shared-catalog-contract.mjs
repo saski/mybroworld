@@ -8,16 +8,8 @@ export const CATALOG_HELPER_SHEET_TITLES = [
 ];
 
 export const CATALOG_REQUIRED_HEADERS = [
-  'artwork_id',
-  'title_clean',
-  'year',
-  'medium_clean',
-  'support_clean',
-  'dimensions_clean',
-  'status_normalized',
-  'image_main',
   'include_in_catalog',
-  'catalog_ready',
+  'title_raw',
 ];
 
 export const CATALOG_PROFILE_HEADERS = [
